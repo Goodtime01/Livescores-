@@ -80,6 +80,7 @@
     .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -98,23 +99,37 @@
   </div>
 
   <div class="search-box" id="searchBox">
-    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Liverpool, Galatasaray)..." oninput="renderMatches()" />
+    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Enyimba, Liverpool, Real Madrid)..." oninput="renderMatches()" />
   </div>
 
+  <!-- All 26 League Tabs -->
   <div class="tabs">
     <button class="tab active" onclick="setLeague('ALL', this)">All</button>
     <button class="tab" onclick="setLeague('eng.1', this)">Premier League</button>
+    <button class="tab" onclick="setLeague('nga.1', this)">🇳🇬 Nigerian NPFL</button>
     <button class="tab" onclick="setLeague('uefa.champions', this)">Champions League</button>
-    <button class="tab" onclick="setLeague('tur.1', this)">Turkish Süper Lig</button>
-    <button class="tab" onclick="setLeague('ned.1', this)">Netherlands (Eredivisie)</button>
     <button class="tab" onclick="setLeague('esp.1', this)">La Liga</button>
     <button class="tab" onclick="setLeague('ita.1', this)">Serie A</button>
     <button class="tab" onclick="setLeague('ger.1', this)">Bundesliga</button>
     <button class="tab" onclick="setLeague('fra.1', this)">Ligue 1</button>
-    <button class="tab" onclick="setLeague('por.1', this)">Portugal Liga</button>
+    <button class="tab" onclick="setLeague('eng.2', this)">EFL Championship</button>
+    <button class="tab" onclick="setLeague('bra.1', this)">🇧🇷 Brasileirão (Brazil)</button>
+    <button class="tab" onclick="setLeague('ned.1', this)">Eredivisie (Netherlands)</button>
+    <button class="tab" onclick="setLeague('por.1', this)">Liga Portugal</button>
+    <button class="tab" onclick="setLeague('tur.1', this)">Turkish Süper Lig</button>
+    <button class="tab" onclick="setLeague('bel.1', this)">Belgian Pro League</button>
+    <button class="tab" onclick="setLeague('arg.1', this)">🇦🇷 Primera División (Argentina)</button>
+    <button class="tab" onclick="setLeague('jpn.1', this)">🇯🇵 J1 League (Japan)</button>
+    <button class="tab" onclick="setLeague('pol.1', this)">Polish Ekstraklasa</button>
+    <button class="tab" onclick="setLeague('den.1', this)">Danish Superliga</button>
+    <button class="tab" onclick="setLeague('sui.1', this)">Swiss Super League</button>
+    <button class="tab" onclick="setLeague('nor.1', this)">Norwegian Eliteserien</button>
+    <button class="tab" onclick="setLeague('cro.1', this)">Croatian Prva HNL</button>
+    <button class="tab" onclick="setLeague('col.1', this)">Categoría Primera A (Colombia)</button>
+    <button class="tab" onclick="setLeague('ecu.1', this)">LigaPro (Ecuador)</button>
     <button class="tab" onclick="setLeague('uefa.europa', this)">Europa League</button>
     <button class="tab" onclick="setLeague('uefa.europa.conf', this)">Conference League</button>
-    <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro</button>
+    <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro League</button>
     <button class="tab" onclick="setLeague('usa.1', this)">MLS</button>
   </div>
 
@@ -160,7 +175,13 @@
     </div>
   </div>
 <script>
-    const LEAGUE_CODES = ["eng.1", "uefa.champions", "tur.1", "ned.1", "esp.1", "ita.1", "ger.1", "fra.1", "por.1", "uefa.europa", "uefa.europa.conf", "ksa.1", "usa.1"];
+    const LEAGUE_CODES = [
+      "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", "ger.1", "fra.1", 
+      "eng.2", "bra.1", "ned.1", "por.1", "tur.1", "bel.1", "arg.1", "jpn.1", 
+      "pol.1", "den.1", "sui.1", "nor.1", "cro.1", "col.1", "ecu.1", 
+      "uefa.europa", "uefa.europa.conf", "ksa.1", "usa.1"
+    ];
+
     let currentView = "matches";
     let activeLeague = "ALL";
     let matchesData = [];
@@ -235,7 +256,7 @@
 
     async function initLoad() {
       const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Updating live scores...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Updating live scores across all 26 leagues...</div>';
 
       const oldScores = new Map(matchesData.map(m => [m.id, `${m.homeScore}:${m.awayScore}`]));
       matchesData = [];
