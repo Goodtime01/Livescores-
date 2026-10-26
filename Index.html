@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Football Scores</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 16px; min-height: 100vh; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #1e293b; }
+    header h1 { font-size: 1.3rem; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .refresh-btn { background: #38bdf8; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; color: #0b1120; font-size: 0.8rem; cursor: pointer; }
+    
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(34, 197, 94, 0.15); color: #4ade80; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 9999px; }
+    .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    .matches-container { display: flex; flex-direction: column; gap: 12px; }
+    .match-card { background: #1e293b; border-radius: 12px; padding: 14px 16px; border: 1px solid #334155; }
+    .match-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; font-weight: 600; }
+    
+    .match-body { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .team { width: 40%; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .team.away { justify-content: flex-end; text-align: right; }
+    
+    .score-box { background: #0b1120; padding: 6px 14px; border-radius: 8px; font-size: 1.3rem; font-weight: 800; color: #38bdf8; letter-spacing: 2px; }
+    
+    .match-footer { font-size: 0.75rem; text-align: center; color: #fbbf24; font-weight: 600; }
+    .loading { text-align: center; color: #94a3b8; padding: 30px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>⚽ Etini LiveScores</h1>
+    <button class="refresh-btn" onclick="fetchMatches()">↻ Refresh</button>
+  </header>
+
+  <div class="matches-container" id="matchList">
+    <div class="loading">Loading today's live matches...</div>
+  </div>
+
+  <script>
+    const API_TOKEN = "4b83ceb3845d476f9205356b87c8dc68";
+
+    async function fetchMatches() {
+      const container = document.getElementById("matchList");
+      container.innerHTML = '<div class="loading">Updating match scores...</div>';
+
+      const directUrl = "https://api.football-data.org/v4/matches";
+      const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(directUrl);
+
+      let data = null;
+
+      try {
+        // Try proxy first to bypass mobile browser CORS restrictions
+        let res = await fetch(proxyUrl, { headers: { "X-Auth-Token": API_TOKEN } });
+        if (!res.ok) throw new Error("Proxy failed");
+        data = await res.json();
+      } catch (e) {
+        try {
+          // Direct fallback
+          let res = await fetch(directUrl, { headers: { "X-Auth-Token": API_TOKEN } });
+          data = await res.json();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      if (!data || !data.matches || data.matches.length === 0) {
+        container.innerHTML = `
+          <div class="match-card" style="text-align: center; color: #94a3b8; padding: 25px;">
+            <p>No matches scheduled right now for today.</p>
+            <p style="font-size: 0.8rem; margin-top: 8px;">Check back when European leagues kick off!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = "";
+      data.matches.forEach(m => {
+        const homeScore = m.score.fullTime.home ?? "-";
+        const awayScore = m.score.fullTime.away ?? "-";
+        let statusDisplay = m.status;
+
+        if (m.status === "IN_PLAY") {
+          statusDisplay = `<span class="status-badge"><span class="live-dot"></span> LIVE</span>`;
+        } else if (m.status === "FINISHED") {
+          statusDisplay = "FULL TIME";
+        } else if (m.status === "PAUSED") {
+          statusDisplay = "HALF TIME";
+        } else if (m.status === "TIMED" || m.status === "SCHEDULED") {
+          const matchTime = new Date(m.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          statusDisplay = `Kickoff: ${matchTime}`;
+        }
+
+        container.innerHTML += `
+          <div class="match-card">
+            <div class="match-header">
+              <span>${m.competition.name}</span>
+            </div>
+            <div class="match-body">
+              <div class="team">${m.homeTeam.shortName || m.homeTeam.name}</div>
+              <div class="score-box">${homeScore} : ${awayScore}</div>
+              <div class="team away">${m.awayTeam.shortName || m.awayTeam.name}</div>
+            </div>
+            <div class="match-footer">${statusDisplay}</div>
+          </div>
+        `;
+      });
+    }
+
+    // Auto-fetch immediately when opened
+    fetchMatches();
+
+    // Auto-refresh every 60 seconds
+    setInterval(fetchMatches, 60000);
+  </script>
+</body>
+</html>
