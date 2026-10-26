@@ -40,21 +40,33 @@
 
     .match-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #334155; font-size: 0.75rem; color: #cbd5e1; }
     .match-details.open { display: block; }
-    .stat-row { margin: 6px 0; }
-    .stat-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; }
+    
+    .scorers { margin-bottom: 8px; padding: 8px 10px; background: #0b1120; border-radius: 6px; font-size: 0.72rem; line-height: 1.5; }
+    .assist-tag { color: #38bdf8; font-weight: 600; font-size: 0.7rem; margin-left: 4px; }
+    .missed-pen { color: #f87171; font-weight: 600; margin-top: 4px; }
+    
+    .stat-row { margin: 8px 0; }
+    .stat-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 3px; font-weight: 600; }
     .stat-bar { height: 6px; background: #0b1120; border-radius: 3px; overflow: hidden; display: flex; }
     .stat-fill { height: 100%; background: #38bdf8; }
-    .scorers { margin-top: 6px; padding: 6px 8px; background: #0b1120; border-radius: 6px; font-size: 0.72rem; }
+    
+    .stat-grid { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .stat-item { display: flex; justify-content: space-between; background: #0b1120; padding: 6px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
+    .stat-item span:nth-child(2) { color: #94a3b8; font-weight: normal; }
 
     .status-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; }
     .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-    .standings-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
-    .standings-table th { background: #0b1120; color: #94a3b8; padding: 8px 4px; font-size: 0.68rem; }
-    .standings-table td { padding: 8px 4px; border-bottom: 1px solid #334155; }
-    .team-cell { display: flex; align-items: center; gap: 6px; text-align: left; font-weight: 600; }
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+    .standings-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
+    .standings-table th { background: #0b1120; color: #94a3b8; padding: 8px 6px; font-size: 0.68rem; text-transform: uppercase; }
+    .standings-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
+    .team-cell { display: flex; align-items: center; gap: 6px; text-align: left; font-weight: 600; min-width: 130px; }
     .team-cell img { width: 18px; height: 18px; object-fit: contain; }
+    .pts { font-weight: 800; color: #38bdf8; }
+    .gd-pos { color: #4ade80; font-weight: 600; }
+    .gd-neg { color: #f87171; font-weight: 600; }
 
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
@@ -81,20 +93,22 @@
   </div>
 
   <div class="search-box" id="searchBox">
-    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Liverpool, Real Madrid)..." oninput="renderMatches()" />
+    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Liverpool, Galatasaray, Ajax)..." oninput="renderMatches()" />
   </div>
 
-  <!-- Built-in League Tabs -->
   <div class="tabs">
     <button class="tab active" onclick="setLeague('ALL', this)">All</button>
     <button class="tab" onclick="setLeague('eng.1', this)">Premier League</button>
     <button class="tab" onclick="setLeague('uefa.champions', this)">Champions League</button>
-    <button class="tab" onclick="setLeague('uefa.europa', this)">Europa League</button>
-    <button class="tab" onclick="setLeague('uefa.europa.conf', this)">Conference League</button>
+    <button class="tab" onclick="setLeague('tur.1', this)">Turkish Süper Lig</button>
+    <button class="tab" onclick="setLeague('ned.1', this)">Netherlands (Eredivisie)</button>
     <button class="tab" onclick="setLeague('esp.1', this)">La Liga</button>
     <button class="tab" onclick="setLeague('ita.1', this)">Serie A</button>
     <button class="tab" onclick="setLeague('ger.1', this)">Bundesliga</button>
     <button class="tab" onclick="setLeague('fra.1', this)">Ligue 1</button>
+    <button class="tab" onclick="setLeague('por.1', this)">Portugal Liga</button>
+    <button class="tab" onclick="setLeague('uefa.europa', this)">Europa League</button>
+    <button class="tab" onclick="setLeague('uefa.europa.conf', this)">Conference League</button>
     <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro</button>
     <button class="tab" onclick="setLeague('usa.1', this)">MLS</button>
   </div>
@@ -106,34 +120,15 @@
   </div>
 
   <div id="standingsView" style="display:none;">
-    <div class="match-card" id="standingsList" style="padding:8px;">
-      <div style="text-align:center; padding:25px; color:#94a3b8;">Select a league above to view table...</div>
+    <div class="match-card" style="padding:8px;">
+      <div class="table-wrapper" id="standingsWrapper">
+        <div style="text-align:center; padding:25px; color:#94a3b8;">Select a league above to view table...</div>
+      </div>
     </div>
   </div>
 
-  <!-- Review Modal -->
-  <div class="modal-overlay" id="reviewModal">
-    <div class="modal">
-      <h2>Send Review ⚽</h2>
-      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Sent directly to Etini's inbox.</p>
-      <form onsubmit="sendReview(event)">
-        <input type="text" id="revName" placeholder="Your Name" />
-        <select id="revRating">
-          <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
-          <option value="4">⭐⭐⭐⭐ (4/5)</option>
-          <option value="3">⭐⭐⭐ (3/5)</option>
-        </select>
-        <textarea id="revMsg" placeholder="Your feedback..." required></textarea>
-        <div class="modal-btns">
-          <button type="button" class="btn" onclick="closeReview()">Close</button>
-          <button type="submit" class="btn btn-primary" id="revBtn">Send</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    const LEAGUE_CODES = ["eng.1", "uefa.champions", "uefa.europa", "uefa.europa.conf", "esp.1", "ita.1", "ger.1", "fra.1", "ksa.1", "usa.1"];
+<script>
+    const LEAGUE_CODES = ["eng.1", "uefa.champions", "tur.1", "ned.1", "esp.1", "ita.1", "ger.1", "fra.1", "por.1", "uefa.europa", "uefa.europa.conf", "ksa.1", "usa.1"];
     let currentView = "matches";
     let activeLeague = "ALL";
     let matchesData = [];
@@ -179,10 +174,28 @@
             const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
             const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
             
-            const goals = (c.details || []).filter(d => d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"))).map(d => ({
-              clock: d.clock ? d.clock.displayValue : '',
-              player: d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : 'Goal'
-            }));
+            const goals = [];
+            const missedPens = [];
+
+            (c.details || []).forEach(d => {
+              const isGoal = d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"));
+              const isPenalty = d.penaltyKick || (d.type && d.type.text && d.type.text.toLowerCase().includes("penalty"));
+
+              if (isGoal) {
+                const scorer = d.athletesInvolved?.[0]?.displayName || 'Goal';
+                const assist = d.athletesInvolved?.[1]?.displayName ? `(Assist: ${d.athletesInvolved[1].displayName})` : '';
+                goals.push({
+                  clock: d.clock ? d.clock.displayValue : '',
+                  scorer: scorer,
+                  assist: assist
+                });
+              } else if (isPenalty && !d.scoringPlay) {
+                missedPens.push({
+                  clock: d.clock ? d.clock.displayValue : '',
+                  player: d.athletesInvolved?.[0]?.displayName || 'Penalty taker'
+                });
+              }
+            });
 
             matchesData.push({
               id: ev.id,
@@ -197,14 +210,15 @@
               state: c.status.type.state,
               statusText: c.status.type.shortDetail || c.status.type.description,
               venue: c.venue ? c.venue.fullName : '',
-              goals: goals
+              goals: goals,
+              missedPens: missedPens
             });
           });
           renderMatches();
         } catch (e) {}
       }
       if (matchesData.length === 0) {
-        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games available at the moment.</div>';
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled today. Check back soon!</div>';
       }
     }
 
@@ -227,7 +241,14 @@
         let badge = m.statusText;
         if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusText}</span>`;
 
-        let goalsHtml = m.goals.length ? `<div class="scorers">` + m.goals.map(g => `<div>⚽ ${g.player} ${g.clock}</div>`).join("") + `</div>` : '';
+        let eventsHtml = "";
+        if (m.goals.length > 0 || m.missedPens.length > 0) {
+          let items = m.goals.map(g => `<div>⚽ <strong>${g.scorer}</strong> ${g.clock} <span class="assist-tag">${g.assist}</span></div>`).join("");
+          if (m.missedPens.length > 0) {
+            items += m.missedPens.map(p => `<div class="missed-pen">❌ Missed Penalty: ${p.player} ${p.clock}</div>`).join("");
+          }
+          eventsHtml = `<div class="scorers">${items}</div>`;
+        }
 
         return `
           <div class="match-card" onclick="toggleStats('${m.id}', '${m.leagueCode}')">
@@ -239,8 +260,8 @@
             </div>
             <div class="match-footer">${badge}</div>
             <div class="match-details" id="d-${m.id}">
-              ${goalsHtml}
-              <div id="st-${m.id}" style="margin-top:8px; color:#94a3b8; text-align:center; font-size:0.7rem;">Tap to load match possession...</div>
+              ${eventsHtml}
+              <div id="st-${m.id}" style="margin-top:8px; color:#94a3b8; text-align:center; font-size:0.7rem;">Tap to load full match stats...</div>
               ${m.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:6px;">📍 ${m.venue}</div>` : ''}
             </div>
           </div>
@@ -260,19 +281,49 @@
           box.dataset.loaded = "true";
           if (d.boxscore?.teams?.length >= 2) {
             const h = {}, a = {};
-            d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue);
-            d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue);
-            const p = parseInt(h["possessionPct"] || "50");
+            d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
+            d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
+
+            const hPoss = parseInt(h["possessionPct"] || "50");
+            const aPoss = 100 - hPoss;
+            const hShots = parseInt(h["totalShots"] || "0");
+            const aShots = parseInt(a["totalShots"] || "0");
+            const hOnTarget = parseInt(h["shotsOnTarget"] || "0");
+            const aOnTarget = parseInt(a["shotsOnTarget"] || "0");
+            const hOffTarget = h["shotsOffTarget"] || Math.max(0, hShots - hOnTarget);
+            const aOffTarget = a["shotsOffTarget"] || Math.max(0, aShots - aOnTarget);
+            const hCorners = h["wonCorners"] || h["corners"] || "0";
+            const aCorners = a["wonCorners"] || a["corners"] || "0";
+            const hPasses = h["totalPasses"] || (h["passingPct"] ? h["passingPct"] + "%" : "-");
+            const aPasses = a["totalPasses"] || (a["passingPct"] ? a["passingPct"] + "%" : "-");
+            const hFouls = h["foulsCommitted"] || "0";
+            const aFouls = a["foulsCommitted"] || "0";
+            const hYellow = h["yellowCards"] || "0";
+            const aYellow = a["yellowCards"] || "0";
+            const hRed = h["redCards"] || "0";
+            const aRed = a["redCards"] || "0";
+            const hOffsides = h["offsides"] || "0";
+            const aOffsides = a["offsides"] || "0";
+
             box.innerHTML = `
               <div class="stat-row">
-                <div class="stat-labels"><span>${p}%</span><span>Possession</span><span>${100-p}%</span></div>
-                <div class="stat-bar"><div class="stat-fill" style="width:${p}%;"></div></div>
+                <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
+                <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
               </div>
-              <div class="stat-row"><div class="stat-labels"><span>${h["totalShots"]||0}</span><span>Shots</span><span>${a["totalShots"]||0}</span></div></div>
-              <div class="stat-row"><div class="stat-labels"><span>${h["shotsOnTarget"]||0}</span><span>On Target</span><span>${a["shotsOnTarget"]||0}</span></div></div>
+              <div class="stat-grid">
+                <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
+                <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
+                <div class="stat-item"><span>${hOffTarget}</span><span>Shots Off Target</span><span>${aOffTarget}</span></div>
+                <div class="stat-item"><span>${hCorners}</span><span>Corner Kicks</span><span>${aCorners}</span></div>
+                <div class="stat-item"><span>${hPasses}</span><span>Passes</span><span>${aPasses}</span></div>
+                <div class="stat-item"><span>${hFouls}</span><span>Fouls</span><span>${aFouls}</span></div>
+                <div class="stat-item"><span>${hOffsides}</span><span>Offsides</span><span>${aOffsides}</span></div>
+                <div class="stat-item"><span>🟨 ${hYellow}</span><span>Yellow Cards</span><span>🟨 ${aYellow}</span></div>
+                <div class="stat-item"><span>🟥 ${hRed}</span><span>Red Cards</span><span>${aRed} 🟥</span></div>
+              </div>
             `;
           } else {
-            box.innerHTML = `<div>Stats will appear at kickoff.</div>`;
+            box.innerHTML = `<div>Detailed match stats will appear at kickoff.</div>`;
           }
         } catch (e) {
           box.innerHTML = `<div>Stats unavailable.</div>`;
@@ -281,21 +332,62 @@
     }
 
     async function loadStandings(code) {
-      const box = document.getElementById("standingsList");
+      const box = document.getElementById("standingsWrapper");
       box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading standings...</div>';
       try {
         const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`);
         const d = await res.json();
         const entries = d.children?.[0]?.standings?.entries || d.standings?.[0]?.entries || [];
         if (!entries.length) {
-          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this cup.</div>';
+          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this cup tournament.</div>';
           return;
         }
-        let html = `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr></thead><tbody>`;
+
+        let html = `
+          <table class="standings-table">
+            <thead>
+              <tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th></tr>
+            </thead>
+            <tbody>
+        `;
+
         entries.forEach((e, i) => {
-          const s = (n) => e.stats?.find(x => x.name === n)?.displayValue || "0";
-          html += `<tr><td>${i+1}</td><td class="team-cell">${e.team.logos?.[0]?.href ? `<img src="${e.team.logos[0].href}">` : ''}<span>${e.team.shortDisplayName||e.team.name}</span></td><td>${s('gamesPlayed')}</td><td>${s('wins')}</td><td>${s('ties')}</td><td>${s('losses')}</td><td>${s('goalDifference')}</td><td style="font-weight:bold; color:#38bdf8;">${s('points')}</td></tr>`;
+          const s = (name) => {
+            const stat = e.stats?.find(x => x.name === name);
+            return stat ? (stat.displayValue ?? stat.value ?? "0") : null;
+          };
+
+          const p = s('gamesPlayed') || "0";
+          const w = s('wins') || "0";
+          const d = s('ties') || "0";
+          const l = s('losses') || "0";
+          const gf = s('pointsFor') || s('goalsFor') || "0";
+          const ga = s('pointsAgainst') || s('goalsAgainst') || "0";
+          const rawGd = s('goalDifference') || s('differential') || (parseInt(gf) - parseInt(ga));
+          const gdInt = parseInt(rawGd);
+          const gdClass = gdInt > 0 ? "gd-pos" : (gdInt < 0 ? "gd-neg" : "");
+          const gdFormatted = gdInt > 0 ? `+${gdInt}` : `${gdInt}`;
+          const pts = s('points') || "0";
+
+          html += `
+            <tr>
+              <td>${i + 1}</td>
+              <td class="team-cell">
+                ${e.team.logos?.[0]?.href ? `<img src="${e.team.logos[0].href}">` : ''}
+                <span>${e.team.shortDisplayName || e.team.name}</span>
+              </td>
+              <td>${p}</td>
+              <td>${w}</td>
+              <td>${d}</td>
+              <td>${l}</td>
+              <td>${gf}</td>
+              <td>${ga}</td>
+              <td class="${gdClass}">${gdFormatted}</td>
+              <td class="pts">${pts}</td>
+            </tr>
+          `;
         });
+
         html += `</tbody></table>`;
         box.innerHTML = html;
       } catch (e) {
@@ -337,3 +429,22 @@
   </script>
 </body>
 </html>
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <h2>Send Review ⚽</h2>
+      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Sent directly to Etini's inbox.</p>
+      <form onsubmit="sendReview(event)">
+        <input type="text" id="revName" placeholder="Your Name" />
+        <select id="revRating">
+          <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+          <option value="4">⭐⭐⭐⭐ (4/5)</option>
+          <option value="3">⭐⭐⭐ (3/5)</option>
+        </select>
+        <textarea id="revMsg" placeholder="Your feedback..." required></textarea>
+        <div class="modal-btns">
+          <button type="button" class="btn" onclick="closeReview()">Close</button>
+          <button type="submit" class="btn btn-primary" id="revBtn">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
