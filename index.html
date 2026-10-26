@@ -19,7 +19,6 @@
     .view-btn { flex: 1; padding: 7px 4px; font-size: 0.75rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; text-align: center; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
 
-    /* Date Bar (Yesterday, Today, Tomorrow) */
     .date-bar { display: flex; justify-content: space-between; background: #1e293b; border-radius: 6px; padding: 4px; margin-bottom: 10px; font-size: 0.75rem; }
     .date-btn { flex: 1; border: none; background: transparent; color: #94a3b8; padding: 5px; font-weight: 600; border-radius: 4px; cursor: pointer; text-align: center; }
     .date-btn.active { background: #334155; color: #38bdf8; }
@@ -47,58 +46,72 @@
     .score-box { background: #0b1120; padding: 5px 10px; border-radius: 6px; font-size: 1.15rem; font-weight: 800; color: #38bdf8; min-width: 55px; text-align: center; }
     .match-footer { font-size: 0.72rem; text-align: center; color: #fbbf24; font-weight: 600; margin-top: 8px; }
 
-    .status-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; }
-    .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
     /* Flashscore Match Center Modal */
     .mc-overlay { display: none; position: fixed; inset: 0; background: #0b1120; z-index: 1000; overflow-y: auto; flex-direction: column; }
     .mc-overlay.open { display: flex; }
-    .mc-top { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: #1e293b; border-bottom: 1px solid #334155; }
+    .mc-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 20; }
     .mc-close { background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
     
-    .mc-banner { padding: 20px 14px; text-align: center; background: linear-gradient(180deg, #1e293b 0%, #0b1120 100%); border-bottom: 1px solid #334155; }
-    .mc-league { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; }
+    .mc-banner { padding: 16px 14px; text-align: center; background: linear-gradient(180deg, #1e293b 0%, #0b1120 100%); border-bottom: 1px solid #334155; }
+    .mc-league { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
     .mc-teams { display: flex; justify-content: space-around; align-items: center; }
     .mc-team-block { width: 35%; text-align: center; }
-    .mc-team-block img { width: 44px; height: 44px; object-fit: contain; margin-bottom: 6px; }
+    .mc-team-block img { width: 44px; height: 44px; object-fit: contain; margin-bottom: 4px; }
     .mc-team-name { font-size: 0.95rem; font-weight: 700; }
     .mc-score { font-size: 2rem; font-weight: 900; color: #38bdf8; min-width: 80px; }
-    .mc-status { font-size: 0.8rem; color: #fbbf24; font-weight: 700; margin-top: 8px; }
+    .mc-status { font-size: 0.75rem; color: #fbbf24; font-weight: 700; margin-top: 4px; }
+    
+    /* Goal Scorers on Banner */
+    .mc-scorers-banner { display: flex; justify-content: space-between; font-size: 0.72rem; color: #cbd5e1; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #334155; }
+    .mc-scorers-home { width: 48%; text-align: left; }
+    .mc-scorers-away { width: 48%; text-align: right; }
 
-    /* Flashscore Slide Tabs */
-    .mc-tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; overflow-x: auto; scrollbar-width: none; }
+    /* STICKY Slide Tabs (Never disappears while scrolling!) */
+    .mc-tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; overflow-x: auto; scrollbar-width: none; position: sticky; top: 48px; z-index: 15; }
     .mc-tabs::-webkit-scrollbar { display: none; }
-    .mc-tab { flex: 1; min-width: 90px; text-align: center; padding: 10px 8px; font-size: 0.75rem; font-weight: 700; color: #94a3b8; border: none; background: transparent; cursor: pointer; border-bottom: 3px solid transparent; }
-    .mc-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; background: rgba(56, 189, 248, 0.05); }
+    .mc-tab { flex: 1; min-width: 80px; text-align: center; padding: 10px 6px; font-size: 0.72rem; font-weight: 700; color: #94a3b8; border: none; background: transparent; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+    .mc-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
 
     .mc-body { padding: 14px; flex: 1; }
     .mc-slide { display: none; }
     .mc-slide.active { display: block; }
 
-    /* Match Info Events */
-    .event-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; }
-    .event-min { font-weight: 700; color: #38bdf8; min-width: 32px; }
+    /* Visual Soccer Pitch */
+    .pitch-team-select { display: flex; gap: 8px; margin-bottom: 10px; }
+    .pitch-team-btn { flex: 1; padding: 8px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+    .pitch-team-btn.active { background: #38bdf8; color: #0b1120; border-color: #38bdf8; }
+    
+    .soccer-pitch { background: linear-gradient(180deg, #166534 0%, #15803d 50%, #166534 100%); border: 2px solid #22c55e; border-radius: 12px; padding: 16px 8px; position: relative; min-height: 440px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.5); }
+    .pitch-center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; border: 1px solid rgba(255,255,255,0.4); border-radius: 50%; pointer-events: none; }
+    .pitch-half-line { position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid rgba(255,255,255,0.4); pointer-events: none; }
+    
+    .pitch-row { display: flex; justify-content: space-around; align-items: center; width: 100%; position: relative; z-index: 2; margin: 4px 0; }
+    .pitch-player { display: flex; flex-direction: column; align-items: center; width: 65px; text-align: center; }
+    .jersey-circle { width: 30px; height: 30px; border-radius: 50%; background: #0f172a; border: 2px solid #38bdf8; color: #fff; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
+    .player-name { font-size: 0.65rem; color: #fff; font-weight: 700; margin-top: 3px; text-shadow: 0 1px 3px #000; max-width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* Stats bar */
-    .stat-row { margin: 10px 0; }
+    /* News Cards */
+    .news-card { display: flex; gap: 10px; background: #1e293b; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #334155; text-decoration: none; color: inherit; }
+    .news-card img { width: 75px; height: 55px; object-fit: cover; border-radius: 6px; }
+    .news-title { font-size: 0.78rem; font-weight: 700; color: #f8fafc; line-height: 1.3; margin-bottom: 4px; }
+    .news-time { font-size: 0.65rem; color: #94a3b8; }
+
+    /* Commentary */
+    .comm-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; line-height: 1.4; }
+    .comm-time { background: #38bdf8; color: #0b1120; font-weight: 800; font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; height: fit-content; min-width: 32px; text-align: center; }
+
+    /* Stats & Events */
+    .stat-row { margin: 8px 0; }
     .stat-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
     .stat-bar { height: 7px; background: #1e293b; border-radius: 4px; overflow: hidden; display: flex; }
     .stat-fill { height: 100%; background: #38bdf8; }
     .stat-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
     .stat-item { display: flex; justify-content: space-between; background: #1e293b; padding: 8px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
     .stat-item span:nth-child(2) { color: #94a3b8; font-weight: normal; }
+    .event-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; }
+    .event-min { font-weight: 700; color: #38bdf8; min-width: 32px; }
 
-    /* Lineup Pitch */
-    .lineup-card { background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-    .lineup-head { font-weight: 700; color: #38bdf8; display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; }
-    .lineup-players { font-size: 0.72rem; color: #cbd5e1; line-height: 1.6; }
-
-    /* Live Commentary Stream */
-    .comm-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; line-height: 1.4; }
-    .comm-time { background: #38bdf8; color: #0b1120; font-weight: 800; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; height: fit-content; min-width: 32px; text-align: center; }
-
-    /* Standings */
+    /* Tables & Badges */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
     .standings-table { width: 100%; min-width: 550px; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
     .standings-table th { background: #0b1120; color: #94a3b8; padding: 8px 5px; font-size: 0.68rem; text-transform: uppercase; }
@@ -110,7 +123,7 @@
     .gd-neg { color: #f87171; font-weight: 600; }
     .form-badges { display: flex; gap: 3px; justify-content: center; }
 
-    /* Review Modal */
+    /* Modal */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
     .modal { background: #1e293b; border-radius: 12px; padding: 18px; width: 100%; max-width: 340px; border: 1px solid #334155; }
@@ -232,18 +245,29 @@
     
     <div class="mc-banner" id="mcBanner"></div>
 
+    <!-- 5 Sticky Slides: Info, Stats, Pitch Lineup, Commentary, News -->
     <div class="mc-tabs">
       <button class="mc-tab active" onclick="switchMcSlide('info', this)">📝 Info</button>
       <button class="mc-tab" onclick="switchMcSlide('stats', this)">📊 Statistics</button>
-      <button class="mc-tab" onclick="switchMcSlide('lineups', this)">👥 Lineups</button>
+      <button class="mc-tab" onclick="switchMcSlide('lineups', this)">🏟️ Pitch Lineup</button>
       <button class="mc-tab" onclick="switchMcSlide('comm', this)">🎙️ Commentary</button>
+      <button class="mc-tab" onclick="switchMcSlide('news', this)">📰 Club News</button>
     </div>
 
     <div class="mc-body">
       <div class="mc-slide active" id="mcSlide-info"></div>
       <div class="mc-slide" id="mcSlide-stats"></div>
-      <div class="mc-slide" id="mcSlide-lineups"></div>
+      <div class="mc-slide" id="mcSlide-lineups">
+        <div class="pitch-team-select" id="pitchTeamSelect"></div>
+        <div class="soccer-pitch" id="soccerPitch">
+          <div class="pitch-center-circle"></div>
+          <div class="pitch-half-line"></div>
+          <div id="pitchRows"></div>
+        </div>
+        <div id="benchContainer" style="margin-top:14px;"></div>
+      </div>
       <div class="mc-slide" id="mcSlide-comm"></div>
+      <div class="mc-slide" id="mcSlide-news"></div>
     </div>
   </div>
 
@@ -261,6 +285,7 @@
     let favTeams = JSON.parse(localStorage.getItem("etini_favs") || "[]");
     let soundEnabled = true;
     let dateOffset = 0; // -1 = Yesterday, 0 = Today, 1 = Tomorrow
+    let currentRosters = []; // Stores rosters for the tactical pitch
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
@@ -439,7 +464,8 @@
         `;
       }).join("");
     }
-// Flashscore Match Center Engine (Info, Stats, Lineups, Commentary)
+
+// Flashscore Match Center Engine
     function closeMatchCenter() {
       document.getElementById("matchCenter").classList.remove("open");
     }
@@ -451,6 +477,65 @@
       document.getElementById(`mcSlide-${slide}`).classList.add("active");
     }
 
+    // Render Formation on the Green Turf Pitch
+    function renderPitch(teamIdx) {
+      const data = currentRosters[teamIdx];
+      if (!data) return;
+
+      document.querySelectorAll(".pitch-team-btn").forEach((b, i) => {
+        b.classList.toggle("active", i === teamIdx);
+      });
+
+      const formation = (data.formation || "4-3-3").split("-").map(Number);
+      const starters = (data.roster || []).filter(p => p.starter);
+      const rowsContainer = document.getElementById("pitchRows");
+      rowsContainer.innerHTML = "";
+
+      if (starters.length < 11) {
+        rowsContainer.innerHTML = '<div style="text-align:center; color:#fff; padding:60px 0; font-weight:700;">Tactical pitch diagram will appear once official Starting XI is announced.</div>';
+        return;
+      }
+
+      // GK is at the bottom, outfield players above
+      const gk = starters[0];
+      const outfield = starters.slice(1);
+
+      // Split outfield players according to formation (e.g. 4-3-3 -> Def, Mid, Fwd)
+      let slices = [];
+      let start = 0;
+      formation.forEach(num => {
+        slices.push(outfield.slice(start, start + num));
+        start += num;
+      });
+
+      // Render Attackers (top) down to Goalkeeper (bottom)
+      const renderRow = (players) => {
+        const row = document.createElement("div");
+        row.className = "pitch-row";
+        row.innerHTML = players.map(p => `
+          <div class="pitch-player">
+            <div class="jersey-circle">${p.jersey || '•'}</div>
+            <div class="player-name">${(p.athlete?.shortName || p.athlete?.displayName || '').split(' ').pop()}</div>
+          </div>
+        `).join("");
+        rowsContainer.appendChild(row);
+      };
+
+      for (let i = slices.length - 1; i >= 0; i--) {
+        renderRow(slices[i]);
+      }
+      renderRow([gk]); // Goalkeeper at the goal line
+
+      // Substitutes Bench
+      const bench = (data.roster || []).filter(p => !p.starter).map(p => `${p.jersey ? '#' + p.jersey + ' ' : ''}${p.athlete?.displayName || p.athlete?.shortName}`).join(", ");
+      document.getElementById("benchContainer").innerHTML = `
+        <div class="lineup-card">
+          <div style="font-weight:700; color:#94a3b8; font-size:0.75rem; margin-bottom:4px;">Substitutes / Bench:</div>
+          <div style="font-size:0.7rem; color:#cbd5e1; line-height:1.5;">${bench || 'N/A'}</div>
+        </div>
+      `;
+    }
+
     async function openMatchCenter(id, code) {
       const mc = document.getElementById("matchCenter");
       mc.classList.add("open");
@@ -458,14 +543,14 @@
       const banner = document.getElementById("mcBanner");
       const infoSlide = document.getElementById("mcSlide-info");
       const statsSlide = document.getElementById("mcSlide-stats");
-      const lineupsSlide = document.getElementById("mcSlide-lineups");
       const commSlide = document.getElementById("mcSlide-comm");
+      const newsSlide = document.getElementById("mcSlide-news");
 
-      banner.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem;">Loading match details...</div>';
-      infoSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading events & timeline...</div>';
+      banner.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem;">Loading match center...</div>';
+      infoSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading match events...</div>';
       statsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading statistics...</div>';
-      lineupsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading official lineups...</div>';
-      commSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Connecting to live commentary...</div>';
+      commSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading live commentary...</div>';
+      newsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading club headlines...</div>';
 
       try {
         const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
@@ -475,46 +560,62 @@
         const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
         const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
 
-        // 1. Banner
-        banner.innerHTML = `
-          <div class="mc-league">${d.header?.league?.name || code.toUpperCase()}</div>
-          <div class="mc-teams">
-            <div class="mc-team-block">
-              <img src="${home.team?.logos?.[0]?.href || home.team?.logo || ''}" alt="">
-              <div class="mc-team-name">${home.team?.shortDisplayName || home.team?.name || 'Home'}</div>
-            </div>
-            <div class="mc-score">${home.score ?? 0} : ${away.score ?? 0}</div>
-            <div class="mc-team-block">
-              <img src="${away.team?.logos?.[0]?.href || away.team?.logo || ''}" alt="">
-              <div class="mc-team-name">${away.team?.shortDisplayName || away.team?.name || 'Away'}</div>
-            </div>
-          </div>
-          <div class="mc-status">${comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled'}</div>
-          ${comp.venue ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:6px;">📍 ${comp.venue.fullName || ''}</div>` : ''}
-        `;
-
-        // 2. Match Info & Goals
-        let eventsHtml = "";
-        const details = comp.details || [];
-        details.forEach(ev => {
+        // Parse Scorers for Banner & Timeline
+        const homeGoals = [], awayGoals = [], allEvents = [];
+        (comp.details || []).forEach(ev => {
           const isGoal = ev.scoringPlay || (ev.type?.text?.toLowerCase().includes("goal"));
           const isPen = ev.penaltyKick || (ev.type?.text?.toLowerCase().includes("penalty"));
           const min = ev.clock?.displayValue || "";
           const player = ev.athletesInvolved?.[0]?.displayName || "";
-          const assist = ev.athletesInvolved?.[1]?.displayName ? ` (Assist: ${ev.athletesInvolved[1].displayName})` : "";
+          const assist = ev.athletesInvolved?.[1]?.displayName ? ` (${ev.athletesInvolved[1].displayName})` : "";
+          const isHome = ev.team?.id === home.id;
 
           if (isGoal) {
-            eventsHtml += `<div class="event-row"><span class="event-min">${min}</span> ⚽ <strong>${player}</strong> <span style="color:#38bdf8;">${assist}</span></div>`;
+            const goalStr = `⚽ ${player} ${min}${assist}`;
+            if (isHome) homeGoals.push(goalStr);
+            else awayGoals.push(goalStr);
+            allEvents.push({ min, text: `⚽ <strong>${player}</strong> ${assist} (${isHome ? home.team?.shortDisplayName : away.team?.shortDisplayName})` });
           } else if (isPen && !ev.scoringPlay) {
-            eventsHtml += `<div class="event-row"><span class="event-min">${min}</span> ❌ Missed Penalty: ${player}</div>`;
+            allEvents.push({ min, text: `❌ Missed Penalty: ${player}` });
           } else if (ev.type?.text?.toLowerCase().includes("card")) {
-            const cardIcon = ev.type.text.toLowerCase().includes("red") ? "🟥" : "🟨";
-            eventsHtml += `<div class="event-row"><span class="event-min">${min}</span> ${cardIcon} ${player}</div>`;
+            const icon = ev.type.text.toLowerCase().includes("red") ? "🟥" : "🟨";
+            allEvents.push({ min, text: `${icon} ${player} (${isHome ? home.team?.shortDisplayName : away.team?.shortDisplayName})` });
           }
         });
-        infoSlide.innerHTML = eventsHtml || '<div style="text-align:center; padding:25px; color:#94a3b8;">No major events recorded yet.</div>';
 
-        // 3. Statistics
+        // 1. Banner with Goal Scorers
+        banner.innerHTML = `
+          <div class="mc-league">${d.header?.league?.name || code.toUpperCase()}</div>
+          <div class="mc-teams">
+            <div class="mc-team-block">
+              <img src="${home.team?.logos?.[0]?.href || home.team?.logo || ''}">
+              <div class="mc-team-name">${home.team?.shortDisplayName || home.team?.name || 'Home'}</div>
+            </div>
+            <div class="mc-score">${home.score ?? 0} : ${away.score ?? 0}</div>
+            <div class="mc-team-block">
+              <img src="${away.team?.logos?.[0]?.href || away.team?.logo || ''}">
+              <div class="mc-team-name">${away.team?.shortDisplayName || away.team?.name || 'Away'}</div>
+            </div>
+          </div>
+          <div class="mc-status">${comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled'}</div>
+          
+          <div class="mc-scorers-banner">
+            <div class="mc-scorers-home">${homeGoals.join("<br>")}</div>
+            <div class="mc-scorers-away">${awayGoals.join("<br>")}</div>
+          </div>
+          ${comp.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:8px;">📍 ${comp.venue.fullName || ''}</div>` : ''}
+        `;
+
+        // 2. Info Timeline Slide
+        if (allEvents.length > 0) {
+          infoSlide.innerHTML = allEvents.map(e => `
+            <div class="event-row"><span class="event-min">${e.min}</span><span>${e.text}</span></div>
+          `).join("");
+        } else {
+          infoSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No events recorded yet.</div>';
+        }
+
+        // 3. Stats Slide
         if (d.boxscore?.teams?.length >= 2) {
           const h = {}, a = {};
           d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
@@ -545,47 +646,67 @@
             </div>
           `;
         } else {
-          statsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Statistics will be available once the game kicks off.</div>';
+          statsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Detailed stats will update at kickoff.</div>';
         }
 
-        // 4. Lineups
+        // 4. Lineups on Visual Pitch
         if (d.rosters && d.rosters.length >= 2) {
-          let lineHtml = "";
-          d.rosters.forEach(r => {
-            const starters = (r.roster || []).filter(p => p.starter).map(p => `${p.jersey ? `#${p.jersey} ` : ''}${p.athlete?.displayName || p.athlete?.shortName}`).join("<br>");
-            const subs = (r.roster || []).filter(p => !p.starter).map(p => p.athlete?.displayName || p.athlete?.shortName).join(", ");
-            lineHtml += `
-              <div class="lineup-card">
-                <div class="lineup-head"><span>${r.team?.displayName || 'Team'}</span><span>Formation: ${r.formation || 'N/A'}</span></div>
-                <div style="font-weight:700; font-size:0.75rem; margin:6px 0 3px 0; color:#38bdf8;">Starting XI:</div>
-                <div class="lineup-players">${starters || 'Announced 1 hour before kickoff'}</div>
-                ${subs ? `<div style="font-weight:700; font-size:0.75rem; margin:8px 0 3px 0; color:#94a3b8;">Substitutes:</div><div style="font-size:0.68rem; color:#94a3b8;">${subs}</div>` : ''}
-              </div>
-            `;
-          });
-          lineupsSlide.innerHTML = lineHtml;
+          currentRosters = d.rosters;
+          document.getElementById("pitchTeamSelect").innerHTML = `
+            <button class="pitch-team-btn active" onclick="renderPitch(0)">${d.rosters[0].team?.shortDisplayName || 'Home'} (${d.rosters[0].formation || 'Pitch'})</button>
+            <button class="pitch-team-btn" onclick="renderPitch(1)">${d.rosters[1].team?.shortDisplayName || 'Away'} (${d.rosters[1].formation || 'Pitch'})</button>
+          `;
+          renderPitch(0);
         } else {
-          lineupsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Lineups are announced approximately 1 hour before kickoff.</div>';
+          document.getElementById("pitchRows").innerHTML = '<div style="text-align:center; color:#fff; padding:60px 0; font-weight:700;">Lineups are announced 1 hour before kickoff.</div>';
         }
 
-        // 5. Live Commentary Feed
+        // 5. Commentary Feed (Fixed & Guaranteed)
         const commList = d.commentary || d.plays || [];
         if (commList.length > 0) {
-          commSlide.innerHTML = commList.map(item => {
-            const time = item.time?.displayValue || item.clock?.displayValue || "•";
-            const text = item.text || item.description || "";
-            return `
-              <div class="comm-item">
-                <div class="comm-time">${time}</div>
-                <div>${text}</div>
-              </div>
-            `;
-          }).join("");
+          commSlide.innerHTML = commList.map(item => `
+            <div class="comm-item">
+              <div class="comm-time">${item.time?.displayValue || item.clock?.displayValue || '•'}</div>
+              <div>${item.text || item.description || ''}</div>
+            </div>
+          `).join("");
+        } else if (allEvents.length > 0) {
+          // Play-by-play narrative fallback
+          commSlide.innerHTML = allEvents.map(e => `
+            <div class="comm-item">
+              <div class="comm-time">${e.min}</div>
+              <div>${e.text}</div>
+            </div>
+          `).join("");
         } else {
-          commSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Live play-by-play commentary is available while the match is underway.</div>';
+          commSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Live play-by-play commentary is active during match play.</div>';
         }
+
+        // 6. Club News Slide
+        fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/news`)
+          .then(r => r.json())
+          .then(nData => {
+            const articles = (nData.articles || []).slice(0, 6);
+            if (articles.length > 0) {
+              newsSlide.innerHTML = articles.map(a => `
+                <a href="${a.links?.web?.href || '#'}" target="_blank" class="news-card">
+                  ${a.images?.[0]?.url ? `<img src="${a.images[0].url}" alt="">` : ''}
+                  <div>
+                    <div class="news-title">${a.headline}</div>
+                    <div class="news-time">${a.published ? new Date(a.published).toLocaleDateString() : 'Recent'}</div>
+                  </div>
+                </a>
+              `).join("");
+            } else {
+              newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No club news at this moment.</div>';
+            }
+          })
+          .catch(() => {
+            newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Club news currently unavailable.</div>';
+          });
+
       } catch (err) {
-        banner.innerHTML = '<div style="color:#ef4444; font-size:0.8rem;">Could not load match center details.</div>';
+        banner.innerHTML = '<div style="color:#ef4444; font-size:0.8rem;">Could not load match details.</div>';
       }
     }
 
