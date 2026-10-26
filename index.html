@@ -6,7 +6,8 @@
   <title>Etini LiveScores</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 60px; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+    
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     header h1 { font-size: 1.2rem; color: #38bdf8; font-weight: 800; display: flex; align-items: center; gap: 8px; }
     .header-btns { display: flex; gap: 6px; }
@@ -14,9 +15,14 @@
     .btn-primary { background: #38bdf8; color: #0b1120; border: none; font-weight: 700; }
     .btn-sound.active { background: rgba(34, 197, 94, 0.2); color: #4ade80; border-color: #22c55e; }
 
-    .view-switcher { display: flex; background: #1e293b; border-radius: 8px; padding: 3px; margin-bottom: 12px; }
+    .view-switcher { display: flex; background: #1e293b; border-radius: 8px; padding: 3px; margin-bottom: 10px; }
     .view-btn { flex: 1; padding: 7px 4px; font-size: 0.75rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; text-align: center; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
+
+    /* Date Bar (Yesterday, Today, Tomorrow) */
+    .date-bar { display: flex; justify-content: space-between; background: #1e293b; border-radius: 6px; padding: 4px; margin-bottom: 10px; font-size: 0.75rem; }
+    .date-btn { flex: 1; border: none; background: transparent; color: #94a3b8; padding: 5px; font-weight: 600; border-radius: 4px; cursor: pointer; text-align: center; }
+    .date-btn.active { background: #334155; color: #38bdf8; }
 
     .search-box { margin-bottom: 12px; }
     .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
@@ -41,25 +47,58 @@
     .score-box { background: #0b1120; padding: 5px 10px; border-radius: 6px; font-size: 1.15rem; font-weight: 800; color: #38bdf8; min-width: 55px; text-align: center; }
     .match-footer { font-size: 0.72rem; text-align: center; color: #fbbf24; font-weight: 600; margin-top: 8px; }
 
-    .match-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #334155; font-size: 0.75rem; color: #cbd5e1; }
-    .match-details.open { display: block; }
-    .scorers { margin-bottom: 8px; padding: 8px 10px; background: #0b1120; border-radius: 6px; font-size: 0.72rem; line-height: 1.5; }
-    .assist-tag { color: #38bdf8; font-weight: 600; margin-left: 4px; }
-    .missed-pen { color: #f87171; font-weight: 600; margin-top: 4px; }
-    .lineup-box { background: #0b1120; border-radius: 6px; padding: 8px 10px; margin-top: 8px; font-size: 0.7rem; }
-
-    .stat-row { margin: 8px 0; }
-    .stat-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 3px; font-weight: 600; }
-    .stat-bar { height: 6px; background: #0b1120; border-radius: 3px; overflow: hidden; display: flex; }
-    .stat-fill { height: 100%; background: #38bdf8; }
-    .stat-grid { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
-    .stat-item { display: flex; justify-content: space-between; background: #0b1120; padding: 6px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
-    .stat-item span:nth-child(2) { color: #94a3b8; font-weight: normal; }
-
     .status-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; }
     .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
+    /* Flashscore Match Center Modal */
+    .mc-overlay { display: none; position: fixed; inset: 0; background: #0b1120; z-index: 1000; overflow-y: auto; flex-direction: column; }
+    .mc-overlay.open { display: flex; }
+    .mc-top { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: #1e293b; border-bottom: 1px solid #334155; }
+    .mc-close { background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+    
+    .mc-banner { padding: 20px 14px; text-align: center; background: linear-gradient(180deg, #1e293b 0%, #0b1120 100%); border-bottom: 1px solid #334155; }
+    .mc-league { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; }
+    .mc-teams { display: flex; justify-content: space-around; align-items: center; }
+    .mc-team-block { width: 35%; text-align: center; }
+    .mc-team-block img { width: 44px; height: 44px; object-fit: contain; margin-bottom: 6px; }
+    .mc-team-name { font-size: 0.95rem; font-weight: 700; }
+    .mc-score { font-size: 2rem; font-weight: 900; color: #38bdf8; min-width: 80px; }
+    .mc-status { font-size: 0.8rem; color: #fbbf24; font-weight: 700; margin-top: 8px; }
+
+    /* Flashscore Slide Tabs */
+    .mc-tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; overflow-x: auto; scrollbar-width: none; }
+    .mc-tabs::-webkit-scrollbar { display: none; }
+    .mc-tab { flex: 1; min-width: 90px; text-align: center; padding: 10px 8px; font-size: 0.75rem; font-weight: 700; color: #94a3b8; border: none; background: transparent; cursor: pointer; border-bottom: 3px solid transparent; }
+    .mc-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; background: rgba(56, 189, 248, 0.05); }
+
+    .mc-body { padding: 14px; flex: 1; }
+    .mc-slide { display: none; }
+    .mc-slide.active { display: block; }
+
+    /* Match Info Events */
+    .event-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; }
+    .event-min { font-weight: 700; color: #38bdf8; min-width: 32px; }
+
+    /* Stats bar */
+    .stat-row { margin: 10px 0; }
+    .stat-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
+    .stat-bar { height: 7px; background: #1e293b; border-radius: 4px; overflow: hidden; display: flex; }
+    .stat-fill { height: 100%; background: #38bdf8; }
+    .stat-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .stat-item { display: flex; justify-content: space-between; background: #1e293b; padding: 8px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .stat-item span:nth-child(2) { color: #94a3b8; font-weight: normal; }
+
+    /* Lineup Pitch */
+    .lineup-card { background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .lineup-head { font-weight: 700; color: #38bdf8; display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; }
+    .lineup-players { font-size: 0.72rem; color: #cbd5e1; line-height: 1.6; }
+
+    /* Live Commentary Stream */
+    .comm-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; line-height: 1.4; }
+    .comm-time { background: #38bdf8; color: #0b1120; font-weight: 800; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; height: fit-content; min-width: 32px; text-align: center; }
+
+    /* Standings */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
     .standings-table { width: 100%; min-width: 550px; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
     .standings-table th { background: #0b1120; color: #94a3b8; padding: 8px 5px; font-size: 0.68rem; text-transform: uppercase; }
@@ -71,6 +110,7 @@
     .gd-neg { color: #f87171; font-weight: 600; }
     .form-badges { display: flex; gap: 3px; justify-content: center; }
 
+    /* Review Modal */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
     .modal { background: #1e293b; border-radius: 12px; padding: 18px; width: 100%; max-width: 340px; border: 1px solid #334155; }
@@ -98,6 +138,13 @@
     <button class="view-btn" id="btnLdr" onclick="setView('leaders')">👟 Scorers & Assists</button>
   </div>
 
+  <!-- Flashscore Date Bar -->
+  <div class="date-bar" id="dateBar">
+    <button class="date-btn" id="datePrev" onclick="changeDate(-1)">◀ Yesterday</button>
+    <button class="date-btn active" id="dateToday" onclick="changeDate(0)">📅 Today</button>
+    <button class="date-btn" id="dateNext" onclick="changeDate(1)">Tomorrow ▶</button>
+  </div>
+
   <div class="search-box" id="searchBox">
     <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Enyimba, Liverpool, Real Madrid)..." oninput="renderMatches()" />
   </div>
@@ -113,23 +160,23 @@
     <button class="tab" onclick="setLeague('ger.1', this)">Bundesliga</button>
     <button class="tab" onclick="setLeague('fra.1', this)">Ligue 1</button>
     <button class="tab" onclick="setLeague('eng.2', this)">EFL Championship</button>
-    <button class="tab" onclick="setLeague('bra.1', this)">🇧🇷 Brasileirão (Brazil)</button>
-    <button class="tab" onclick="setLeague('ned.1', this)">Eredivisie (Netherlands)</button>
+    <button class="tab" onclick="setLeague('bra.1', this)">🇧🇷 Brasileirão</button>
+    <button class="tab" onclick="setLeague('ned.1', this)">Eredivisie</button>
     <button class="tab" onclick="setLeague('por.1', this)">Liga Portugal</button>
     <button class="tab" onclick="setLeague('tur.1', this)">Turkish Süper Lig</button>
-    <button class="tab" onclick="setLeague('bel.1', this)">Belgian Pro League</button>
-    <button class="tab" onclick="setLeague('arg.1', this)">🇦🇷 Primera División (Argentina)</button>
-    <button class="tab" onclick="setLeague('jpn.1', this)">🇯🇵 J1 League (Japan)</button>
+    <button class="tab" onclick="setLeague('bel.1', this)">Belgian Pro</button>
+    <button class="tab" onclick="setLeague('arg.1', this)">🇦🇷 Primera (Argentina)</button>
+    <button class="tab" onclick="setLeague('jpn.1', this)">🇯🇵 J1 League</button>
     <button class="tab" onclick="setLeague('pol.1', this)">Polish Ekstraklasa</button>
     <button class="tab" onclick="setLeague('den.1', this)">Danish Superliga</button>
     <button class="tab" onclick="setLeague('sui.1', this)">Swiss Super League</button>
     <button class="tab" onclick="setLeague('nor.1', this)">Norwegian Eliteserien</button>
-    <button class="tab" onclick="setLeague('cro.1', this)">Croatian Prva HNL</button>
-    <button class="tab" onclick="setLeague('col.1', this)">Categoría Primera A (Colombia)</button>
+    <button class="tab" onclick="setLeague('cro.1', this)">Croatian HNL</button>
+    <button class="tab" onclick="setLeague('col.1', this)">Primera A (Colombia)</button>
     <button class="tab" onclick="setLeague('ecu.1', this)">LigaPro (Ecuador)</button>
     <button class="tab" onclick="setLeague('uefa.europa', this)">Europa League</button>
     <button class="tab" onclick="setLeague('uefa.europa.conf', this)">Conference League</button>
-    <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro League</button>
+    <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro</button>
     <button class="tab" onclick="setLeague('usa.1', this)">MLS</button>
   </div>
 
@@ -155,6 +202,7 @@
     </div>
   </div>
 
+  <!-- Review Modal -->
   <div class="modal-overlay" id="reviewModal">
     <div class="modal">
       <h2>Send Review ⚽</h2>
@@ -174,6 +222,31 @@
       </form>
     </div>
   </div>
+
+  <!-- Flashscore Match Center Slide Screen -->
+  <div class="mc-overlay" id="matchCenter">
+    <div class="mc-top">
+      <span style="font-weight:700; color:#38bdf8; font-size:0.85rem;">⚡ Flashscore Match Center</span>
+      <button class="mc-close" onclick="closeMatchCenter()">✕ Close</button>
+    </div>
+    
+    <div class="mc-banner" id="mcBanner"></div>
+
+    <div class="mc-tabs">
+      <button class="mc-tab active" onclick="switchMcSlide('info', this)">📝 Info</button>
+      <button class="mc-tab" onclick="switchMcSlide('stats', this)">📊 Statistics</button>
+      <button class="mc-tab" onclick="switchMcSlide('lineups', this)">👥 Lineups</button>
+      <button class="mc-tab" onclick="switchMcSlide('comm', this)">🎙️ Commentary</button>
+    </div>
+
+    <div class="mc-body">
+      <div class="mc-slide active" id="mcSlide-info"></div>
+      <div class="mc-slide" id="mcSlide-stats"></div>
+      <div class="mc-slide" id="mcSlide-lineups"></div>
+      <div class="mc-slide" id="mcSlide-comm"></div>
+    </div>
+  </div>
+
 <script>
     const LEAGUE_CODES = [
       "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", "ger.1", "fra.1", 
@@ -187,6 +260,7 @@
     let matchesData = [];
     let favTeams = JSON.parse(localStorage.getItem("etini_favs") || "[]");
     let soundEnabled = true;
+    let dateOffset = 0; // -1 = Yesterday, 0 = Today, 1 = Tomorrow
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
@@ -214,6 +288,23 @@
       } catch (e) {}
     }
 
+    function getDateStr() {
+      const d = new Date();
+      d.setDate(d.getDate() + dateOffset);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
+    }
+
+    function changeDate(offset) {
+      dateOffset = offset;
+      document.getElementById("datePrev").classList.toggle("active", offset === -1);
+      document.getElementById("dateToday").classList.toggle("active", offset === 0);
+      document.getElementById("dateNext").classList.toggle("active", offset === 1);
+      initLoad();
+    }
+
     function setView(view) {
       currentView = view;
       document.getElementById("btnMat").classList.toggle("active", view === "matches");
@@ -223,6 +314,7 @@
       document.getElementById("standingsView").style.display = view === "standings" ? "block" : "none";
       document.getElementById("leadersView").style.display = view === "leaders" ? "block" : "none";
       document.getElementById("searchBox").style.display = view === "matches" ? "block" : "none";
+      document.getElementById("dateBar").style.display = view === "matches" ? "flex" : "none";
 
       if (view === "standings") loadStandings(activeLeague === "ALL" ? "eng.1" : activeLeague);
       else if (view === "leaders") loadLeaders(activeLeague === "ALL" ? "eng.1" : activeLeague);
@@ -256,14 +348,15 @@
 
     async function initLoad() {
       const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Updating live scores across all 26 leagues...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fixtures & scores...</div>';
 
       const oldScores = new Map(matchesData.map(m => [m.id, `${m.homeScore}:${m.awayScore}`]));
       matchesData = [];
+      const dt = getDateStr();
 
       for (const code of LEAGUE_CODES) {
         try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
+          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${dt}`);
           if (!res.ok) continue;
           const data = await res.json();
           if (!data.events) continue;
@@ -272,27 +365,6 @@
             const c = ev.competitions[0];
             const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
             const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
-            
-            const goals = [];
-            const missedPens = [];
-
-            (c.details || []).forEach(d => {
-              const isGoal = d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"));
-              const isPen = d.penaltyKick || (d.type && d.type.text && d.type.text.toLowerCase().includes("penalty"));
-
-              if (isGoal) {
-                goals.push({
-                  clock: d.clock ? d.clock.displayValue : '',
-                  scorer: d.athletesInvolved?.[0]?.displayName || 'Goal',
-                  assist: d.athletesInvolved?.[1]?.displayName ? `(Assist: ${d.athletesInvolved[1].displayName})` : ''
-                });
-              } else if (isPen && !d.scoringPlay) {
-                missedPens.push({
-                  clock: d.clock ? d.clock.displayValue : '',
-                  player: d.athletesInvolved?.[0]?.displayName || 'Penalty taker'
-                });
-              }
-            });
 
             const currentScore = `${home.score ?? "-"}:${away.score ?? "-"}`;
             if (oldScores.has(ev.id) && oldScores.get(ev.id) !== currentScore && c.status.type.state === "in") {
@@ -311,16 +383,14 @@
               awayScore: away.score ?? "-",
               state: c.status.type.state,
               statusText: c.status.type.shortDetail || c.status.type.description,
-              venue: c.venue ? c.venue.fullName : '',
-              goals: goals,
-              missedPens: missedPens
+              venue: c.venue ? c.venue.fullName : ''
             });
           });
           renderMatches();
         } catch (e) {}
       }
       if (matchesData.length === 0) {
-        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled today. Check back soon!</div>';
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled for this date. Check another tab!</div>';
       }
     }
 
@@ -349,21 +419,14 @@
 
         const isFav = favTeams.includes(m.home) || favTeams.includes(m.away);
 
-        let eventsHtml = "";
-        if (m.goals.length > 0 || m.missedPens.length > 0) {
-          let items = m.goals.map(g => `<div>⚽ <strong>${g.scorer}</strong> ${g.clock} <span class="assist-tag">${g.assist}</span></div>`).join("");
-          if (m.missedPens.length > 0) items += m.missedPens.map(p => `<div class="missed-pen">❌ Missed Penalty: ${p.player} ${p.clock}</div>`).join("");
-          eventsHtml = `<div class="scorers">${items}</div>`;
-        }
-
         return `
-          <div class="match-card ${isFav ? 'is-favorite' : ''}" onclick="toggleStats('${m.id}', '${m.leagueCode}')">
+          <div class="match-card ${isFav ? 'is-favorite' : ''}" onclick="openMatchCenter('${m.id}', '${m.leagueCode}')">
             <div class="match-header">
               <span>${m.leagueName}</span>
               <div class="header-actions">
                 <button class="wa-btn" onclick="shareWA(event, '${m.id}')">📲 WhatsApp</button>
                 <button class="fav-btn" onclick="toggleFav(event, '${m.home}')">${isFav ? '⭐' : '☆'}</button>
-                <span style="color:#38bdf8;">Stats ▾</span>
+                <span style="color:#38bdf8;">Match Center ⚡</span>
               </div>
             </div>
             <div class="match-body">
@@ -372,83 +435,157 @@
               <div class="team away"><span>${m.away}</span>${m.awayLogo ? `<img src="${m.awayLogo}">` : ''}</div>
             </div>
             <div class="match-footer">${badge}</div>
-            <div class="match-details" id="d-${m.id}">
-              ${eventsHtml}
-              <div id="lineup-${m.id}"></div>
-              <div id="st-${m.id}" style="margin-top:8px; color:#94a3b8; text-align:center; font-size:0.7rem;">Tap to load lineups & match stats...</div>
-              ${m.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:6px;">📍 ${m.venue}</div>` : ''}
-            </div>
           </div>
         `;
       }).join("");
     }
-// Lineups, Formations & Complete Stats
-    async function toggleStats(id, code) {
-      const el = document.getElementById(`d-${id}`);
-      if (!el) return;
-      el.classList.toggle("open");
-      const box = document.getElementById(`st-${id}`);
-      const lineupBox = document.getElementById(`lineup-${id}`);
+// Flashscore Match Center Engine (Info, Stats, Lineups, Commentary)
+    function closeMatchCenter() {
+      document.getElementById("matchCenter").classList.remove("open");
+    }
 
-      if (el.classList.contains("open") && !box.dataset.loaded) {
-        try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
-          const d = await res.json();
-          box.dataset.loaded = "true";
+    function switchMcSlide(slide, btn) {
+      document.querySelectorAll(".mc-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".mc-slide").forEach(s => s.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`mcSlide-${slide}`).classList.add("active");
+    }
 
-          // Starting Lineups & Formations
-          if (d.rosters && d.rosters.length >= 2) {
-            let html = "";
-            d.rosters.forEach(r => {
-              const starters = (r.roster || []).filter(p => p.starter).map(p => p.athlete?.displayName || p.athlete?.shortName).filter(Boolean).slice(0, 11).join(", ");
-              html += `
-                <div class="lineup-box">
-                  <div style="font-weight:700; color:#38bdf8; margin-bottom:4px; display:flex; justify-content:space-between;">
-                    <span>👥 ${r.team?.displayName || ''}</span><span>Formation: ${r.formation || 'N/A'}</span>
-                  </div>
-                  <div style="color:#94a3b8; font-size:0.68rem; line-height:1.4;"><strong>XI:</strong> ${starters || 'Announced near kickoff'}</div>
-                </div>
-              `;
-            });
-            lineupBox.innerHTML = html;
+    async function openMatchCenter(id, code) {
+      const mc = document.getElementById("matchCenter");
+      mc.classList.add("open");
+
+      const banner = document.getElementById("mcBanner");
+      const infoSlide = document.getElementById("mcSlide-info");
+      const statsSlide = document.getElementById("mcSlide-stats");
+      const lineupsSlide = document.getElementById("mcSlide-lineups");
+      const commSlide = document.getElementById("mcSlide-comm");
+
+      banner.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem;">Loading match details...</div>';
+      infoSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading events & timeline...</div>';
+      statsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading statistics...</div>';
+      lineupsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading official lineups...</div>';
+      commSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Connecting to live commentary...</div>';
+
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
+        const d = await res.json();
+
+        const comp = d.header?.competitions?.[0] || {};
+        const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
+        const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
+
+        // 1. Banner
+        banner.innerHTML = `
+          <div class="mc-league">${d.header?.league?.name || code.toUpperCase()}</div>
+          <div class="mc-teams">
+            <div class="mc-team-block">
+              <img src="${home.team?.logos?.[0]?.href || home.team?.logo || ''}" alt="">
+              <div class="mc-team-name">${home.team?.shortDisplayName || home.team?.name || 'Home'}</div>
+            </div>
+            <div class="mc-score">${home.score ?? 0} : ${away.score ?? 0}</div>
+            <div class="mc-team-block">
+              <img src="${away.team?.logos?.[0]?.href || away.team?.logo || ''}" alt="">
+              <div class="mc-team-name">${away.team?.shortDisplayName || away.team?.name || 'Away'}</div>
+            </div>
+          </div>
+          <div class="mc-status">${comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled'}</div>
+          ${comp.venue ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:6px;">📍 ${comp.venue.fullName || ''}</div>` : ''}
+        `;
+
+        // 2. Match Info & Goals
+        let eventsHtml = "";
+        const details = comp.details || [];
+        details.forEach(ev => {
+          const isGoal = ev.scoringPlay || (ev.type?.text?.toLowerCase().includes("goal"));
+          const isPen = ev.penaltyKick || (ev.type?.text?.toLowerCase().includes("penalty"));
+          const min = ev.clock?.displayValue || "";
+          const player = ev.athletesInvolved?.[0]?.displayName || "";
+          const assist = ev.athletesInvolved?.[1]?.displayName ? ` (Assist: ${ev.athletesInvolved[1].displayName})` : "";
+
+          if (isGoal) {
+            eventsHtml += `<div class="event-row"><span class="event-min">${min}</span> ⚽ <strong>${player}</strong> <span style="color:#38bdf8;">${assist}</span></div>`;
+          } else if (isPen && !ev.scoringPlay) {
+            eventsHtml += `<div class="event-row"><span class="event-min">${min}</span> ❌ Missed Penalty: ${player}</div>`;
+          } else if (ev.type?.text?.toLowerCase().includes("card")) {
+            const cardIcon = ev.type.text.toLowerCase().includes("red") ? "🟥" : "🟨";
+            eventsHtml += `<div class="event-row"><span class="event-min">${min}</span> ${cardIcon} ${player}</div>`;
           }
+        });
+        infoSlide.innerHTML = eventsHtml || '<div style="text-align:center; padding:25px; color:#94a3b8;">No major events recorded yet.</div>';
 
-          // In-depth Stats Breakdown
-          if (d.boxscore?.teams?.length >= 2) {
-            const h = {}, a = {};
-            d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
-            d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
+        // 3. Statistics
+        if (d.boxscore?.teams?.length >= 2) {
+          const h = {}, a = {};
+          d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
+          d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
 
-            const hPoss = parseInt(h["possessionPct"] || "50");
-            const aPoss = 100 - hPoss;
-            const hShots = parseInt(h["totalShots"] || "0");
-            const aShots = parseInt(a["totalShots"] || "0");
-            const hOnTarget = parseInt(h["shotsOnTarget"] || "0");
-            const aOnTarget = parseInt(a["shotsOnTarget"] || "0");
+          const hPoss = parseInt(h["possessionPct"] || "50");
+          const aPoss = 100 - hPoss;
+          const hShots = parseInt(h["totalShots"] || "0");
+          const aShots = parseInt(a["totalShots"] || "0");
+          const hOnTarget = parseInt(h["shotsOnTarget"] || "0");
+          const aOnTarget = parseInt(a["shotsOnTarget"] || "0");
 
-            box.innerHTML = `
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
-                <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
-              </div>
-              <div class="stat-grid">
-                <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
-                <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
-                <div class="stat-item"><span>${h["shotsOffTarget"] || Math.max(0, hShots - hOnTarget)}</span><span>Shots Off Target</span><span>${a["shotsOffTarget"] || Math.max(0, aShots - aOnTarget)}</span></div>
-                <div class="stat-item"><span>${h["wonCorners"] || h["corners"] || "0"}</span><span>Corner Kicks</span><span>${a["wonCorners"] || a["corners"] || "0"}</span></div>
-                <div class="stat-item"><span>${h["totalPasses"] || "-"}</span><span>Passes</span><span>${a["totalPasses"] || "-"}</span></div>
-                <div class="stat-item"><span>${h["foulsCommitted"] || "0"}</span><span>Fouls</span><span>${a["foulsCommitted"] || "0"}</span></div>
-                <div class="stat-item"><span>${h["offsides"] || "0"}</span><span>Offsides</span><span>${a["offsides"] || "0"}</span></div>
-                <div class="stat-item"><span>🟨 ${h["yellowCards"] || "0"}</span><span>Yellow Cards</span><span>🟨 ${a["yellowCards"] || "0"}</span></div>
-                <div class="stat-item"><span>🟥 ${h["redCards"] || "0"}</span><span>Red Cards</span><span>${a["redCards"] || "0"} 🟥</span></div>
+          statsSlide.innerHTML = `
+            <div class="stat-row">
+              <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
+              <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
+              <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
+              <div class="stat-item"><span>${h["shotsOffTarget"] || Math.max(0, hShots - hOnTarget)}</span><span>Shots Off Target</span><span>${a["shotsOffTarget"] || Math.max(0, aShots - aOnTarget)}</span></div>
+              <div class="stat-item"><span>${h["wonCorners"] || h["corners"] || "0"}</span><span>Corner Kicks</span><span>${a["wonCorners"] || a["corners"] || "0"}</span></div>
+              <div class="stat-item"><span>${h["totalPasses"] || "-"}</span><span>Passes</span><span>${a["totalPasses"] || "-"}</span></div>
+              <div class="stat-item"><span>${h["foulsCommitted"] || "0"}</span><span>Fouls</span><span>${a["foulsCommitted"] || "0"}</span></div>
+              <div class="stat-item"><span>${h["offsides"] || "0"}</span><span>Offsides</span><span>${a["offsides"] || "0"}</span></div>
+              <div class="stat-item"><span>🟨 ${h["yellowCards"] || "0"}</span><span>Yellow Cards</span><span>🟨 ${a["yellowCards"] || "0"}</span></div>
+              <div class="stat-item"><span>🟥 ${h["redCards"] || "0"}</span><span>Red Cards</span><span>${a["redCards"] || "0"} 🟥</span></div>
+            </div>
+          `;
+        } else {
+          statsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Statistics will be available once the game kicks off.</div>';
+        }
+
+        // 4. Lineups
+        if (d.rosters && d.rosters.length >= 2) {
+          let lineHtml = "";
+          d.rosters.forEach(r => {
+            const starters = (r.roster || []).filter(p => p.starter).map(p => `${p.jersey ? `#${p.jersey} ` : ''}${p.athlete?.displayName || p.athlete?.shortName}`).join("<br>");
+            const subs = (r.roster || []).filter(p => !p.starter).map(p => p.athlete?.displayName || p.athlete?.shortName).join(", ");
+            lineHtml += `
+              <div class="lineup-card">
+                <div class="lineup-head"><span>${r.team?.displayName || 'Team'}</span><span>Formation: ${r.formation || 'N/A'}</span></div>
+                <div style="font-weight:700; font-size:0.75rem; margin:6px 0 3px 0; color:#38bdf8;">Starting XI:</div>
+                <div class="lineup-players">${starters || 'Announced 1 hour before kickoff'}</div>
+                ${subs ? `<div style="font-weight:700; font-size:0.75rem; margin:8px 0 3px 0; color:#94a3b8;">Substitutes:</div><div style="font-size:0.68rem; color:#94a3b8;">${subs}</div>` : ''}
               </div>
             `;
-          } else {
-            box.innerHTML = `<div style="text-align:center; padding:10px; color:#94a3b8;">Detailed stats will update once match begins.</div>`;
-          }
-        } catch (e) {
-          box.innerHTML = `<div style="text-align:center; padding:10px; color:#94a3b8;">Stats unavailable.</div>`;
+          });
+          lineupsSlide.innerHTML = lineHtml;
+        } else {
+          lineupsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Lineups are announced approximately 1 hour before kickoff.</div>';
         }
+
+        // 5. Live Commentary Feed
+        const commList = d.commentary || d.plays || [];
+        if (commList.length > 0) {
+          commSlide.innerHTML = commList.map(item => {
+            const time = item.time?.displayValue || item.clock?.displayValue || "•";
+            const text = item.text || item.description || "";
+            return `
+              <div class="comm-item">
+                <div class="comm-time">${time}</div>
+                <div>${text}</div>
+              </div>
+            `;
+          }).join("");
+        } else {
+          commSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Live play-by-play commentary is available while the match is underway.</div>';
+        }
+      } catch (err) {
+        banner.innerHTML = '<div style="color:#ef4444; font-size:0.8rem;">Could not load match center details.</div>';
       }
     }
 
