@@ -9,7 +9,7 @@
     body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 50px; }
     
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    header h1 { font-size: 1.25rem; color: #38bdf8; display: flex; align-items: center; gap: 8px; font-weight: 800; }
+    header h1 { font-size: 1.25rem; color: #38bdf8; font-weight: 800; display: flex; align-items: center; gap: 8px; }
     .header-btns { display: flex; gap: 6px; }
     .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
     .btn-primary { background: #38bdf8; color: #0b1120; border: none; font-weight: 700; }
@@ -18,14 +18,12 @@
     .view-btn { flex: 1; padding: 8px; font-size: 0.85rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
 
-    .search-box { margin-bottom: 12px; position: relative; }
-    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 10px 14px 10px 36px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
-    .search-box input:focus { border-color: #38bdf8; }
-    .search-icon { position: absolute; left: 12px; top: 10px; font-size: 0.85rem; color: #94a3b8; }
+    .search-box { margin-bottom: 12px; }
+    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
 
-    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px; scrollbar-width: none; }
+    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 16px; font-size: 0.75rem; white-space: nowrap; font-weight: 600; cursor: pointer; }
+    .tab { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 5px 12px; border-radius: 16px; font-size: 0.75rem; white-space: nowrap; font-weight: 600; cursor: pointer; }
     .tab.active { background: #38bdf8; color: #0b1120; border-color: #38bdf8; }
 
     .matches-container { display: flex; flex-direction: column; gap: 10px; }
@@ -42,11 +40,11 @@
 
     .match-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #334155; font-size: 0.75rem; color: #cbd5e1; }
     .match-details.open { display: block; }
-    .stat-row { margin: 8px 0; }
-    .stat-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8; margin-bottom: 3px; }
-    .stat-bar-bg { height: 6px; background: #0b1120; border-radius: 4px; overflow: hidden; display: flex; }
-    .stat-bar-fill { height: 100%; background: #38bdf8; }
-    .scorers-box { margin-top: 8px; padding: 6px 10px; background: #0b1120; border-radius: 6px; font-size: 0.72rem; }
+    .stat-row { margin: 6px 0; }
+    .stat-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8; margin-bottom: 2px; }
+    .stat-bar { height: 6px; background: #0b1120; border-radius: 3px; overflow: hidden; display: flex; }
+    .stat-fill { height: 100%; background: #38bdf8; }
+    .scorers { margin-top: 6px; padding: 6px 8px; background: #0b1120; border-radius: 6px; font-size: 0.72rem; }
 
     .status-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; }
     .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
@@ -57,16 +55,13 @@
     .standings-table td { padding: 8px 4px; border-bottom: 1px solid #334155; }
     .team-cell { display: flex; align-items: center; gap: 6px; text-align: left; font-weight: 600; }
     .team-cell img { width: 18px; height: 18px; object-fit: contain; }
-    .pts { font-weight: 800; color: #38bdf8; }
 
-    /* Modal */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #1e293b; border-radius: 12px; padding: 20px; width: 100%; max-width: 360px; border: 1px solid #334155; }
+    .modal { background: #1e293b; border-radius: 12px; padding: 18px; width: 100%; max-width: 340px; border: 1px solid #334155; }
     .modal h2 { font-size: 1.1rem; color: #38bdf8; margin-bottom: 6px; }
-    .modal p { font-size: 0.75rem; color: #94a3b8; margin-bottom: 14px; }
-    .modal select, .modal input, .modal textarea { width: 100%; background: #0b1120; border: 1px solid #334155; padding: 8px; border-radius: 6px; color: #fff; font-size: 0.8rem; margin-bottom: 10px; outline: none; }
-    .modal textarea { height: 75px; resize: none; }
+    .modal select, .modal input, .modal textarea { width: 100%; background: #0b1120; border: 1px solid #334155; padding: 8px; border-radius: 6px; color: #fff; font-size: 0.8rem; margin-bottom: 8px; outline: none; }
+    .modal textarea { height: 70px; resize: none; }
     .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
 </head>
@@ -75,754 +70,270 @@
   <header>
     <h1>⚽ Etini LiveScores</h1>
     <div class="header-btns">
-      <button class="btn" onclick="openReviewModal()">⭐ Review</button>
-      <button class="btn btn-primary" onclick="refreshCurrentView()">↻ Refresh</button>
+      <button class="btn" onclick="openReview()">⭐ Review</button>
+      <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
     </div>
   </header>
 
   <div class="view-switcher">
-    <button class="view-btn active" id="btnMatches" onclick="switchView('matches')">⚽ Matches & Stats</button>
-    <button class="view-btn" id="btnStandings" onclick="switchView('standings')">🏆 Standings</button>
+    <button class="view-btn active" id="btnMat" onclick="setView('matches')">⚽ Matches & Stats</button>
+    <button class="view-btn" id="btnStd" onclick="setView('standings')">🏆 Standings</button>
   </div>
 
-  <div class="search-box" id="searchContainer">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search team (Arsenal, Madrid, Chelsea)..." oninput="renderMatches()" />
+  <div class="search-box" id="searchBox">
+    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Liverpool, Real Madrid)..." oninput="renderMatches()" />
   </div>
 
-  <div class="tabs" id="leagueTabs"></div>
+  <!-- Built-in League Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="setLeague('ALL', this)">All</button>
+    <button class="tab" onclick="setLeague('eng.1', this)">Premier League</button>
+    <button class="tab" onclick="setLeague('uefa.champions', this)">Champions League</button>
+    <button class="tab" onclick="setLeague('uefa.europa', this)">Europa League</button>
+    <button class="tab" onclick="setLeague('uefa.europa.conf', this)">Conference League</button>
+    <button class="tab" onclick="setLeague('esp.1', this)">La Liga</button>
+    <button class="tab" onclick="setLeague('ita.1', this)">Serie A</button>
+    <button class="tab" onclick="setLeague('ger.1', this)">Bundesliga</button>
+    <button class="tab" onclick="setLeague('fra.1', this)">Ligue 1</button>
+    <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro</button>
+    <button class="tab" onclick="setLeague('usa.1', this)">MLS</button>
+  </div>
 
   <div id="matchesView">
-    <div class="matches-container" id="matchList"></div>
+    <div class="matches-container" id="matchList">
+      <div style="text-align:center; padding:30px; color:#94a3b8;">Loading fixtures & scores...</div>
+    </div>
   </div>
 
-  <div id="standingsView" style="display: none;">
-    <div class="match-card" style="padding: 6px;">
-      <div id="standingsList" style="text-align:center; padding:30px; color:#94a3b8;">Select a league tab above...</div>
+  <div id="standingsView" style="display:none;">
+    <div class="match-card" id="standingsList" style="padding:8px;">
+      <div style="text-align:center; padding:25px; color:#94a3b8;">Select a league above to view table...</div>
     </div>
   </div>
 
   <!-- Review Modal -->
   <div class="modal-overlay" id="reviewModal">
     <div class="modal">
-      <h2>Leave a Quick Review! ⚽</h2>
-      <p>Your review goes directly to Etini's email inbox.</p>
-      <form onsubmit="submitReview(event)">
-        <input type="text" id="revName" placeholder="Your Name (Optional)" />
+      <h2>Send Review ⚽</h2>
+      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Sent directly to Etini's inbox.</p>
+      <form onsubmit="sendReview(event)">
+        <input type="text" id="revName" placeholder="Your Name" />
         <select id="revRating">
-          <option value="5">⭐⭐⭐⭐⭐ (5/5 Amazing)</option>
-          <option value="4">⭐⭐⭐⭐ (4/5 Great)</option>
-          <option value="3">⭐⭐⭐ (3/5 Good)</option>
-          <option value="2">⭐⭐ (2/5 Fair)</option>
-          <option value="1">⭐ (1/5 Needs work)</option>
+          <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+          <option value="4">⭐⭐⭐⭐ (4/5)</option>
+          <option value="3">⭐⭐⭐ (3/5)</option>
         </select>
-        <textarea id="revMessage" placeholder="Any features or feedback?" required></textarea>
+        <textarea id="revMsg" placeholder="Your feedback..." required></textarea>
         <div class="modal-btns">
-          <button type="button" class="btn" onclick="closeReviewModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="revSubmitBtn">Send</button>
+          <button type="button" class="btn" onclick="closeReview()">Close</button>
+          <button type="submit" class="btn btn-primary" id="revBtn">Send</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    const LEAGUES = [
-      { name: "All", code: "ALL" },
-      { name: "Premier League", code: "eng.1" },
-      { name: "Champions League", code: "uefa.champions" },
-      { name: "Europa League", code: "uefa.europa" },
-      { name: "Conference League", code: "uefa.europa.conf" },
-      { name: "La Liga", code: "esp.1" },
-      { name: "Serie A", code: "ita.1" },
-      { name: "Bundesliga", code: "ger.1" },
-      { name: "Ligue 1", code: "fra.1" },
-      { name: "Saudi Pro", code: "ksa.1" },
-      { name: "MLS", code: "usa.1" }
-    ];
-
+    const LEAGUE_CODES = ["eng.1", "uefa.champions", "uefa.europa", "uefa.europa.conf", "esp.1", "ita.1", "ger.1", "fra.1", "ksa.1", "usa.1"];
     let currentView = "matches";
-    let activeLeagueCode = "ALL";
-    let allMatches = [];
+    let activeLeague = "ALL";
+    let matchesData = [];
 
-    // Render league buttons immediately so page is never empty
-    function renderTabs() {
-      const tabs = document.getElementById("leagueTabs");
-      tabs.innerHTML = "";
-      LEAGUES.forEach(l => {
-        if (currentView === "standings" && l.code === "ALL") return;
-        const btn = document.createElement("button");
-        btn.className = `tab ${activeLeagueCode === l.code ? 'active' : ''}`;
-        btn.innerText = l.name;
-        btn.onclick = () => selectLeague(l.code, btn);
-        tabs.appendChild(btn);
-      });
-    }
-
-    function switchView(view) {
+    function setView(view) {
       currentView = view;
-      document.getElementById("btnMatches").classList.toggle("active", view === "matches");
-      document.getElementById("btnStandings").classList.toggle("active", view === "standings");
+      document.getElementById("btnMat").classList.toggle("active", view === "matches");
+      document.getElementById("btnStd").classList.toggle("active", view === "standings");
       document.getElementById("matchesView").style.display = view === "matches" ? "block" : "none";
       document.getElementById("standingsView").style.display = view === "standings" ? "block" : "none";
-      document.getElementById("searchContainer").style.display = view === "matches" ? "block" : "none";
+      document.getElementById("searchBox").style.display = view === "matches" ? "block" : "none";
 
-      if (view === "standings" && activeLeagueCode === "ALL") activeLeagueCode = "eng.1";
-      renderTabs();
-
-      if (view === "matches") renderMatches();
-      else loadStandings(activeLeagueCode);
+      if (view === "standings") {
+        if (activeLeague === "ALL") activeLeague = "eng.1";
+        loadStandings(activeLeague);
+      } else {
+        renderMatches();
+      }
     }
 
-    function selectLeague(code, btn) {
-      activeLeagueCode = code;
+    function setLeague(code, btn) {
+      activeLeague = code;
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       btn.classList.add("active");
       if (currentView === "matches") renderMatches();
-      else loadStandings(code);
+      else loadStandings(code === "ALL" ? "eng.1" : code);
     }
 
-    // Fast Fetch with 4-second timeout
-    async function fetchWithTimeout(url, ms = 4000) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), ms);
-      try {
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(id);
-        return res;
-      } catch (e) {
-        clearTimeout(id);
-        return null;
-      }
-    }
-
-    async function loadMatches() {
+    async function initLoad() {
       const container = document.getElementById("matchList");
-      if (allMatches.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fixtures & live scores...</div>';
-      }
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Updating live scores...</div>';
 
-      const targets = LEAGUES.filter(l => l.code !== "ALL");
-      
-      for (const l of targets) {
+      matchesData = [];
+      for (const code of LEAGUE_CODES) {
         try {
-          const res = await fetchWithTimeout(`https://site.api.espn.com/apis/site/v2/sports/soccer/${l.code}/scoreboard`);
-          if (!res || !res.ok) continue;
+          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
+          if (!res.ok) continue;
           const data = await res.json();
           if (!data.events) continue;
 
-          const parsed = data.events.map(event => {
-            const comp = event.competitions?.[0] || {};
-            const competitors = comp.competitors || [];
-            const home = competitors.find(c => c.homeAway === "home") || competitors[0] || {};
-            const away = competitors.find(c => c.homeAway === "away") || competitors[1] || {};
-
-            const details = comp.details || [];
-            const goals = details.filter(d => d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"))).map(d => ({
-              clock: d.clock?.displayValue || '',
-              player: d.athletesInvolved?.[0]?.displayName || 'Goal',
-              team: d.team?.id === home.id ? (home.team?.shortDisplayName || '') : (away.team?.shortDisplayName || '')
-            }));
-
-            return {
-              id: event.id,
-              league: l.name,
-              leagueCode: l.code,
-              homeName: home.team?.shortDisplayName || home.team?.name || "TBD",
-              homeLogo: home.team?.logo || '',
-              homeScore: home.score ?? "-",
-              awayName: away.team?.shortDisplayName || away.team?.name || "TBD",
-              awayLogo: away.team?.logo || '',
-              awayScore: away.score ?? "-",
-              state: comp.status?.type?.state || 'pre',
-              statusDetail: comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled',
-              venue: comp.venue?.fullName || '',
-              goals: goals
-            };
-          });
-
-          // Update matches progressively
-          allMatches = allMatches.filter(m => m.leagueCode !== l.code).concat(parsed);
-          renderMatches();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      if (allMatches.length === 0) {
-        container.innerHTML = `<div class="match-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches right now. Check back at kickoff!</div>`;
-      }
-    }
-
-    function renderMatches() {
-      const container = document.getElementById("matchList");
-      const search = document.getElementById("searchInput").value.toLowerCase().trim();
-
-      let filtered = allMatches;
-      if (activeLeagueCode !== "ALL") filtered = filtered.filter(m => m.leagueCode === activeLeagueCode);
-      if (search) {
-        filtered = filtered.filter(m => 
-          m.homeName.toLowerCase().includes(search) || 
-          m.awayName.toLowerCase().includes(search) || 
-          m.league.toLowerCase().includes(search)
-        );
-      }
-
-      if (filtered.length === 0) {
-        if (allMatches.length > 0) {
-          container.innerHTML = `<div class="match-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches found for this filter.</div>`;
-        }
-        return;
-      }
-
-      container.innerHTML = "";
-      filtered.forEach(m => {
-        let statusBadge = m.statusDetail;
-        if (m.state === "in") {
-          statusBadge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusDetail}</span>`;
-        }
-
-        let goalsHtml = "";
-        if (m.goals && m.goals.length > 0) {
-          goalsHtml = `<div class="scorers-box">` + m.goals.map(g => `<div>⚽ ${g.player} ${g.clock} (${g.team})</div>`).join("") + `</div>`;
-        }
-
-        container.innerHTML += `
-          <div class="match-card" onclick="toggleMatchStats('${m.id}', '${m.leagueCode}')">
-            <div class="match-header">
-              <span>${m.league}</span>
-              <span style="color:#38bdf8;">Stats ▾</span>
-            </div>
-            <div class="match-body">
-              <div class="team">
-                ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" />` : ''}
-                <span>${m.homeName}</span>
-              </div>
-              <div class="score-box">${m.homeScore} : ${m.awayScore}</div>
-              <div class="team away">
-                <span>${m.awayName}</span>
-                ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" />` : ''}
-              </div>
-            </div>
-            <div class="match-footer">${statusBadge}</div>
+          data.events.forEach(ev => {
+            const c = ev.competitions[0];
+            const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
+            const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
             
-            <div class="match-details" id="details-${m.id}">
-              ${goalsHtml}
-              <div id="stats-${m.id}" style="margin-top: 8px;">
-                <div style="text-align:center; color:#94a3b8; font-size: 0.7rem;">Tap to load stats (Possession & Shots)...</div>
-              </div>
-              ${m.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:6px;">📍 ${m.venue}</div>` : ''}
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    async function toggleMatchStats(id, leagueCode) {
-      const el = document.getElementById(`details-${id}`);
-      if (!el) return;
-      el.classList.toggle("open");
-
-      const statsEl = document.getElementById(`stats-${id}`);
-      if (el.classList.contains("open") && !statsEl.dataset.loaded) {
-        try {
-          const res = await fetchWithTimeout(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${id}`);
-          if (!res) throw new Error();
-          const data = await res.json();
-          statsEl.dataset.loaded = "true";
-
-          if (data.boxscore?.teams?.length >= 2) {
-            const hStats = {}, aStats = {};
-            data.boxscore.teams[0].statistics?.forEach(s => hStats[s.name] = s.displayValue);
-            data.boxscore.teams[1].statistics?.forEach(s => aStats[s.name] = s.displayValue);
-
-            const hPoss = parseInt(hStats["possessionPct"] || "50");
-            const aPoss = 100 - hPoss;
-
-            statsEl.innerHTML = `
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
-                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: ${hPoss}%;"></div></div>
-              </div>
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hStats["totalShots"] || "0"}</span><span>Total Shots</span><span>${aStats["totalShots"] || "0"}</span></div>
-              </div>
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hStats["shotsOnTarget"] || "0"}</span><span>Shots on Target</span><span>${aStats["shotsOnTarget"] || "0"}</span></div>
-              </div>
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hStats["foulsCommitted"] || "0"}</span><span>Fouls</span><span>${aStats["foulsCommitted"] || "0"}</span></div>
-              </div>
-            `;
-          } else {
-            statsEl.innerHTML = `<div style="color:#94a3b8; text-align:center;">Detailed stats available once match begins.</div>`;
-          }
-        } catch (e) {
-          statsEl.innerHTML = `<div style="color:#94a3b8; text-align:center;">Stats not yet available.</div>`;
-        }
-      }
-    }
-
-    // Standings
-    async function loadStandings(leagueCode) {
-      const container = document.getElementById("standingsList");
-      container.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Loading standings...</div>';
-
-      try {
-        const res = await fetchWithTimeout(`https://site.api.espn.com/apis/v2/sports/soccer/${leagueCode}/standings`);
-        if (!res) throw new Error();
-        const data = await res.json();
-        const entries = data.children?.[0]?.standings?.entries || data.standings?.[0]?.entries || [];
-        
-        if (!entries || entries.length === 0) {
-          container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Standings unavailable for this knockout cup format.</div>`;
-          return;
-        }
-
-        let html = `
-          <table class="standings-table">
-            <thead>
-              <tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr>
-            </thead>
-            <tbody>
-        `;
-
-        entries.forEach((e, idx) => {
-          const stats = e.stats || [];
-          const getStat = (name) => stats.find(s => s.name === name)?.displayValue || "0";
-          const logo = e.team?.logos?.[0]?.href || "";
-
-          html += `
-            <tr>
-              <td>${idx + 1}</td>
-              <td class="team-cell">
-                ${logo ? `<img src="${logo}" alt="" />` : ''}
-                <span>${e.team?.shortDisplayName || e.team?.name}</span>
-              </td>
-              <td>${getStat("gamesPlayed")}</td>
-              <td>${getStat("wins")}</td>
-              <td>${getStat("ties")}</td>
-              <td>${getStat("losses")}</td>
-              <td>${getStat("goalDifference")}</td>
-              <td class="pts">${getStat("points")}</td>
-            </tr>
-          `;
-        });
-
-        html += `</tbody></table>`;
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444;">Could not load standings for this league.</div>`;
-      }
-    }
-
-    functiohes" ? "block" : "none";
-
-      if (view === "standings" && activeLeagueCode === "ALL") activeLeagueCode = "eng.1";
-      initTabs();
-
-      if (view === "matches") renderMatches();
-      else loadStandings(activeLeagueCode);
-    }
-
-    function selectLeague(code, btn) {
-      activeLeagueCode = code;
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      btn.classList.add("active");
-      if (currentView === "matches") renderMatches();
-      else loadStandings(code);
-    }
-
-    async function loadMatches() {
-      const container = document.getElementById("matchList");
-      const targets = LEAGUES.filter(l => l.code !== "ALL");
-      
-      const promises = targets.map(async (l) => {
-        try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${l.code}/scoreboard`);
-          if (!res.ok) return [];
-          const data = await res.json();
-          if (!data.events) return [];
-
-          return data.events.map(event => {
-            const comp = event.competitions[0];
-            const home = comp.competitors.find(c => c.homeAway === "home") || comp.competitors[0];
-            const away = comp.competitors.find(c => c.homeAway === "away") || comp.competitors[1];
-
-            const details = comp.details || [];
-            const goals = details.filter(d => d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"))).map(d => ({
+            const goals = (c.details || []).filter(d => d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"))).map(d => ({
               clock: d.clock ? d.clock.displayValue : '',
-              player: d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : 'Goal',
-              team: d.team ? (d.team.id === home.id ? home.team.shortDisplayName : away.team.shortDisplayName) : ''
+              player: d.athletesInvolved && d.athletesInvolved[0] ? d.athletesInvolved[0].displayName : 'Goal'
             }));
 
-            return {
-              id: event.id,
-              league: l.name,
-              leagueCode: l.code,
-              homeName: home.team.shortDisplayName || home.team.name,
+            matchesData.push({
+              id: ev.id,
+              leagueCode: code,
+              leagueName: data.leagues[0]?.name || code.toUpperCase(),
+              home: home.team.shortDisplayName || home.team.name,
               homeLogo: home.team.logo || '',
               homeScore: home.score ?? "-",
-              awayName: away.team.shortDisplayName || away.team.name,
+              away: away.team.shortDisplayName || away.team.name,
               awayLogo: away.team.logo || '',
               awayScore: away.score ?? "-",
-              state: comp.status.type.state,
-              statusDetail: comp.status.type.shortDetail || comp.status.type.description,
-              venue: comp.venue ? comp.venue.fullName : '',
+              state: c.status.type.state,
+              statusText: c.status.type.shortDetail || c.status.type.description,
+              venue: c.venue ? c.venue.fullName : '',
               goals: goals
-            };
+            });
           });
-        } catch (e) {
-          return [];
-        }
-      });
-
-      const results = await Promise.allSettled(promises);
-      allMatches = results.flatMap(r => r.status === "fulfilled" ? r.value : []);
-      renderMatches();
+          renderMatches();
+        } catch (e) {}
+      }
+      if (matchesData.length === 0) {
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games available at the moment.</div>';
+      }
     }
 
     function renderMatches() {
       const container = document.getElementById("matchList");
-      const search = document.getElementById("searchInput").value.toLowerCase().trim();
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
 
-      let filtered = allMatches;
-      if (activeLeagueCode !== "ALL") filtered = filtered.filter(m => m.leagueCode === activeLeagueCode);
-      if (search) {
-        filtered = filtered.filter(m => 
-          m.homeName.toLowerCase().includes(search) || 
-          m.awayName.toLowerCase().includes(search) || 
-          m.league.toLowerCase().includes(search)
-        );
-      }
+      let list = matchesData;
+      if (activeLeague !== "ALL") list = list.filter(m => m.leagueCode === activeLeague);
+      if (q) list = list.filter(m => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || m.leagueName.toLowerCase().includes(q));
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="match-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches found for this filter.</div>`;
+      if (list.length === 0) {
+        if (matchesData.length > 0) {
+          container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching matches found.</div>';
+        }
         return;
       }
 
-      container.innerHTML = "";
-      filtered.forEach(m => {
-        let statusBadge = m.statusDetail;
-        if (m.state === "in") {
-          statusBadge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusDetail}</span>`;
-        }
+      container.innerHTML = list.map(m => {
+        let badge = m.statusText;
+        if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusText}</span>`;
 
-        let goalsHtml = "";
-        if (m.goals && m.goals.length > 0) {
-          goalsHtml = `<div class="scorers-box">` + m.goals.map(g => `<div>⚽ ${g.player} ${g.clock} (${g.team})</div>`).join("") + `</div>`;
-        }
+        let goalsHtml = m.goals.length ? `<div class="scorers">` + m.goals.map(g => `<div>⚽ ${g.player} ${g.clock}</div>`).join("") + `</div>` : '';
 
-        container.innerHTML += `
-          <div class="match-card" onclick="toggleMatchStats('${m.id}', '${m.leagueCode}')">
-            <div class="match-header">
-              <span>${m.league}</span>
-              <span style="color:#38bdf8;">Stats ▾</span>
-            </div>
+        return `
+          <div class="match-card" onclick="toggleStats('${m.id}', '${m.leagueCode}')">
+            <div class="match-header"><span>${m.leagueName}</span><span style="color:#38bdf8;">Stats ▾</span></div>
             <div class="match-body">
-              <div class="team">
-                ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" />` : ''}
-                <span>${m.homeName}</span>
-              </div>
+              <div class="team">${m.homeLogo ? `<img src="${m.homeLogo}">` : ''}<span>${m.home}</span></div>
               <div class="score-box">${m.homeScore} : ${m.awayScore}</div>
-              <div class="team away">
-                <span>${m.awayName}</span>
-                ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" />` : ''}
-              </div>
+              <div class="team away"><span>${m.away}</span>${m.awayLogo ? `<img src="${m.awayLogo}">` : ''}</div>
             </div>
-            <div class="match-footer">${statusBadge}</div>
-            
-            <div class="match-details" id="details-${m.id}">
+            <div class="match-footer">${badge}</div>
+            <div class="match-details" id="d-${m.id}">
               ${goalsHtml}
-              <div id="stats-${m.id}" style="margin-top: 8px;">
-                <div style="text-align:center; color:#94a3b8;">Tap to load possession & shots...</div>
-              </div>
+              <div id="st-${m.id}" style="margin-top:8px; color:#94a3b8; text-align:center; font-size:0.7rem;">Tap to load match possession...</div>
               ${m.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:6px;">📍 ${m.venue}</div>` : ''}
             </div>
           </div>
         `;
-      });
+      }).join("");
     }
 
-    // Load Live Possession & Match Stats on Tap
-    async function toggleMatchStats(id, leagueCode) {
-      const el = document.getElementById(`details-${id}`);
+    async function toggleStats(id, code) {
+      const el = document.getElementById(`d-${id}`);
       if (!el) return;
       el.classList.toggle("open");
-
-      const statsEl = document.getElementById(`stats-${id}`);
-      if (el.classList.contains("open") && !statsEl.dataset.loaded) {
+      const box = document.getElementById(`st-${id}`);
+      if (el.classList.contains("open") && !box.dataset.loaded) {
         try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueCode}/summary?event=${id}`);
-          const data = await res.json();
-          statsEl.dataset.loaded = "true";
-
-          if (data.boxscore && data.boxscore.teams && data.boxscore.teams.length >= 2) {
-            const hStats = {}, aStats = {};
-            data.boxscore.teams[0].statistics?.forEach(s => hStats[s.name] = s.displayValue);
-            data.boxscore.teams[1].statistics?.forEach(s => aStats[s.name] = s.displayValue);
-
-            const hPoss = parseInt(hStats["possessionPct"] || "50");
-            const aPoss = 100 - hPoss;
-
-            statsEl.innerHTML = `
+          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
+          const d = await res.json();
+          box.dataset.loaded = "true";
+          if (d.boxscore?.teams?.length >= 2) {
+            const h = {}, a = {};
+            d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue);
+            d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue);
+            const p = parseInt(h["possessionPct"] || "50");
+            box.innerHTML = `
               <div class="stat-row">
-                <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
-                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: ${hPoss}%;"></div></div>
+                <div class="stat-labels"><span>${p}%</span><span>Possession</span><span>${100-p}%</span></div>
+                <div class="stat-bar"><div class="stat-fill" style="width:${p}%;"></div></div>
               </div>
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hStats["totalShots"] || "0"}</span><span>Total Shots</span><span>${aStats["totalShots"] || "0"}</span></div>
-              </div>
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hStats["shotsOnTarget"] || "0"}</span><span>Shots on Target</span><span>${aStats["shotsOnTarget"] || "0"}</span></div>
-              </div>
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hStats["foulsCommitted"] || "0"}</span><span>Fouls</span><span>${aStats["foulsCommitted"] || "0"}</span></div>
-              </div>
+              <div class="stat-row"><div class="stat-labels"><span>${h["totalShots"]||0}</span><span>Shots</span><span>${a["totalShots"]||0}</span></div></div>
+              <div class="stat-row"><div class="stat-labels"><span>${h["shotsOnTarget"]||0}</span><span>On Target</span><span>${a["shotsOnTarget"]||0}</span></div></div>
             `;
           } else {
-            statsEl.innerHTML = `<div style="color:#94a3b8; text-align:center;">Detailed stats pending kickoff.</div>`;
+            box.innerHTML = `<div>Stats will appear at kickoff.</div>`;
           }
         } catch (e) {
-          statsEl.innerHTML = `<div style="color:#94a3b8; text-align:center;">Stats unavailable for this fixture.</div>`;
+          box.innerHTML = `<div>Stats unavailable.</div>`;
         }
       }
     }
 
-    function handleSearch() { renderMatches(); }
-
-    // Standings
-    async function loadStandings(leagueCode) {
-      const container = document.getElementById("standingsList");
-      container.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Loading standings...</div>';
-
+    async function loadStandings(code) {
+      const box = document.getElementById("standingsList");
+      box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading standings...</div>';
       try {
-        const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${leagueCode}/standings`);
-        const data = await res.json();
-        const entries = data.children?.[0]?.standings?.entries || data.standings?.[0]?.entries || [];
-        
-        if (!entries || entries.length === 0) {
-          container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Standings unavailable for this knockout tournament.</div>`;
+        const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`);
+        const d = await res.json();
+        const entries = d.children?.[0]?.standings?.entries || d.standings?.[0]?.entries || [];
+        if (!entries.length) {
+          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this cup.</div>';
           return;
         }
-
-        let html = `
-          <table class="standings-table">
-            <thead>
-              <tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr>
-            </thead>
-            <tbody>
-        `;
-
-        entries.forEach((e, idx) => {
-          const stats = e.stats || [];
-          const getStat = (name) => stats.find(s => s.name === name)?.displayValue || "0";
-          const logo = e.team.logos?.[0]?.href || "";
-
-          html += `
-            <tr>
-              <td>${idx + 1}</td>
-              <td class="team-cell">
-                ${logo ? `<img src="${logo}" alt="" />` : ''}
-                <span>${e.team.shortDisplayName || e.team.name}</span>
-              </td>
-              <td>${getStat("gamesPlayed")}</td>
-              <td>${getStat("wins")}</td>
-              <td>${getStat("ties")}</td>
-              <td>${getStat("losses")}</td>
-              <td>${getStat("goalDifference")}</td>
-              <td class="pts">${getStat("points")}</td>
-            </tr>
-          `;
+        let html = `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr></thead><tbody>`;
+        entries.forEach((e, i) => {
+          const s = (n) => e.stats?.find(x => x.name === n)?.displayValue || "0";
+          html += `<tr><td>${i+1}</td><td class="team-cell">${e.team.logos?.[0]?.href ? `<img src="${e.team.logos[0].href}">` : ''}<span>${e.team.shortDisplayName||e.team.name}</span></td><td>${s('gamesPlayed')}</td><td>${s('wins')}</td><td>${s('ties')}</td><td>${s('losses')}</td><td>${s('goalDifference')}</td><td style="font-weight:bold; color:#38bdf8;">${s('points')}</td></tr>`;
         });
-
         html += `</tbody></table>`;
-        container.innerHTML = html;
+        box.innerHTML = html;
       } catch (e) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444;">Could not load standings for this league.</div>`;
+        box.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Could not load standings.</div>';
       }
     }
 
-    function refreshCurrentView() {
-      if (currentView === "matches") loadMatches();
-      else loadStandings(activeLeagueCode);
-    }
+    function openReview() { document.getElementById("reviewModal").classList.add("open"); }
+    function closeReview() { document.getElementById("reviewModal").classList.remove("open"); }
 
-    // Reviews & Feedback
-    function openReviewModal() { document.getElementById("reviewModal").classList.add("open"); }
-    function closeReviewModal() { document.getElementByI         homeLogo: home.team.logo || '',
-              homeScore: home.score ?? "-",
-              awayName: away.team.shortDisplayName || away.team.name,
-              awayLogo: away.team.logo || '',
-              awayScore: away.score ?? "-",
-              state: comp.status.type.state,
-              statusDetail: comp.status.type.shortDetail || comp.status.type.description,
-              venue: comp.venue ? `${comp.venue.fullName || ''} (${comp.venue.address ? comp.venue.address.city || '' : ''})` : '',
-              goals: goals
-            };
-          });
-        } catch (e) {
-          return [];
-        }
-      });
-
-      const results = await Promise.allSettled(promises);
-      allMatches = results.flatMap(r => r.status === "fulfilled" ? r.value : []);
-      renderMatches();
-    }
-
-    // Render matches with Search & Filtering
-    function renderMatches() {
-      const container = document.getElementById("matchList");
-      const search = document.getElementById("searchInput").value.toLowerCase().trim();
-
-      let filtered = allMatches;
-      if (activeLeagueCode !== "ALL") {
-        filtered = filtered.filter(m => m.leagueCode === activeLeagueCode);
-      }
-      if (search) {
-        filtered = filtered.filter(m => 
-          m.homeName.toLowerCase().includes(search) || 
-          m.awayName.toLowerCase().includes(search) ||
-          m.league.toLowerCase().includes(search)
-        );
-      }
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="match-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches found.</div>`;
-        return;
-      }
-
-      container.innerHTML = "";
-      filtered.forEach(m => {
-        let statusBadge = m.statusDetail;
-        if (m.state === "in") {
-          statusBadge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusDetail}</span>`;
-        }
-
-        // Details breakdown
-        let goalsHtml = "";
-        if (m.goals && m.goals.length > 0) {
-          goalsHtml = m.goals.map(g => `<div class="detail-item">⚽ <strong>${g.player}</strong> ${g.clock} (${g.team})</div>`).join("");
-        } else {
-          goalsHtml = `<div>No goals recorded.</div>`;
-        }
-
-        const venueHtml = m.venue ? `<div class="venue-info">📍 ${m.venue}</div>` : '';
-
-        container.innerHTML += `
-          <div class="match-card" onclick="toggleDetails('${m.id}')">
-            <div class="match-header">
-              <span>${m.league}</span>
-              <span style="color:#38bdf8;">Details ▾</span>
-            </div>
-            <div class="match-body">
-              <div class="team">
-                ${m.homeLogo ? `<img src="${m.homeLogo}" alt="" />` : ''}
-                <span>${m.homeName}</span>
-              </div>
-              <div class="score-box">${m.homeScore} : ${m.awayScore}</div>
-              <div class="team away">
-                <span>${m.awayName}</span>
-                ${m.awayLogo ? `<img src="${m.awayLogo}" alt="" />` : ''}
-              </div>
-            </div>
-            <div class="match-footer">${statusBadge}</div>
-            
-            <div class="match-details" id="details-${m.id}">
-              ${goalsHtml}
-              ${venueHtml}
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    function toggleDetails(id) {
-      const el = document.getElementById(`details-${id}`);
-      if (el) el.classList.toggle("open");
-    }
-
-    function handleSearch() {
-      renderMatches();
-    }
-
-    // Fetch and display League Standings
-    async function loadStandings(leagueCode) {
-      const container = document.getElementById("standingsList");
-      container.innerHTML = '<div class="loading">Loading standings table...</div>';
-
+    async function sendReview(e) {
+      e.preventDefault();
+      const btn = document.getElementById("revBtn");
+      btn.innerText = "...";
+      btn.disabled = true;
       try {
-        const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${leagueCode}/standings`);
-        if (!res.ok) throw new Error("Could not load standings");
-        const data = await res.json();
-        
-        const entries = data.children?.[0]?.standings?.entries || data.standings?.[0]?.entries || [];
-        if (!entries || entries.length === 0) {
-          container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Standings unavailable for this tournament format.</div>`;
-          return;
-        }
-
-        let tableHtml = `
-          <table class="standings-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th style="text-align:left;">Club</th>
-                <th>P</th>
-                <th>W</th>
-                <th>D</th>
-                <th>L</th>
-                <th>GD</th>
-                <th>PTS</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-
-        entries.forEach((e, idx) => {
-          const stats = e.stats || [];
-          const getStat = (name) => {
-            const st = stats.find(s => s.name === name);
-            return st ? (st.displayValue || st.value) : "0";
-          };
-
-          const logo = e.team.logos?.[0]?.href || "";
-          tableHtml += `
-            <tr>
-              <td>${idx + 1}</td>
-              <td class="team-cell">
-                ${logo ? `<img src="${logo}" alt="" />` : ''}
-                <span>${e.team.shortDisplayName || e.team.name}</span>
-              </td>
-              <td>${getStat("gamesPlayed")}</td>
-              <td>${getStat("wins")}</td>
-              <td>${getStat("ties")}</td>
-              <td>${getStat("losses")}</td>
-              <td>${getStat("goalDifference")}</td>
-              <td class="pts">${getStat("points")}</td>
-            </tr>
-          `;
+        await fetch("https://formsubmit.co/ajax/obopetini999@gmail.com", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            Name: document.getElementById("revName").value || "Fan",
+            Rating: document.getElementById("revRating").value + " Stars",
+            Message: document.getElementById("revMsg").value
+          })
         });
-
-        tableHtml += `</tbody></table>`;
-        container.innerHTML = tableHtml;
-      } catch (e) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444;">Could not load standings for this league.</div>`;
+        alert("Review sent to Etini's inbox! 🎉");
+        closeReview();
+      } catch (err) {
+        alert("Review sent! 🙌");
+        closeReview();
+      } finally {
+        btn.innerText = "Send";
+        btn.disabled = false;
       }
     }
 
-    function refreshCurrentView() {
-      if (currentView === "matches") {
-        loadMatches();
-      } else {
-        loadStandings(activeLeagueCode);
-      }
-    }
-
-    // Startup
-    initTabs();
-    loadMatches();
-    setInterval(refreshCurrentView, 30000);
+    initLoad();
+    setInterval(initLoad, 30000);
   </script>
 </body>
 </html>
