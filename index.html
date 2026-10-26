@@ -6,16 +6,17 @@
   <title>Etini LiveScores</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 50px; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 60px; }
     
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     header h1 { font-size: 1.25rem; color: #38bdf8; font-weight: 800; display: flex; align-items: center; gap: 8px; }
     .header-btns { display: flex; gap: 6px; }
-    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
+    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 10px; border-radius: 6px; font-weight: 600; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
     .btn-primary { background: #38bdf8; color: #0b1120; border: none; font-weight: 700; }
+    .btn-sound.active { background: rgba(34, 197, 94, 0.2); color: #4ade80; border-color: #22c55e; }
 
     .view-switcher { display: flex; background: #1e293b; border-radius: 8px; padding: 3px; margin-bottom: 12px; }
-    .view-btn { flex: 1; padding: 8px; font-size: 0.85rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; }
+    .view-btn { flex: 1; padding: 8px 4px; font-size: 0.78rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; text-align: center; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
 
     .search-box { margin-bottom: 12px; }
@@ -28,10 +29,15 @@
 
     .matches-container { display: flex; flex-direction: column; gap: 10px; }
     .match-card { background: #1e293b; border-radius: 10px; padding: 12px 14px; border: 1px solid #334155; cursor: pointer; }
-    .match-header { display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
+    .match-card.is-favorite { border: 1px solid #facc15; box-shadow: 0 0 10px rgba(250, 204, 21, 0.15); }
     
+    .match-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
+    .header-actions { display: flex; align-items: center; gap: 6px; }
+    .wa-btn { background: #22c55e; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+    .fav-btn { background: none; border: none; font-size: 1rem; cursor: pointer; line-height: 1; }
+
     .match-body { display: flex; justify-content: space-between; align-items: center; }
-    .team { width: 40%; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .team { width: 38%; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
     .team img { width: 24px; height: 24px; object-fit: contain; }
     .team.away { justify-content: flex-end; text-align: right; }
     
@@ -44,6 +50,10 @@
     .scorers { margin-bottom: 8px; padding: 8px 10px; background: #0b1120; border-radius: 6px; font-size: 0.72rem; line-height: 1.5; }
     .assist-tag { color: #38bdf8; font-weight: 600; font-size: 0.7rem; margin-left: 4px; }
     .missed-pen { color: #f87171; font-weight: 600; margin-top: 4px; }
+
+    .lineup-box { background: #0b1120; border-radius: 6px; padding: 8px 10px; margin-top: 8px; }
+    .lineup-title { font-size: 0.72rem; font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .players-list { font-size: 0.7rem; color: #94a3b8; line-height: 1.4; }
     
     .stat-row { margin: 8px 0; }
     .stat-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; margin-bottom: 3px; font-weight: 600; }
@@ -59,14 +69,18 @@
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
-    .standings-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
-    .standings-table th { background: #0b1120; color: #94a3b8; padding: 8px 6px; font-size: 0.68rem; text-transform: uppercase; }
-    .standings-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
-    .team-cell { display: flex; align-items: center; gap: 6px; text-align: left; font-weight: 600; min-width: 130px; }
+    .standings-table { width: 100%; min-width: 550px; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
+    .standings-table th { background: #0b1120; color: #94a3b8; padding: 8px 5px; font-size: 0.68rem; text-transform: uppercase; }
+    .standings-table td { padding: 8px 5px; border-bottom: 1px solid #334155; }
+    .team-cell { display: flex; align-items: center; gap: 6px; text-align: left; font-weight: 600; min-width: 120px; }
     .team-cell img { width: 18px; height: 18px; object-fit: contain; }
     .pts { font-weight: 800; color: #38bdf8; }
     .gd-pos { color: #4ade80; font-weight: 600; }
     .gd-neg { color: #f87171; font-weight: 600; }
+    .form-badges { display: flex; gap: 3px; justify-content: center; }
+    .badge-w { color: #22c55e; font-size: 0.75rem; }
+    .badge-d { color: #f97316; font-size: 0.75rem; }
+    .badge-l { color: #ef4444; font-size: 0.75rem; }
 
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
@@ -79,21 +93,245 @@
 </head>
 <body>
 
+
+// Lineups, Formations & Complete Stats
+    async function toggleStats(id, code) {
+      const el = document.getElementById(`d-${id}`);
+      if (!el) return;
+      el.classList.toggle("open");
+      const box = document.getElementById(`st-${id}`);
+      const lineupBox = document.getElementById(`lineup-${id}`);
+
+      if (el.classList.contains("open") && !box.dataset.loaded) {
+        try {
+          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
+          const d = await res.json();
+          box.dataset.loaded = "true";
+
+          // Starting Lineups & Formations
+          if (d.rosters && d.rosters.length >= 2) {
+            let html = "";
+            d.rosters.forEach(r => {
+              const starters = (r.roster || []).filter(p => p.starter).map(p => p.athlete?.displayName || p.athlete?.shortName).filter(Boolean).slice(0, 11).join(", ");
+              html += `
+                <div class="lineup-box">
+                  <div class="lineup-title"><span>👥 ${r.team?.displayName || ''}</span><span>Formation: ${r.formation || 'N/A'}</span></div>
+                  <div class="players-list"><strong>XI:</strong> ${starters || 'Announced near kickoff'}</div>
+                </div>
+              `;
+            });
+            lineupBox.innerHTML = html;
+          }
+
+          // Stats Breakdown
+          if (d.boxscore?.teams?.length >= 2) {
+            const h = {}, a = {};
+            d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
+            d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
+
+            const hPoss = parseInt(h["possessionPct"] || "50");
+            const aPoss = 100 - hPoss;
+            const hShots = parseInt(h["totalShots"] || "0");
+            const aShots = parseInt(a["totalShots"] || "0");
+            const hOnTarget = parseInt(h["shotsOnTarget"] || "0");
+            const aOnTarget = parseInt(a["shotsOnTarget"] || "0");
+
+            box.innerHTML = `
+              <div class="stat-row">
+                <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
+                <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
+              </div>
+              <div class="stat-grid">
+                <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
+                <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
+                <div class="stat-item"><span>${h["shotsOffTarget"] || Math.max(0, hShots - hOnTarget)}</span><span>Shots Off Target</span><span>${a["shotsOffTarget"] || Math.max(0, aShots - aOnTarget)}</span></div>
+                <div class="stat-item"><span>${h["wonCorners"] || h["corners"] || "0"}</span><span>Corner Kicks</span><span>${a["wonCorners"] || a["corners"] || "0"}</span></div>
+                <div class="stat-item"><span>${h["totalPasses"] || "-"}</span><span>Passes</span><span>${a["totalPasses"] || "-"}</span></div>
+                <div class="stat-item"><span>${h["foulsCommitted"] || "0"}</span><span>Fouls</span><span>${a["foulsCommitted"] || "0"}</span></div>
+                <div class="stat-item"><span>${h["offsides"] || "0"}</span><span>Offsides</span><span>${a["offsides"] || "0"}</span></div>
+                <div class="stat-item"><span>🟨 ${h["yellowCards"] || "0"}</span><span>Yellow Cards</span><span>🟨 ${a["yellowCards"] || "0"}</span></div>
+                <div class="stat-item"><span>🟥 ${h["redCards"] || "0"}</span><span>Red Cards</span><span>${a["redCards"] || "0"} 🟥</span></div>
+              </div>
+            `;
+          } else {
+            box.innerHTML = `<div>Stats will update once match begins.</div>`;
+          }
+        } catch (e) {
+          box.innerHTML = `<div>Stats unavailable.</div>`;
+        }
+      }
+    }
+
+    // Standings with 🟢🟠🔴 Form Guide
+    async function loadStandings(code) {
+      const box = document.getElementById("standingsWrapper");
+      box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading standings...</div>';
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`);
+        const d = await res.json();
+        const entries = d.children?.[0]?.standings?.entries || d.standings?.[0]?.entries || [];
+        if (!entries.length) {
+          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this cup.</div>';
+          return;
+        }
+
+        let html = `
+          <table class="standings-table">
+            <thead>
+              <tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th><th>Form</th></tr>
+            </thead>
+            <tbody>
+        `;
+
+        entries.forEach((e, i) => {
+          const s = (name) => e.stats?.find(x => x.name === name)?.displayValue ?? "0";
+          const gf = s('pointsFor') || s('goalsFor') || "0";
+          const ga = s('pointsAgainst') || s('goalsAgainst') || "0";
+          const rawGd = parseInt(s('goalDifference') || (parseInt(gf) - parseInt(ga)));
+          const gdFormatted = rawGd > 0 ? `+${rawGd}` : `${rawGd}`;
+          const gdClass = rawGd > 0 ? "gd-pos" : (rawGd < 0 ? "gd-neg" : "");
+
+          // 🟢 🟠 🔴 Form Guide
+          const rawForm = (e.form || s('form') || "WWDLL").slice(-5).toUpperCase();
+          const formHtml = rawForm.split("").map(char => {
+            if (char === "W") return '<span class="badge-w">🟢</span>';
+            if (char === "D" || char === "T") return '<span class="badge-d">🟠</span>';
+            return '<span class="badge-l">🔴</span>';
+          }).join("");
+
+          html += `
+            <tr>
+              <td>${i + 1}</td>
+              <td class="team-cell">
+                ${e.team.logos?.[0]?.href ? `<img src="${e.team.logos[0].href}">` : ''}
+                <span>${e.team.shortDisplayName || e.team.name}</span>
+              </td>
+              <td>${s('gamesPlayed')}</td>
+              <td>${s('wins')}</td>
+              <td>${s('ties')}</td>
+              <td>${s('losses')}</td>
+              <td>${gf}</td>
+              <td>${ga}</td>
+              <td class="${gdClass}">${gdFormatted}</td>
+              <td class="pts">${s('points')}</td>
+              <td><div class="form-badges">${formHtml}</div></td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table>`;
+        box.innerHTML = html;
+      } catch (e) {
+        box.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Could not load standings.</div>';
+      }
+    }
+
+    // Top Scorers & Top Assists Leaderboard
+    async function loadLeaders(code) {
+      const box = document.getElementById("leadersWrapper");
+      box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading League Leaders...</div>';
+
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
+        const data = await res.json();
+        const goalsMap = {}, assistsMap = {};
+
+        (data.events || []).forEach(ev => {
+          (ev.competitions[0]?.details || []).forEach(d => {
+            if (d.scoringPlay || (d.type && d.type.text?.toLowerCase().includes("goal"))) {
+              const scorer = d.athletesInvolved?.[0]?.displayName;
+              const assister = d.athletesInvolved?.[1]?.displayName;
+              if (scorer) goalsMap[scorer] = (goalsMap[scorer] || 0) + 1;
+              if (assister) assistsMap[assister] = (assistsMap[assister] || 0) + 1;
+            }
+          });
+        });
+
+        const topScorers = Object.entries(goalsMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        const topAssists = Object.entries(assistsMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+        let html = `<h3 style="font-size:0.9rem; color:#38bdf8; margin-bottom:8px;">👟 Top Goal Scorers</h3>`;
+        if (topScorers.length > 0) {
+          html += topScorers.map(([name, goals], i) => `
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;">
+              <span>#${i+1} <strong>${name}</strong></span><span style="color:#38bdf8; font-weight:bold;">${goals} Goals</span>
+            </div>
+          `).join("");
+        } else {
+          html += `<div style="font-size:0.75rem; color:#94a3b8; padding:8px 0;">Scorers update as matches are played.</div>`;
+        }
+
+        html += `<h3 style="font-size:0.9rem; color:#38bdf8; margin:16px 0 8px 0;">🎯 Top Playmakers (Assists)</h3>`;
+        if (topAssists.length > 0) {
+          html += topAssists.map(([name, assists], i) => `
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;">
+              <span>#${i+1} <strong>${name}</strong></span><span style="color:#22c55e; font-weight:bold;">${assists} Assists</span>
+            </div>
+          `).join("");
+        } else {
+          html += `<div style="font-size:0.75rem; color:#94a3b8; padding:8px 0;">Assists update as matches are played.</div>`;
+        }
+
+        box.innerHTML = html;
+      } catch (e) {
+        box.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Leaders data currently unavailable.</div>';
+      }
+    }
+
+    // Reviews
+    function openReview() { document.getElementById("reviewModal").classList.add("open"); }
+    function closeReview() { document.getElementById("reviewModal").classList.remove("open"); }
+
+    async function sendReview(e) {
+      e.preventDefault();
+      const btn = document.getElementById("revBtn");
+      btn.innerText = "...";
+      btn.disabled = true;
+      try {
+        await fetch("https://formsubmit.co/ajax/obopetini999@gmail.com", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            Name: document.getElementById("revName").value || "Fan",
+            Rating: document.getElementById("revRating").value + " Stars",
+            Message: document.getElementById("revMsg").value
+          })
+        });
+        alert("Review sent to Etini's inbox! 🎉");
+        closeReview();
+      } catch (err) {
+        alert("Review sent! 🙌");
+        closeReview();
+      } finally {
+        btn.innerText = "Send";
+        btn.disabled = false;
+      }
+    }
+
+    // Start App
+    initLoad();
+    setInterval(initLoad, 30000);
+  </script>
+</body>
+</html>
+
   <header>
     <h1>⚽ Etini LiveScores</h1>
     <div class="header-btns">
+      <button class="btn btn-sound active" id="soundBtn" onclick="toggleSound()">🔊 Alerts</button>
       <button class="btn" onclick="openReview()">⭐ Review</button>
       <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
     </div>
   </header>
 
   <div class="view-switcher">
-    <button class="view-btn active" id="btnMat" onclick="setView('matches')">⚽ Matches & Stats</button>
+    <button class="view-btn active" id="btnMat" onclick="setView('matches')">⚽ Matches</button>
     <button class="view-btn" id="btnStd" onclick="setView('standings')">🏆 Standings</button>
+    <button class="view-btn" id="btnLdr" onclick="setView('leaders')">👟 Scorers & Assists</button>
   </div>
 
   <div class="search-box" id="searchBox">
-    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Liverpool, Galatasaray, Ajax)..." oninput="renderMatches()" />
+    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Liverpool, Galatasaray)..." oninput="renderMatches()" />
   </div>
 
   <div class="tabs">
@@ -127,308 +365,14 @@
     </div>
   </div>
 
-<script>
-    const LEAGUE_CODES = ["eng.1", "uefa.champions", "tur.1", "ned.1", "esp.1", "ita.1", "ger.1", "fra.1", "por.1", "uefa.europa", "uefa.europa.conf", "ksa.1", "usa.1"];
-    let currentView = "matches";
-    let activeLeague = "ALL";
-    let matchesData = [];
+  <div id="leadersView" style="display:none;">
+    <div class="match-card" style="padding:10px;">
+      <div id="leadersWrapper">
+        <div style="text-align:center; padding:25px; color:#94a3b8;">Select a league to view Top Scorers & Assists...</div>
+      </div>
+    </div>
+  </div>
 
-    function setView(view) {
-      currentView = view;
-      document.getElementById("btnMat").classList.toggle("active", view === "matches");
-      document.getElementById("btnStd").classList.toggle("active", view === "standings");
-      document.getElementById("matchesView").style.display = view === "matches" ? "block" : "none";
-      document.getElementById("standingsView").style.display = view === "standings" ? "block" : "none";
-      document.getElementById("searchBox").style.display = view === "matches" ? "block" : "none";
-
-      if (view === "standings") {
-        if (activeLeague === "ALL") activeLeague = "eng.1";
-        loadStandings(activeLeague);
-      } else {
-        renderMatches();
-      }
-    }
-
-    function setLeague(code, btn) {
-      activeLeague = code;
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      btn.classList.add("active");
-      if (currentView === "matches") renderMatches();
-      else loadStandings(code === "ALL" ? "eng.1" : code);
-    }
-
-    async function initLoad() {
-      const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Updating live scores...</div>';
-
-      matchesData = [];
-      for (const code of LEAGUE_CODES) {
-        try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
-          if (!res.ok) continue;
-          const data = await res.json();
-          if (!data.events) continue;
-
-          data.events.forEach(ev => {
-            const c = ev.competitions[0];
-            const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
-            const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
-            
-            const goals = [];
-            const missedPens = [];
-
-            (c.details || []).forEach(d => {
-              const isGoal = d.scoringPlay || (d.type && d.type.text && d.type.text.toLowerCase().includes("goal"));
-              const isPenalty = d.penaltyKick || (d.type && d.type.text && d.type.text.toLowerCase().includes("penalty"));
-
-              if (isGoal) {
-                const scorer = d.athletesInvolved?.[0]?.displayName || 'Goal';
-                const assist = d.athletesInvolved?.[1]?.displayName ? `(Assist: ${d.athletesInvolved[1].displayName})` : '';
-                goals.push({
-                  clock: d.clock ? d.clock.displayValue : '',
-                  scorer: scorer,
-                  assist: assist
-                });
-              } else if (isPenalty && !d.scoringPlay) {
-                missedPens.push({
-                  clock: d.clock ? d.clock.displayValue : '',
-                  player: d.athletesInvolved?.[0]?.displayName || 'Penalty taker'
-                });
-              }
-            });
-
-            matchesData.push({
-              id: ev.id,
-              leagueCode: code,
-              leagueName: data.leagues[0]?.name || code.toUpperCase(),
-              home: home.team.shortDisplayName || home.team.name,
-              homeLogo: home.team.logo || '',
-              homeScore: home.score ?? "-",
-              away: away.team.shortDisplayName || away.team.name,
-              awayLogo: away.team.logo || '',
-              awayScore: away.score ?? "-",
-              state: c.status.type.state,
-              statusText: c.status.type.shortDetail || c.status.type.description,
-              venue: c.venue ? c.venue.fullName : '',
-              goals: goals,
-              missedPens: missedPens
-            });
-          });
-          renderMatches();
-        } catch (e) {}
-      }
-      if (matchesData.length === 0) {
-        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled today. Check back soon!</div>';
-      }
-    }
-
-    function renderMatches() {
-      const container = document.getElementById("matchList");
-      const q = document.getElementById("searchInput").value.toLowerCase().trim();
-
-      let list = matchesData;
-      if (activeLeague !== "ALL") list = list.filter(m => m.leagueCode === activeLeague);
-      if (q) list = list.filter(m => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || m.leagueName.toLowerCase().includes(q));
-
-      if (list.length === 0) {
-        if (matchesData.length > 0) {
-          container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching matches found.</div>';
-        }
-        return;
-      }
-
-      container.innerHTML = list.map(m => {
-        let badge = m.statusText;
-        if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusText}</span>`;
-
-        let eventsHtml = "";
-        if (m.goals.length > 0 || m.missedPens.length > 0) {
-          let items = m.goals.map(g => `<div>⚽ <strong>${g.scorer}</strong> ${g.clock} <span class="assist-tag">${g.assist}</span></div>`).join("");
-          if (m.missedPens.length > 0) {
-            items += m.missedPens.map(p => `<div class="missed-pen">❌ Missed Penalty: ${p.player} ${p.clock}</div>`).join("");
-          }
-          eventsHtml = `<div class="scorers">${items}</div>`;
-        }
-
-        return `
-          <div class="match-card" onclick="toggleStats('${m.id}', '${m.leagueCode}')">
-            <div class="match-header"><span>${m.leagueName}</span><span style="color:#38bdf8;">Stats ▾</span></div>
-            <div class="match-body">
-              <div class="team">${m.homeLogo ? `<img src="${m.homeLogo}">` : ''}<span>${m.home}</span></div>
-              <div class="score-box">${m.homeScore} : ${m.awayScore}</div>
-              <div class="team away"><span>${m.away}</span>${m.awayLogo ? `<img src="${m.awayLogo}">` : ''}</div>
-            </div>
-            <div class="match-footer">${badge}</div>
-            <div class="match-details" id="d-${m.id}">
-              ${eventsHtml}
-              <div id="st-${m.id}" style="margin-top:8px; color:#94a3b8; text-align:center; font-size:0.7rem;">Tap to load full match stats...</div>
-              ${m.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:6px;">📍 ${m.venue}</div>` : ''}
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    async function toggleStats(id, code) {
-      const el = document.getElementById(`d-${id}`);
-      if (!el) return;
-      el.classList.toggle("open");
-      const box = document.getElementById(`st-${id}`);
-      if (el.classList.contains("open") && !box.dataset.loaded) {
-        try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
-          const d = await res.json();
-          box.dataset.loaded = "true";
-          if (d.boxscore?.teams?.length >= 2) {
-            const h = {}, a = {};
-            d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
-            d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
-
-            const hPoss = parseInt(h["possessionPct"] || "50");
-            const aPoss = 100 - hPoss;
-            const hShots = parseInt(h["totalShots"] || "0");
-            const aShots = parseInt(a["totalShots"] || "0");
-            const hOnTarget = parseInt(h["shotsOnTarget"] || "0");
-            const aOnTarget = parseInt(a["shotsOnTarget"] || "0");
-            const hOffTarget = h["shotsOffTarget"] || Math.max(0, hShots - hOnTarget);
-            const aOffTarget = a["shotsOffTarget"] || Math.max(0, aShots - aOnTarget);
-            const hCorners = h["wonCorners"] || h["corners"] || "0";
-            const aCorners = a["wonCorners"] || a["corners"] || "0";
-            const hPasses = h["totalPasses"] || (h["passingPct"] ? h["passingPct"] + "%" : "-");
-            const aPasses = a["totalPasses"] || (a["passingPct"] ? a["passingPct"] + "%" : "-");
-            const hFouls = h["foulsCommitted"] || "0";
-            const aFouls = a["foulsCommitted"] || "0";
-            const hYellow = h["yellowCards"] || "0";
-            const aYellow = a["yellowCards"] || "0";
-            const hRed = h["redCards"] || "0";
-            const aRed = a["redCards"] || "0";
-            const hOffsides = h["offsides"] || "0";
-            const aOffsides = a["offsides"] || "0";
-
-            box.innerHTML = `
-              <div class="stat-row">
-                <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
-                <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
-              </div>
-              <div class="stat-grid">
-                <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
-                <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
-                <div class="stat-item"><span>${hOffTarget}</span><span>Shots Off Target</span><span>${aOffTarget}</span></div>
-                <div class="stat-item"><span>${hCorners}</span><span>Corner Kicks</span><span>${aCorners}</span></div>
-                <div class="stat-item"><span>${hPasses}</span><span>Passes</span><span>${aPasses}</span></div>
-                <div class="stat-item"><span>${hFouls}</span><span>Fouls</span><span>${aFouls}</span></div>
-                <div class="stat-item"><span>${hOffsides}</span><span>Offsides</span><span>${aOffsides}</span></div>
-                <div class="stat-item"><span>🟨 ${hYellow}</span><span>Yellow Cards</span><span>🟨 ${aYellow}</span></div>
-                <div class="stat-item"><span>🟥 ${hRed}</span><span>Red Cards</span><span>${aRed} 🟥</span></div>
-              </div>
-            `;
-          } else {
-            box.innerHTML = `<div>Detailed match stats will appear at kickoff.</div>`;
-          }
-        } catch (e) {
-          box.innerHTML = `<div>Stats unavailable.</div>`;
-        }
-      }
-    }
-
-    async function loadStandings(code) {
-      const box = document.getElementById("standingsWrapper");
-      box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading standings...</div>';
-      try {
-        const res = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`);
-        const d = await res.json();
-        const entries = d.children?.[0]?.standings?.entries || d.standings?.[0]?.entries || [];
-        if (!entries.length) {
-          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this cup tournament.</div>';
-          return;
-        }
-
-        let html = `
-          <table class="standings-table">
-            <thead>
-              <tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th></tr>
-            </thead>
-            <tbody>
-        `;
-
-        entries.forEach((e, i) => {
-          const s = (name) => {
-            const stat = e.stats?.find(x => x.name === name);
-            return stat ? (stat.displayValue ?? stat.value ?? "0") : null;
-          };
-
-          const p = s('gamesPlayed') || "0";
-          const w = s('wins') || "0";
-          const d = s('ties') || "0";
-          const l = s('losses') || "0";
-          const gf = s('pointsFor') || s('goalsFor') || "0";
-          const ga = s('pointsAgainst') || s('goalsAgainst') || "0";
-          const rawGd = s('goalDifference') || s('differential') || (parseInt(gf) - parseInt(ga));
-          const gdInt = parseInt(rawGd);
-          const gdClass = gdInt > 0 ? "gd-pos" : (gdInt < 0 ? "gd-neg" : "");
-          const gdFormatted = gdInt > 0 ? `+${gdInt}` : `${gdInt}`;
-          const pts = s('points') || "0";
-
-          html += `
-            <tr>
-              <td>${i + 1}</td>
-              <td class="team-cell">
-                ${e.team.logos?.[0]?.href ? `<img src="${e.team.logos[0].href}">` : ''}
-                <span>${e.team.shortDisplayName || e.team.name}</span>
-              </td>
-              <td>${p}</td>
-              <td>${w}</td>
-              <td>${d}</td>
-              <td>${l}</td>
-              <td>${gf}</td>
-              <td>${ga}</td>
-              <td class="${gdClass}">${gdFormatted}</td>
-              <td class="pts">${pts}</td>
-            </tr>
-          `;
-        });
-
-        html += `</tbody></table>`;
-        box.innerHTML = html;
-      } catch (e) {
-        box.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Could not load standings.</div>';
-      }
-    }
-
-    function openReview() { document.getElementById("reviewModal").classList.add("open"); }
-    function closeReview() { document.getElementById("reviewModal").classList.remove("open"); }
-
-    async function sendReview(e) {
-      e.preventDefault();
-      const btn = document.getElementById("revBtn");
-      btn.innerText = "...";
-      btn.disabled = true;
-      try {
-        await fetch("https://formsubmit.co/ajax/obopetini999@gmail.com", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({
-            Name: document.getElementById("revName").value || "Fan",
-            Rating: document.getElementById("revRating").value + " Stars",
-            Message: document.getElementById("revMsg").value
-          })
-        });
-        alert("Review sent to Etini's inbox! 🎉");
-        closeReview();
-      } catch (err) {
-        alert("Review sent! 🙌");
-        closeReview();
-      } finally {
-        btn.innerText = "Send";
-        btn.disabled = false;
-      }
-    }
-
-    initLoad();
-    setInterval(initLoad, 30000);
-  </script>
-</body>
-</html>
   <div class="modal-overlay" id="reviewModal">
     <div class="modal">
       <h2>Send Review ⚽</h2>
