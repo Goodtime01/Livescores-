@@ -19,17 +19,24 @@
     .view-btn { flex: 1; padding: 7px 4px; font-size: 0.75rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; text-align: center; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
 
-    /* Flashscore Interactive Calendar Bar */
-    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 8px; padding: 6px 8px; margin-bottom: 12px; gap: 6px; }
+    /* Flashscore Calendar Bar */
+    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 8px; padding: 6px 8px; margin-bottom: 10px; gap: 6px; }
     .date-nav-btn { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
     .date-picker-wrap { display: flex; align-items: center; gap: 6px; background: #0b1120; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; flex: 1; justify-content: center; }
     .date-picker-input { background: transparent; border: none; color: #38bdf8; font-weight: 700; font-size: 0.8rem; outline: none; color-scheme: dark; font-family: inherit; width: 100%; text-align: center; cursor: pointer; }
     .today-btn { background: #38bdf8; color: #0b1120; border: none; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
 
-    .search-box { margin-bottom: 12px; }
+    .search-box { margin-bottom: 10px; }
     .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
 
-    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    /* 42-League Dropdown & Featured Tabs */
+    .league-filter-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .league-dropdown-wrap { width: 100%; }
+    .league-select { width: 100%; background: #1e293b; border: 1px solid #38bdf8; color: #f8fafc; padding: 9px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; outline: none; cursor: pointer; }
+    .league-select optgroup { background: #0b1120; color: #38bdf8; font-weight: 800; }
+    .league-select option { background: #1e293b; color: #fff; font-weight: 500; }
+
+    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
     .tab { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 5px 12px; border-radius: 16px; font-size: 0.72rem; white-space: nowrap; font-weight: 600; cursor: pointer; }
     .tab.active { background: #38bdf8; color: #0b1120; border-color: #38bdf8; }
@@ -136,6 +143,8 @@
     .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
 </head>
+
+
 <body>
 
   <header>
@@ -165,38 +174,107 @@
   </div>
 
   <div class="search-box" id="searchBox">
-    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Enyimba, Benfica, Real Madrid)..." oninput="renderMatches()" />
+    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Enyimba, Real Madrid, Al Nassr)..." oninput="renderMatches()" />
   </div>
 
-  <!-- All 26 League Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="setLeague('ALL', this)">All</button>
-    <button class="tab" onclick="setLeague('eng.1', this)">Premier League</button>
-    <button class="tab" onclick="setLeague('nga.1', this)">🇳🇬 Nigerian NPFL</button>
-    <button class="tab" onclick="setLeague('uefa.champions', this)">Champions League</button>
-    <button class="tab" onclick="setLeague('esp.1', this)">La Liga</button>
-    <button class="tab" onclick="setLeague('ita.1', this)">Serie A</button>
-    <button class="tab" onclick="setLeague('ger.1', this)">Bundesliga</button>
-    <button class="tab" onclick="setLeague('fra.1', this)">Ligue 1</button>
-    <button class="tab" onclick="setLeague('eng.2', this)">EFL Championship</button>
-    <button class="tab" onclick="setLeague('bra.1', this)">🇧🇷 Brasileirão</button>
-    <button class="tab" onclick="setLeague('ned.1', this)">Eredivisie</button>
-    <button class="tab" onclick="setLeague('por.1', this)">Liga Portugal</button>
-    <button class="tab" onclick="setLeague('tur.1', this)">Turkish Süper Lig</button>
-    <button class="tab" onclick="setLeague('bel.1', this)">Belgian Pro</button>
-    <button class="tab" onclick="setLeague('arg.1', this)">🇦🇷 Primera (Argentina)</button>
-    <button class="tab" onclick="setLeague('jpn.1', this)">🇯🇵 J1 League</button>
-    <button class="tab" onclick="setLeague('pol.1', this)">Polish Ekstraklasa</button>
-    <button class="tab" onclick="setLeague('den.1', this)">Danish Superliga</button>
-    <button class="tab" onclick="setLeague('sui.1', this)">Swiss Super League</button>
-    <button class="tab" onclick="setLeague('nor.1', this)">Norwegian Eliteserien</button>
-    <button class="tab" onclick="setLeague('cro.1', this)">Croatian HNL</button>
-    <button class="tab" onclick="setLeague('col.1', this)">Primera A (Colombia)</button>
-    <button class="tab" onclick="setLeague('ecu.1', this)">LigaPro (Ecuador)</button>
-    <button class="tab" onclick="setLeague('uefa.europa', this)">Europa League</button>
-    <button class="tab" onclick="setLeague('uefa.europa.conf', this)">Conference League</button>
-    <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro</button>
-    <button class="tab" onclick="setLeague('usa.1', this)">MLS</button>
+  <!-- 42-League Dropdown & Featured Tabs -->
+  <div class="league-filter-row">
+    <div class="league-dropdown-wrap">
+      <select class="league-select" id="leagueSelect" onchange="onLeagueDropdownChange(this.value)">
+        <option value="ALL">🌟 All Featured Matches</option>
+        
+        <optgroup label="🌍 Africa & Middle East">
+          <option value="nga.1">🇳🇬 Nigeria – NPFL</option>
+          <option value="egy.1">🇪🇬 Egypt – Premier League</option>
+          <option value="rsa.1">🇿🇦 South Africa – Premier Division</option>
+          <option value="mar.1">🇲🇦 Morocco – Botola Pro</option>
+          <option value="tun.1">🇹🇳 Tunisia – Ligue Professionnelle 1</option>
+          <option value="ksa.1">🇸🇦 Saudi Arabia – Pro League</option>
+          <option value="uae.1">🇦🇪 UAE – Pro League</option>
+        </optgroup>
+
+        <optgroup label="🏆 Europe">
+          <option value="eng.1">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England – Premier League</option>
+          <option value="eng.2">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England – Championship</option>
+          <option value="eng.5">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England – National League</option>
+          <option value="esp.1">🇪🇸 Spain – La Liga</option>
+          <option value="esp.2">🇪🇸 Spain – Segunda División</option>
+          <option value="ita.1">🇮🇹 Italy – Serie A</option>
+          <option value="ita.2">🇮🇹 Italy – Serie B</option>
+          <option value="ger.1">🇩🇪 Germany – Bundesliga</option>
+          <option value="ger.3">🇩🇪 Germany – 3. Liga</option>
+          <option value="fra.1">🇫🇷 France – Ligue 1</option>
+          <option value="ned.1">🇳🇱 Netherlands – Eredivisie</option>
+          <option value="ned.2">🇳🇱 Netherlands – Eerste Divisie</option>
+          <option value="por.1">🇵🇹 Portugal – Liga Portugal</option>
+          <option value="tur.1">🇹🇷 Turkey – Süper Lig</option>
+          <option value="sco.1">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland – Premiership</option>
+          <option value="sco.2">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland – Championship</option>
+          <option value="bel.1">🇧🇪 Belgium – Pro League</option>
+          <option value="aut.1">🇦🇹 Austria – Bundesliga</option>
+          <option value="gre.1">🇬🇷 Greece – Super League</option>
+          <option value="den.1">🇩🇰 Denmark – Superliga</option>
+          <option value="swe.1">🇸🇪 Sweden – Allsvenskan</option>
+          <option value="nor.1">🇳🇴 Norway – Eliteserien</option>
+          <option value="sui.1">🇨🇭 Switzerland – Super League</option>
+          <option value="sui.2">🇨🇭 Switzerland – Challenge League</option>
+        </optgroup>
+
+        <optgroup label="🌎 South America (CONMEBOL)">
+          <option value="bra.1">🇧🇷 Brazil – Série A (Brasileirão)</option>
+          <option value="bra.2">🇧🇷 Brazil – Série B</option>
+          <option value="arg.1">🇦🇷 Argentina – Primera División</option>
+          <option value="col.1">🇨🇴 Colombia – Primera A</option>
+          <option value="col.2">🇨🇴 Colombia – Primera B</option>
+          <option value="chi.1">🇨🇱 Chile – Campeonato Chileno</option>
+          <option value="uru.1">🇺🇾 Uruguay – Primera División</option>
+          <option value="ecu.1">🇪🇨 Ecuador – Serie A</option>
+          <option value="per.1">🇵🇪 Peru – Primera División</option>
+          <option value="par.1">🇵🇾 Paraguay – Primera División</option>
+          <option value="ven.1">🇻🇪 Venezuela – Primera División</option>
+        </optgroup>
+
+        <optgroup label="🌎 North & Central America (CONCACAF)">
+          <option value="usa.1">🇺🇸 USA – Major League Soccer (MLS)</option>
+          <option value="usa.usl">🇺🇸 USA – USL Championship</option>
+          <option value="usa.w.1">🇺🇸 USA – NWSL (Women)</option>
+          <option value="mex.1">🇲🇽 Mexico – Liga MX</option>
+          <option value="mex.w.1">🇲🇽 Mexico – Liga MX Femenil</option>
+          <option value="can.1">🇨🇦 Canada – Premier League</option>
+          <option value="crc.1">🇨🇷 Costa Rica – Liga FPD</option>
+          <option value="gua.1">🇬🇹 Guatemala – Liga Nacional</option>
+          <option value="hon.1">🇭🇳 Honduras – Liga Nacional</option>
+        </optgroup>
+
+        <optgroup label="🌏 Asia & Oceania">
+          <option value="aus.1">🇦🇺 Australia – A-League Men</option>
+          <option value="jpn.1">🇯🇵 Japan – J1 League</option>
+          <option value="chn.1">🇨🇳 China – Super League</option>
+          <option value="ind.1">🇮🇳 India – Super League</option>
+          <option value="tha.1">🇹🇭 Thailand – Thai League 1</option>
+        </optgroup>
+
+        <optgroup label="🏅 Continental Cups">
+          <option value="uefa.champions">🏆 UEFA Champions League</option>
+          <option value="uefa.europa">🥈 UEFA Europa League</option>
+          <option value="uefa.europa.conf">🥉 UEFA Conference League</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Quick Featured Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="setLeague('ALL', this)">All</button>
+      <button class="tab" onclick="setLeague('eng.1', this)">Premier League</button>
+      <button class="tab" onclick="setLeague('nga.1', this)">🇳🇬 NPFL</button>
+      <button class="tab" onclick="setLeague('uefa.champions', this)">Champions League</button>
+      <button class="tab" onclick="setLeague('esp.1', this)">La Liga</button>
+      <button class="tab" onclick="setLeague('ita.1', this)">Serie A</button>
+      <button class="tab" onclick="setLeague('ger.1', this)">Bundesliga</button>
+      <button class="tab" onclick="setLeague('fra.1', this)">Ligue 1</button>
+      <button class="tab" onclick="setLeague('bra.1', this)">🇧🇷 Brasileirão</button>
+      <button class="tab" onclick="setLeague('ksa.1', this)">Saudi Pro</button>
+    </div>
   </div>
 
   <div id="matchesView">
@@ -208,7 +286,7 @@
   <div id="standingsView" style="display:none;">
     <div class="match-card" style="padding:8px;">
       <div class="table-wrapper" id="standingsWrapper">
-        <div style="text-align:center; padding:25px; color:#94a3b8;">Select a league above to view table...</div>
+        <div style="text-align:center; padding:25px; color:#94a3b8;">Select a league to view table...</div>
       </div>
     </div>
   </div>
@@ -242,14 +320,13 @@
     </div>
   </div>
 
-  <!-- Flashscore Match Center with FIXED Top Navigation -->
+  <!-- Flashscore Match Center with FIXED Sticky Tabs -->
   <div class="mc-overlay" id="matchCenter">
     <div class="mc-fixed-header">
       <div class="mc-top">
         <span style="font-weight:700; color:#38bdf8; font-size:0.85rem;">⚡ Flashscore Match Center</span>
         <button class="mc-close" onclick="closeMatchCenter()">✕ Close</button>
       </div>
-      <!-- 5 TABS: PERMANENTLY FIXED & ACCESSIBLE ON EVERY SLIDE -->
       <div class="mc-tabs">
         <button class="mc-tab active" onclick="switchMcSlide('info', this)">📝 Info</button>
         <button class="mc-tab" onclick="switchMcSlide('stats', this)">📊 Statistics</button>
@@ -278,12 +355,12 @@
     </div>
   </div>
 
+
 <script>
-    const LEAGUE_CODES = [
-      "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", "ger.1", "fra.1", 
-      "eng.2", "bra.1", "ned.1", "por.1", "tur.1", "bel.1", "arg.1", "jpn.1", 
-      "pol.1", "den.1", "sui.1", "nor.1", "cro.1", "col.1", "ecu.1", 
-      "uefa.europa", "uefa.europa.conf", "ksa.1", "usa.1"
+    // Top featured leagues loaded when "All" is active (saves phone data & loads in 1 sec)
+    const FEATURED_LEAGUES = [
+      "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", 
+      "ger.1", "fra.1", "bra.1", "ksa.1", "ned.1"
     ];
 
     let currentView = "matches";
@@ -294,7 +371,7 @@
     let currentDate = new Date();
     let currentRosters = [];
 
-    // Interactive Calendar Logic
+    // Calendar Engine
     function formatApiDate(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -371,16 +448,33 @@
       document.getElementById("searchBox").style.display = view === "matches" ? "block" : "none";
       document.getElementById("dateBar").style.display = view === "matches" ? "flex" : "none";
 
-      if (view === "standings") loadStandings(activeLeague === "ALL" ? "eng.1" : activeLeague);
-      else if (view === "leaders") loadLeaders(activeLeague === "ALL" ? "eng.1" : activeLeague);
+      const target = activeLeague === "ALL" ? "eng.1" : activeLeague;
+      if (view === "standings") loadStandings(target);
+      else if (view === "leaders") loadLeaders(target);
       else renderMatches();
+    }
+
+    // Dropdown & Tabs Sync
+    function onLeagueDropdownChange(code) {
+      activeLeague = code;
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      const matchTab = Array.from(document.querySelectorAll(".tab")).find(t => t.getAttribute("onclick")?.includes(`'${code}'`));
+      if (matchTab) matchTab.classList.add("active");
+
+      if (currentView === "matches") initLoad();
+      else if (currentView === "standings") loadStandings(code === "ALL" ? "eng.1" : code);
+      else loadLeaders(code === "ALL" ? "eng.1" : code);
     }
 
     function setLeague(code, btn) {
       activeLeague = code;
+      const select = document.getElementById("leagueSelect");
+      if (select) select.value = code;
+
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      btn.classList.add("active");
-      if (currentView === "matches") renderMatches();
+      if (btn) btn.classList.add("active");
+
+      if (currentView === "matches") initLoad();
       else if (currentView === "standings") loadStandings(code === "ALL" ? "eng.1" : code);
       else loadLeaders(code === "ALL" ? "eng.1" : code);
     }
@@ -418,16 +512,20 @@
       }
     }
 
+    // On-Demand Fast Fetching
     async function initLoad() {
       syncCalendarDisplay();
       const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fixtures & scores...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading match fixtures...</div>';
 
       const oldScores = new Map(matchesData.map(m => [m.id, `${m.homeScore}:${m.awayScore}`]));
       matchesData = [];
       const dt = formatApiDate(currentDate);
 
-      for (const code of LEAGUE_CODES) {
+      // Load specific league or featured batch
+      const targets = activeLeague === "ALL" ? FEATURED_LEAGUES : [activeLeague];
+
+      for (const code of targets) {
         try {
           const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${dt}`);
           if (!res.ok) continue;
@@ -463,7 +561,7 @@
         } catch (e) {}
       }
       if (matchesData.length === 0) {
-        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled for this date. Use the calendar 📅 above to pick another date!</div>';
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled for this date. Check another league or use the calendar 📅 above!</div>';
       }
     }
 
@@ -472,7 +570,6 @@
       const q = document.getElementById("searchInput").value.toLowerCase().trim();
 
       let list = [...matchesData];
-      if (activeLeague !== "ALL") list = list.filter(m => m.leagueCode === activeLeague);
       if (q) list = list.filter(m => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || m.leagueName.toLowerCase().includes(q));
 
       list.sort((a, b) => {
@@ -512,6 +609,7 @@
         `;
       }).join("");
     }
+
 // Flashscore Match Center Engine
     function closeMatchCenter() {
       document.getElementById("matchCenter").classList.remove("open");
@@ -772,7 +870,7 @@
         const d = await res.json();
         const entries = d.children?.[0]?.standings?.entries || d.standings?.[0]?.entries || [];
         if (!entries.length) {
-          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this cup tournament.</div>';
+          box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Table unavailable for this tournament format.</div>';
           return;
         }
 
@@ -914,3 +1012,4 @@
   </script>
 </body>
 </html>
+
