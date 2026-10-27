@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+                  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -8,9 +8,9 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
    
     /* Top Sports Bar */
-    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; padding-right: 16px; margin-bottom: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .sport-nav::-webkit-scrollbar { display: none; }
-    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; flex-shrink: 0; }
     .sport-btn.active { background: #38bdf8; color: #0b1120; border-color: #38bdf8; }
 
 
@@ -258,7 +258,7 @@
           <option value="mex.w.1">🇲🇽 Mexico – Liga MX Femenil</option>
           <option value="can.1">🇨🇦 Canada – Premier League</option>
           <option value="crc.1">🇨🇷 Costa Rica – Liga FPD</option>
-          <option value="gua.1">🇬🇹 Guatemala – Liga Nacional</option>
+    <option value="gua.1">🇬🇹 Guatemala – Liga Nacional</option>
           <option value="hon.1">🇭🇳 Honduras – Liga Nacional</option>
         </optgroup>
 
@@ -523,7 +523,7 @@
           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
         });
       }
-    }
+ }
 
     async function initLoad() {
       syncCalendarDisplay();
@@ -556,6 +556,7 @@
             matchesData.push({
               id: ev.id,
               leagueCode: code,
+              startTime: ev.date || c.date || null,
               leagueName: data.leagues[0]?.name || code.toUpperCase(),
               home: home.team.shortDisplayName || home.team.name,
               homeLogo: home.team.logo || '',
@@ -599,6 +600,10 @@
         if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusText}</span>`;
 
         const isFav = favTeams.includes(m.home) || favTeams.includes(m.away);
+        const isUpcoming = m.state === "pre" && m.startTime;
+        const scoreDisplay = isUpcoming
+          ? new Date(m.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          : `${m.homeScore} : ${m.awayScore}`;
 
         return `
           <div class="match-card ${isFav ? 'is-favorite' : ''}" onclick="openMatchCenter('${m.id}', '${m.leagueCode}')">
@@ -612,7 +617,7 @@
             </div>
             <div class="match-body">
               <div class="team">${m.homeLogo ? `<img src="${m.homeLogo}">` : ''}<span>${m.home}</span></div>
-              <div class="score-box">${m.homeScore} : ${m.awayScore}</div>
+              <div class="score-box">${scoreDisplay}</div>
               <div class="team away"><span>${m.away}</span>${m.awayLogo ? `<img src="${m.awayLogo}">` : ''}</div>
             </div>
             <div class="match-footer">${badge}</div>
@@ -773,7 +778,7 @@
         if (allEvents.length > 0) {
           infoSlide.innerHTML = allEvents.map(e => `
             <div class="event-row"><span class="event-min">${e.min}</span><span>${e.text}</span></div>
-          `).join("");
+ `).join("");
         } else {
           infoSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No major events recorded yet.</div>';
         }
@@ -1021,7 +1026,7 @@
         closeReview();
       } catch (err) {
         alert("Review received! Thank you! 🙌");
-closeReview();
+        closeReview();
       } finally {
         btn.innerText = "Send";
         btn.disabled = false;
@@ -1032,11 +1037,6 @@ closeReview();
     initLoad();
     setInterval(initLoad, 30000);
 
-
-
   </script>
 </body>
 </html>
-
-
-
