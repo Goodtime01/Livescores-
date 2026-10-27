@@ -19,9 +19,12 @@
     .view-btn { flex: 1; padding: 7px 4px; font-size: 0.75rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; text-align: center; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
 
-    .date-bar { display: flex; justify-content: space-between; background: #1e293b; border-radius: 6px; padding: 4px; margin-bottom: 10px; font-size: 0.75rem; }
-    .date-btn { flex: 1; border: none; background: transparent; color: #94a3b8; padding: 5px; font-weight: 600; border-radius: 4px; cursor: pointer; text-align: center; }
-    .date-btn.active { background: #334155; color: #38bdf8; }
+    /* Flashscore Interactive Calendar Bar */
+    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 8px; padding: 6px 8px; margin-bottom: 12px; gap: 6px; }
+    .date-nav-btn { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+    .date-picker-wrap { display: flex; align-items: center; gap: 6px; background: #0b1120; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; flex: 1; justify-content: center; }
+    .date-picker-input { background: transparent; border: none; color: #38bdf8; font-weight: 700; font-size: 0.8rem; outline: none; color-scheme: dark; font-family: inherit; width: 100%; text-align: center; cursor: pointer; }
+    .today-btn { background: #38bdf8; color: #0b1120; border: none; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
 
     .search-box { margin-bottom: 12px; }
     .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
@@ -50,7 +53,6 @@
     .mc-overlay { display: none; position: fixed; inset: 0; background: #0b1120; z-index: 1000; overflow-y: auto; flex-direction: column; }
     .mc-overlay.open { display: flex; }
     
-    /* Fixed Top Navigation Bar - ALWAYS VISIBLE */
     .mc-fixed-header { position: sticky; top: 0; z-index: 50; background: #1e293b; border-bottom: 1px solid #334155; }
     .mc-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #334155; }
     .mc-close { background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.78rem; }
@@ -60,7 +62,6 @@
     .mc-tab { flex: 1; min-width: 82px; text-align: center; padding: 10px 6px; font-size: 0.72rem; font-weight: 700; color: #94a3b8; border: none; background: transparent; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
     .mc-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
 
-    /* Banner */
     .mc-banner { padding: 16px 14px; text-align: center; background: linear-gradient(180deg, #1e293b 0%, #0b1120 100%); border-bottom: 1px solid #334155; }
     .mc-league { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
     .mc-teams { display: flex; justify-content: space-around; align-items: center; }
@@ -135,7 +136,6 @@
     .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
 </head>
-
 <body>
 
   <header>
@@ -153,11 +153,15 @@
     <button class="view-btn" id="btnLdr" onclick="setView('leaders')">👟 Scorers & Assists</button>
   </div>
 
-  <!-- Flashscore Date Bar -->
+  <!-- Interactive Calendar & Date Navigator -->
   <div class="date-bar" id="dateBar">
-    <button class="date-btn" id="datePrev" onclick="changeDate(-1)">◀ Yesterday</button>
-    <button class="date-btn active" id="dateToday" onclick="changeDate(0)">📅 Today</button>
-    <button class="date-btn" id="dateNext" onclick="changeDate(1)">Tomorrow ▶</button>
+    <button class="date-nav-btn" onclick="stepDate(-1)" title="Previous Day">◀</button>
+    <div class="date-picker-wrap">
+      <span>📅</span>
+      <input type="date" id="calendarInput" class="date-picker-input" onchange="onCalendarSelect(this.value)" />
+    </div>
+    <button class="date-nav-btn" onclick="stepDate(1)" title="Next Day">▶</button>
+    <button class="today-btn" onclick="resetToToday()">Today</button>
   </div>
 
   <div class="search-box" id="searchBox">
@@ -254,8 +258,7 @@
         <button class="mc-tab" onclick="switchMcSlide('news', this)">📰 Club News</button>
       </div>
     </div>
-   
- 
+    
     <div class="mc-banner" id="mcBanner"></div>
 
     <div class="mc-body">
@@ -275,7 +278,6 @@
     </div>
   </div>
 
-
 <script>
     const LEAGUE_CODES = [
       "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", "ger.1", "fra.1", 
@@ -289,9 +291,49 @@
     let matchesData = [];
     let favTeams = JSON.parse(localStorage.getItem("etini_favs") || "[]");
     let soundEnabled = true;
-    let dateOffset = 0; // -1 = Yesterday, 0 = Today, 1 = Tomorrow
+    let currentDate = new Date();
     let currentRosters = [];
 
+    // Interactive Calendar Logic
+    function formatApiDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
+    }
+
+    function formatInputDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function syncCalendarDisplay() {
+      const input = document.getElementById("calendarInput");
+      if (input) input.value = formatInputDate(currentDate);
+    }
+
+    function onCalendarSelect(val) {
+      if (!val) return;
+      const [y, m, d] = val.split("-").map(Number);
+      currentDate = new Date(y, m - 1, d);
+      initLoad();
+    }
+
+    function stepDate(delta) {
+      currentDate.setDate(currentDate.getDate() + delta);
+      syncCalendarDisplay();
+      initLoad();
+    }
+
+    function resetToToday() {
+      currentDate = new Date();
+      syncCalendarDisplay();
+      initLoad();
+    }
+
+    // Audio & Alerts
     function toggleSound() {
       soundEnabled = !soundEnabled;
       const btn = document.getElementById("soundBtn");
@@ -316,23 +358,6 @@
         osc.start();
         osc.stop(ctx.currentTime + 0.5);
       } catch (e) {}
-    }
-
-    function getDateStr() {
-      const d = new Date();
-      d.setDate(d.getDate() + dateOffset);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}${m}${day}`;
-    }
-
-    function changeDate(offset) {
-      dateOffset = offset;
-      document.getElementById("datePrev").classList.toggle("active", offset === -1);
-      document.getElementById("dateToday").classList.toggle("active", offset === 0);
-      document.getElementById("dateNext").classList.toggle("active", offset === 1);
-      initLoad();
     }
 
     function setView(view) {
@@ -368,7 +393,7 @@
       renderMatches();
     }
 
-    // Universal Share (Native Share Sheet + Copy Link Fallback)
+    // Universal Share (Native Sheet + Clipboard Fallback)
     async function shareMatch(e, id) {
       e.stopPropagation();
       const m = matchesData.find(x => x.id === id);
@@ -385,7 +410,6 @@
           await navigator.share(shareData);
         } catch (err) {}
       } else {
-        // Fallback: Copy to clipboard
         navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
           alert("Match score & link copied to clipboard! 📋");
         }).catch(() => {
@@ -395,12 +419,13 @@
     }
 
     async function initLoad() {
+      syncCalendarDisplay();
       const container = document.getElementById("matchList");
       container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fixtures & scores...</div>';
 
       const oldScores = new Map(matchesData.map(m => [m.id, `${m.homeScore}:${m.awayScore}`]));
       matchesData = [];
-      const dt = getDateStr();
+      const dt = formatApiDate(currentDate);
 
       for (const code of LEAGUE_CODES) {
         try {
@@ -438,7 +463,7 @@
         } catch (e) {}
       }
       if (matchesData.length === 0) {
-        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled for this date. Check another tab!</div>';
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No games scheduled for this date. Use the calendar 📅 above to pick another date!</div>';
       }
     }
 
@@ -487,8 +512,6 @@
         `;
       }).join("");
     }
-
-
 // Flashscore Match Center Engine
     function closeMatchCenter() {
       document.getElementById("matchCenter").classList.remove("open");
@@ -587,7 +610,6 @@
           const isPen = ev.penaltyKick || (ev.type?.text?.toLowerCase().includes("penalty"));
           const min = ev.clock?.displayValue || "";
 
-          // Check all possible name fields
           let player = ev.athletesInvolved?.[0]?.displayName 
                     || ev.participants?.[0]?.athlete?.displayName 
                     || ev.athlete?.displayName 
