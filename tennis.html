@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etini LiveScores - Tennis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+
+    /* Top Sports Switcher Bar */
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav::-webkit-scrollbar { display: none; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; transition: 0.2s; }
+    .sport-btn:hover { color: #f8fafc; border-color: #64748b; }
+    .sport-btn.active { background: #10b981; color: #fff; border-color: #10b981; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    header h1 { font-size: 1.2rem; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
+    .btn-primary { background: #10b981; color: #fff; border: none; }
+
+    /* Date Bar */
+    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 8px; padding: 6px 8px; margin-bottom: 10px; gap: 6px; }
+    .date-nav-btn { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+    .date-picker-wrap { display: flex; align-items: center; gap: 6px; background: #0b1120; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; flex: 1; justify-content: center; }
+    .date-picker-input { background: transparent; border: none; color: #10b981; font-weight: 700; font-size: 0.8rem; outline: none; color-scheme: dark; font-family: inherit; width: 100%; text-align: center; cursor: pointer; }
+    .today-btn { background: #10b981; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
+
+    /* Search Box */
+    .search-box { margin-bottom: 10px; }
+    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
+
+    /* Tour Tabs (ATP / WTA) */
+    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 14px; border-radius: 16px; font-size: 0.75rem; white-space: nowrap; font-weight: 600; cursor: pointer; }
+    .tab.active { background: #10b981; color: #fff; border-color: #10b981; }
+
+    /* Match Container & Cards */
+    .matches-container { display: flex; flex-direction: column; gap: 10px; }
+    .match-card { background: #1e293b; border-radius: 10px; padding: 12px; border: 1px solid #334155; }
+    .match-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px; font-weight: 700; }
+    .tournament-title { color: #38bdf8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%; }
+    .share-btn { background: #0284c7; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+
+    /* Player Rows */
+    .player-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+    .player-info { display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; }
+    .player-flag { width: 18px; height: 13px; object-fit: cover; border-radius: 2px; }
+    .player-name { font-size: 0.84rem; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-name.winner { color: #10b981; font-weight: 800; }
+    .serving-dot { width: 6px; height: 6px; background: #fbbf24; border-radius: 50%; display: inline-block; margin-left: 4px; }
+
+    /* Set Scores */
+    .set-scores { display: flex; gap: 6px; font-size: 0.8rem; font-weight: 700; }
+    .set-box { width: 20px; text-align: center; color: #94a3b8; }
+    .set-box.winner-set { color: #f8fafc; font-weight: 900; }
+
+    .match-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 6px; border-top: 1px solid #334155; font-size: 0.68rem; color: #94a3b8; }
+    .status-badge { font-weight: 700; color: #fbbf24; }
+    .status-badge.live { color: #ef4444; }
+    .status-badge.final { color: #10b981; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sports Switcher Bar -->
+  <div class="sport-nav">
+    <a href="index.html" class="sport-btn">⚽ Football</a>
+    <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
+    <a href="combat.html" class="sport-btn">🥊 Combat (UFC/Boxing)</a>
+    <a href="tennis.html" class="sport-btn active">🎾 Tennis</a>
+  </div>
+
+  <header>
+    <h1>🎾 Etini LiveScores</h1>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
+  </header>
+
+  <!-- Calendar Bar -->
+  <div class="date-bar">
+    <button class="date-nav-btn" onclick="stepDate(-1)">◀</button>
+    <div class="date-picker-wrap">
+      <span>📅</span>
+      <input type="date" id="calendarInput" class="date-picker-input" onchange="onCalendarSelect(this.value)" />
+    </div>
+    <button class="date-nav-btn" onclick="stepDate(1)">▶</button>
+    <button class="today-btn" onclick="resetToToday()">Today</button>
+  </div>
+
+  <!-- Search Box -->
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search player or tournament (e.g. Alcaraz, Sabalenka, Open)..." oninput="renderMatches()" />
+  </div>
+
+  <!-- Tour Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="setTour('atp', this)">ATP (Men's)</button>
+    <button class="tab" onclick="setTour('wta', this)">WTA (Women's)</button>
+  </div>
+
+  <!-- Matches Output -->
+  <div class="matches-container" id="matchList">
+    <div style="text-align:center; padding:30px; color:#94a3b8;">Loading tennis matches...</div>
+  </div>
+
+<script>
+  let activeTour = "atp";
+  let tennisData = [];
+  let currentDate = new Date();
+  let isCustomDate = false;
+
+  function formatApiDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}${m}${day}`;
+  }
+
+  function formatInputDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function syncCalendarDisplay() {
+    const input = document.getElementById("calendarInput");
+    if (input) input.value = formatInputDate(currentDate);
+  }
+
+  function onCalendarSelect(val) {
+    if (!val) return;
+    const [y, m, d] = val.split("-").map(Number);
+    currentDate = new Date(y, m - 1, d);
+    isCustomDate = true;
+    initLoad();
+  }
+
+  function stepDate(delta) {
+    currentDate.setDate(currentDate.getDate() + delta);
+    isCustomDate = true;
+    syncCalendarDisplay();
+    initLoad();
+  }
+
+  function resetToToday() {
+    currentDate = new Date();
+    isCustomDate = false;
+    syncCalendarDisplay();
+    initLoad();
+  }
+
+  function setTour(tour, btn) {
+    activeTour = tour;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    initLoad();
+  }
+
+  async function shareMatch(e, id) {
+    e.stopPropagation();
+    const m = tennisData.find(x => x.id === String(id));
+    if (!m) return;
+
+    const shareData = {
+      title: "Etini Tennis LiveScores",
+      text: `🎾 ${m.tournament} (${m.round})\n${m.player1} vs ${m.player2}\nStatus: ${m.status}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
+        alert("Match details copied to clipboard! 📋");
+      }).catch(() => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
+      });
+    }
+  }
+
+  async function initLoad() {
+    syncCalendarDisplay();
+    const container = document.getElementById("matchList");
+    container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading tennis matches...</div>';
+
+    tennisData = [];
+    const dateQuery = isCustomDate ? `?dates=${formatApiDate(currentDate)}` : "";
+    const url = `https://site.api.espn.com/apis/site/v2/sports/tennis/${activeTour}/scoreboard${dateQuery}`;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+
+      (data.events || []).forEach(ev => {
+        const tournamentName = ev.name || "Tennis Tournament";
+
+        (ev.groupings || []).forEach(grp => {
+          const category = grp.grouping?.displayName || "Singles";
+
+          (grp.competitions || []).forEach(c => {
+            const comps = c.competitors || [];
+            if (comps.length < 2) return;
+
+            const c1 = comps[0];
+            const c2 = comps[1];
+
+            // Player names & flags (handles both singles and doubles)
+            const p1Name = c1.athlete?.displayName || c1.roster?.displayName || "TBD";
+            const p2Name = c2.athlete?.displayName || c2.roster?.displayName || "TBD";
+            const p1Flag = c1.athlete?.flag?.href || c1.roster?.athletes?.[0]?.flag?.href || "";
+            const p2Flag = c2.athlete?.flag?.href || c2.roster?.athletes?.[0]?.flag?.href || "";
+
+            // Sets
+            const p1Sets = (c1.linescores || []).map(s => ({ value: s.value, won: Boolean(s.winner) }));
+            const p2Sets = (c2.linescores || []).map(s => ({ value: s.value, won: Boolean(s.winner) }));
+
+            // Status
+            const rawStatus = c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled";
+            const isFinal = Boolean(c.status?.type?.completed);
+            const isLive = c.status?.type?.state === "in";
+
+            tennisData.push({
+              id: String(c.id),
+              tournament: tournamentName,
+              category: category,
+              round: c.round?.displayName || "",
+              player1: p1Name,
+              player1Flag: p1Flag,
+              player1Win: Boolean(c1.winner),
+              player1Sets: p1Sets,
+              player2: p2Name,
+              player2Flag: p2Flag,
+              player2Win: Boolean(c2.winner),
+              player2Sets: p2Sets,
+              status: rawStatus,
+              isFinal: isFinal,
+              isLive: isLive
+            });
+          });
+        });
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
+    if (tennisData.length === 0) {
+      container.innerHTML = `
+        <div class="match-card" style="text-align:center; color:#94a3b8; padding:25px;">
+          No tennis matches scheduled for this date.<br><br>
+          <button class="today-btn" onclick="resetToToday()">View Current Tournaments</button>
+        </div>`;
+      return;
+    }
+
+    renderMatches();
+  }
+
+  function renderMatches() {
+    const container = document.getElementById("matchList");
+    const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+
+    let list = [...tennisData];
+    if (q) {
+      list = list.filter(m =>
+        m.player1.toLowerCase().includes(q) ||
+        m.player2.toLowerCase().includes(q) ||
+        m.tournament.toLowerCase().includes(q) ||
+        m.round.toLowerCase().includes(q)
+      );
+    }
+
+    if (list.length === 0) {
+      container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching tennis matches found.</div>';
+      return;
+    }
+
+    container.innerHTML = list.map(m => {
+      const maxSets = Math.max(m.player1Sets.length, m.player2Sets.length);
+
+      // Render set scores columns
+      let p1SetsHtml = "";
+      let p2SetsHtml = "";
+      for (let i = 0; i < maxSets; i++) {
+        const s1 = m.player1Sets[i];
+        const s2 = m.player2Sets[i];
+        p1SetsHtml += `<span class="set-box ${s1?.won ? 'winner-set' : ''}">${s1 !== undefined ? s1.value : '-'}</span>`;
+        p2SetsHtml += `<span class="set-box ${s2?.won ? 'winner-set' : ''}">${s2 !== undefined ? s2.value : '-'}</span>`;
+      }
+
+      const statusClass = m.isLive ? 'live' : (m.isFinal ? 'final' : '');
+
+      return `
+        <div class="match-card">
+          <div class="match-header">
+            <span class="tournament-title">🏆 ${m.tournament} ${m.round ? '• ' + m.round : ''}</span>
+            <button class="share-btn" onclick="shareMatch(event, '${m.id}')">🔗 Share</button>
+          </div>
+
+          <!-- Player 1 -->
+          <div class="player-row">
+            <div class="player-info">
+              ${m.player1Flag ? `<img class="player-flag" src="${m.player1Flag}" onerror="this.style.display='none'">` : '🎾'}
+              <span class="player-name ${m.player1Win ? 'winner' : ''}">${m.player1}</span>
+            </div>
+            <div class="set-scores">${p1SetsHtml}</div>
+          </div>
+
+          <!-- Player 2 -->
+          <div class="player-row">
+            <div class="player-info">
+              ${m.player2Flag ? `<img class="player-flag" src="${m.player2Flag}" onerror="this.style.display='none'">` : '🎾'}
+              <span class="player-name ${m.player2Win ? 'winner' : ''}">${m.player2}</span>
+            </div>
+            <div class="set-scores">${p2SetsHtml}</div>
+          </div>
+
+          <div class="match-footer">
+            <span>${m.category}</span>
+            <span class="status-badge ${statusClass}">● ${m.status}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  initLoad();
+</script>
+</body>
+</html>
