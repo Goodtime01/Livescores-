@@ -6,7 +6,15 @@
   <title>Etini LiveScores</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+   
+    /* Top Sports Bar */
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav::-webkit-scrollbar { display: none; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
+    .sport-btn.active { background: #38bdf8; color: #0b1120; border-color: #38bdf8; }
+
+
+ body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
     
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     header h1 { font-size: 1.2rem; color: #38bdf8; font-weight: 800; display: flex; align-items: center; gap: 8px; }
