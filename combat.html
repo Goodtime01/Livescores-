@@ -1,264 +1,212 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Etini LiveScores - Combat Sports</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
-
-    /* Top Sport Bar */
-    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
-    .sport-nav::-webkit-scrollbar { display: none; }
-    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
-    .sport-btn.active { background: #ef4444; color: #fff; border-color: #ef4444; }
-
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    header h1 { font-size: 1.2rem; color: #ef4444; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
-    .btn-primary { background: #ef4444; color: #fff; border: none; }
-
-    /* Date Bar */
-    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 8px; padding: 6px 8px; margin-bottom: 10px; gap: 6px; }
-    .date-nav-btn { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
-    .date-picker-wrap { display: flex; align-items: center; gap: 6px; background: #0b1120; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; flex: 1; justify-content: center; }
-    .date-picker-input { background: transparent; border: none; color: #ef4444; font-weight: 700; font-size: 0.8rem; outline: none; color-scheme: dark; font-family: inherit; width: 100%; text-align: center; cursor: pointer; }
-    .today-btn { background: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
-
-    .search-box { margin-bottom: 10px; }
-    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
-
-    /* Combat Tabs */
-    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tab { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 14px; border-radius: 16px; font-size: 0.75rem; white-space: nowrap; font-weight: 600; cursor: pointer; }
-    .tab.active { background: #ef4444; color: #fff; border-color: #ef4444; }
-
-    /* Fight Cards */
-    .matches-container { display: flex; flex-direction: column; gap: 10px; }
-    .fight-card { background: #1e293b; border-radius: 10px; padding: 14px; border: 1px solid #334155; }
-    .fight-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #94a3b8; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; }
-    .share-btn { background: #0284c7; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
-
-    .fighters-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .fighter { width: 42%; text-align: center; }
-    .fighter img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; background: #0b1120; border: 2px solid #334155; margin-bottom: 4px; }
-    .fighter-name { font-size: 0.85rem; font-weight: 700; color: #f8fafc; }
-    .fighter-record { font-size: 0.68rem; color: #94a3b8; }
-    .vs-badge { font-size: 0.85rem; font-weight: 900; color: #ef4444; background: #0b1120; padding: 6px 10px; border-radius: 8px; border: 1px solid #334155; }
-    .winner-badge { display: inline-block; background: #22c55e; color: #0b1120; font-size: 0.62rem; font-weight: 800; padding: 1px 6px; border-radius: 4px; margin-top: 3px; }
-
-    .fight-result { background: #0b1120; border-radius: 6px; padding: 6px 10px; text-align: center; font-size: 0.72rem; color: #fbbf24; font-weight: 700; margin-top: 8px; }
-    .fight-venue { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 6px; font-style: italic; }
-  </style>
-</head>
-<body>
-
-  <!-- Top Sports Switcher Bar -->
-  <div class="sport-nav">
-    <a href="index.html" class="sport-btn">⚽ Football</a>
-    <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
-    <a href="combat.html" class="sport-btn active">🥊 Combat (UFC/Boxing)</a>
-    <a href="tennis.html" class="sport-btn">🎾 Tennis</a>
-  </div>
-
-  <header>
-    <h1>🥊 Etini LiveScores</h1>
-    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
-  </header>
-
-  <!-- Calendar Bar -->
-  <div class="date-bar">
-    <button class="date-nav-btn" onclick="stepDate(-1)">◀</button>
-    <div class="date-picker-wrap">
-      <span>📅</span>
-      <input type="date" id="calendarInput" class="date-picker-input" onchange="onCalendarSelect(this.value)" />
-    </div>
-    <button class="date-nav-btn" onclick="stepDate(1)">▶</button>
-    <button class="today-btn" onclick="resetToToday()">Today</button>
-  </div>
-
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="🔍 Search fighter (e.g. Adesanya, Usyk, McGregor)..." oninput="renderMatches()" />
-  </div>
-
-  <!-- Combat League Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="setSport('mma/ufc', this)">UFC / MMA</button>
-    <button class="tab" onclick="setSport('boxing', this)">Boxing</button>
-  </div>
-
-  <div class="matches-container" id="matchList">
-    <div style="text-align:center; padding:30px; color:#94a3b8;">Loading fight cards...</div>
-  </div>
-
 <script>
-    let activeSport = "mma/ufc";
-    let fightsData = [];
-    let currentDate = new Date();
+  let activeSport = "mma/ufc";
+  let fightsData = [];
+  let currentDate = new Date();
+  let isCustomDate = false;
 
-    // Calendar Engine
-    function formatApiDate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}${m}${day}`;
-    }
+  function formatApiDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}${m}${day}`;
+  }
 
-    function formatInputDate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    }
+  function formatInputDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
 
-    function syncCalendarDisplay() {
-      const input = document.getElementById("calendarInput");
-      if (input) input.value = formatInputDate(currentDate);
-    }
+  function syncCalendarDisplay() {
+    const input = document.getElementById("calendarInput");
+    if (input) input.value = formatInputDate(currentDate);
+  }
 
-    function onCalendarSelect(val) {
-      if (!val) return;
-      const [y, m, d] = val.split("-").map(Number);
-      currentDate = new Date(y, m - 1, d);
-      initLoad();
-    }
+  function onCalendarSelect(val) {
+    if (!val) return;
+    const [y, m, d] = val.split("-").map(Number);
+    currentDate = new Date(y, m - 1, d);
+    isCustomDate = true;
+    initLoad();
+  }
 
-    function stepDate(delta) {
-      currentDate.setDate(currentDate.getDate() + delta);
-      syncCalendarDisplay();
-      initLoad();
-    }
+  function stepDate(delta) {
+    currentDate.setDate(currentDate.getDate() + delta);
+    isCustomDate = true;
+    syncCalendarDisplay();
+    initLoad();
+  }
 
-    function resetToToday() {
-      currentDate = new Date();
-      syncCalendarDisplay();
-      initLoad();
-    }
+  function resetToToday() {
+    currentDate = new Date();
+    isCustomDate = false;
+    syncCalendarDisplay();
+    initLoad();
+  }
 
-    function setSport(sport, btn) {
-      activeSport = sport;
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      if (btn) btn.classList.add("active");
-      initLoad();
-    }
+  function setSport(sport, btn) {
+    activeSport = sport;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    initLoad();
+  }
 
-    // Universal Share
-    async function shareFight(e, id) {
-      e.stopPropagation();
-      const f = fightsData.find(x => x.id === id);
-      if (!f) return;
+  async function shareFight(e, id) {
+    e.stopPropagation();
+    const f = fightsData.find(x => x.id === String(id));
+    if (!f) return;
 
-      const shareData = {
-        title: "Etini Combat Sports Live",
-        text: `🥊 ${f.fighter1} vs ${f.fighter2}\n🏆 ${f.weightClass} (${f.status})\nFollow live:`,
-        url: window.location.href
-      };
+    const shareData = {
+      title: "Etini Combat Sports Live",
+      text: `🥊 ${f.eventName}\n${f.fighter1} vs ${f.fighter2} (${f.weightClass})\nStatus: ${f.status}`,
+      url: window.location.href
+    };
 
-      if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-        } catch (err) {}
-      } else {
-        navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
-          alert("Fight result & link copied to clipboard! 📋");
-        }).catch(() => {
-          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
-        });
-      }
-    }
-
-    async function initLoad() {
-      syncCalendarDisplay();
-      const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fight cards...</div>';
-
-      fightsData = [];
-      const dt = formatApiDate(currentDate);
-
+    if (navigator.share) {
       try {
-        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${activeSport}/scoreboard?dates=${dt}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
+        await navigator.share(shareData);
+      } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
+        alert("Fight details copied to clipboard! 📋");
+      }).catch(() => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
+      });
+    }
+  }
 
-        (data.events || []).forEach(ev => {
-          const c = ev.competitions?.[0] || {};
-          const f1 = c.competitors?.[0] || {};
-          const f2 = c.competitors?.[1] || {};
+  async function initLoad() {
+    syncCalendarDisplay();
+    const container = document.getElementById("matchList");
+    container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fight cards...</div>';
+
+    if (activeSport === "boxing") {
+      container.innerHTML = `
+        <div class="fight-card" style="text-align:center; color:#94a3b8; padding:25px;">
+          🥊 <strong>Boxing API Notice:</strong><br><br>
+          ESPN does not provide a public scoreboard feed for boxing. A dedicated boxing data feed is being connected. Switch to <strong>UFC / MMA</strong> to view active cards!
+        </div>`;
+      return;
+    }
+
+    fightsData = [];
+
+    // If viewing default "Today", omit ?dates to load the upcoming UFC card automatically
+    const dateQuery = isCustomDate ? `?dates=${formatApiDate(currentDate)}` : "";
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${activeSport}/scoreboard${dateQuery}`;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+
+      (data.events || []).forEach(ev => {
+        const eventTitle = ev.name || data.leagues?.[0]?.name || "UFC Event";
+        
+        // Loop over EVERY bout on the card, reversed so the Main Event appears first
+        const competitions = [...(ev.competitions || [])].reverse();
+
+        competitions.forEach((c, idx) => {
+          const comps = c.competitors || [];
+          const f1 = comps[0] || {};
+          const f2 = comps[1] || {};
+
+          // Weight class is in c.type.abbreviation on ESPN
+          const weight = c.type?.abbreviation || c.type?.text || c.notes?.[0]?.headline || (idx === 0 ? "Main Event" : "Bout");
+
+          // Fight result / time status
+          let statusText = c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled";
+          if (c.status?.type?.completed && c.status?.displayClock && c.status?.period) {
+            statusText = `Final (R${c.status.period} - ${c.status.displayClock})`;
+          }
 
           fightsData.push({
-            id: ev.id,
-            eventName: data.leagues?.[0]?.name || ev.name || (activeSport.includes("ufc") ? "UFC Main Card" : "Boxing Title Fight"),
-            weightClass: c.type?.text || c.notes?.[0]?.headline || "Championship Bout",
-            fighter1: f1.athlete?.displayName || "Fighter 1",
-            fighter1Pic: f1.athlete?.headshot?.href || '',
-            fighter1Record: f1.records?.[0]?.summary || '',
-            fighter1Win: f1.winner || false,
-            fighter2: f2.athlete?.displayName || "Fighter 2",
-            fighter2Pic: f2.athlete?.headshot?.href || '',
-            fighter2Record: f2.records?.[0]?.summary || '',
-            fighter2Win: f2.winner || false,
-            status: c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled",
-            venue: c.venue ? `${c.venue.fullName || ''} (${c.venue.address?.city || ''})` : ''
+            id: String(c.id || `${ev.id}_${idx}`),
+            eventName: eventTitle,
+            weightClass: weight,
+            isMainEvent: idx === 0,
+            fighter1: f1.athlete?.displayName || "TBD",
+            fighter1Pic: f1.athlete?.headshot?.href || "",
+            fighter1Record: f1.records?.[0]?.summary || "",
+            fighter1Win: Boolean(f1.winner),
+            fighter2: f2.athlete?.displayName || "TBD",
+            fighter2Pic: f2.athlete?.headshot?.href || "",
+            fighter2Record: f2.records?.[0]?.summary || "",
+            fighter2Win: Boolean(f2.winner),
+            status: statusText,
+            venue: c.venue ? `${c.venue.fullName || ''}${c.venue.address?.city ? ' (' + c.venue.address.city + ')' : ''}` : ''
           });
         });
-      } catch (err) {}
-
-      if (fightsData.length === 0) {
-        container.innerHTML = '<div class="fight-card" style="text-align:center; color:#94a3b8; padding:25px;">No fights scheduled for this date. Fight nights are usually on weekends. Use the calendar 📅 above to pick another date!</div>';
-        return;
-      }
-
-      renderMatches();
+      });
+    } catch (err) {
+      console.error(err);
     }
 
-    function renderMatches() {
-      const container = document.getElementById("matchList");
-      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+    if (fightsData.length === 0) {
+      container.innerHTML = `
+        <div class="fight-card" style="text-align:center; color:#94a3b8; padding:25px;">
+          No fights scheduled for this date. Fight nights are usually on weekends.<br><br>
+          <button class="today-btn" onclick="resetToToday()">View Upcoming UFC Card</button>
+        </div>`;
+      return;
+    }
 
-      let list = [...fightsData];
-      if (q) list = list.filter(f => f.fighter1.toLowerCase().includes(q) || f.fighter2.toLowerCase().includes(q) || f.weightClass.toLowerCase().includes(q));
+    renderMatches();
+  }
 
-      if (list.length === 0) {
-        container.innerHTML = '<div class="fight-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching fighters found.</div>';
-        return;
-      }
+  function renderMatches() {
+    const container = document.getElementById("matchList");
+    const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
 
-      container.innerHTML = list.map(f => {
-        const f1Badge = f.fighter1Win ? '<span class="winner-badge">WINNER</span>' : '';
-        const f2Badge = f.fighter2Win ? '<span class="winner-badge">WINNER</span>' : '';
+    let list = [...fightsData];
+    if (q) {
+      list = list.filter(f =>
+        f.fighter1.toLowerCase().includes(q) ||
+        f.fighter2.toLowerCase().includes(q) ||
+        f.weightClass.toLowerCase().includes(q) ||
+        f.eventName.toLowerCase().includes(q)
+      );
+    }
 
-        return `
-          <div class="fight-card">
-            <div class="fight-header">
-              <span>${f.weightClass}</span>
-              <button class="share-btn" onclick="shareFight(event, '${f.id}')">🔗 Share</button>
-            </div>
-            <div class="fighters-row">
-              <div class="fighter">
-                ${f.fighter1Pic ? `<img src="${f.fighter1Pic}">` : '<div style="width:46px; height:46px; border-radius:50%; background:#334155; margin:0 auto 4px auto; display:flex; align-items:center; justify-content:center;">🥊</div>'}
-                <div class="fighter-name">${f.fighter1}</div>
-                <div class="fighter-record">${f.fighter1Record}</div>
-                ${f1Badge}
-              </div>
-              <div class="vs-badge">VS</div>
-              <div class="fighter">
-                ${f.fighter2Pic ? `<img src="${f.fighter2Pic}">` : '<div style="width:46px; height:46px; border-radius:50%; background:#334155; margin:0 auto 4px auto; display:flex; align-items:center; justify-content:center;">🥊</div>'}
-                <div class="fighter-name">${f.fighter2}</div>
-                <div class="fighter-record">${f.fighter2Record}</div>
-                ${f2Badge}
-              </div>
-            </div>
-            <div class="fight-result">🥊 ${f.status}</div>
-            ${f.venue ? `<div class="fight-venue">📍 ${f.venue}</div>` : ''}
+    if (list.length === 0) {
+      container.innerHTML = '<div class="fight-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching fighters found.</div>';
+      return;
+    }
+
+    container.innerHTML = list.map(f => {
+      const f1Badge = f.fighter1Win ? '<span class="winner-badge">WINNER</span>' : '';
+      const f2Badge = f.fighter2Win ? '<span class="winner-badge">WINNER</span>' : '';
+      const mainTag = f.isMainEvent ? '<span style="background:#ef4444; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:800; margin-right:6px;">MAIN EVENT</span>' : '';
+
+      return `
+        <div class="fight-card">
+          <div style="font-size:0.72rem; color:#ef4444; font-weight:700; margin-bottom:4px;">${f.eventName}</div>
+          <div class="fight-header">
+            <span>${mainTag}${f.weightClass}</span>
+            <button class="share-btn" onclick="shareFight(event, '${f.id}')">🔗 Share</button>
           </div>
-        `;
-      }).join("");
-    }
+          <div class="fighters-row">
+            <div class="fighter">
+              ${f.fighter1Pic ? `<img src="${f.fighter1Pic}" onerror="this.style.display='none'">` : '<div style="width:46px; height:46px; border-radius:50%; background:#334155; margin:0 auto 4px auto; display:flex; align-items:center; justify-content:center;">🥊</div>'}
+              <div class="fighter-name">${f.fighter1}</div>
+              <div class="fighter-record">${f.fighter1Record}</div>
+              ${f1Badge}
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="fighter">
+              ${f.fighter2Pic ? `<img src="${f.fighter2Pic}" onerror="this.style.display='none'">` : '<div style="width:46px; height:46px; border-radius:50%; background:#334155; margin:0 auto 4px auto; display:flex; align-items:center; justify-content:center;">🥊</div>'}
+              <div class="fighter-name">${f.fighter2}</div>
+              <div class="fighter-record">${f.fighter2Record}</div>
+              ${f2Badge}
+            </div>
+          </div>
+          <div class="fight-result">🥊 ${f.status}</div>
+          ${f.venue ? `<div class="fight-venue">📍 ${f.venue}</div>` : ''}
+        </div>
+      `;
+    }).join("");
+  }
 
-    initLoad();
-    setInterval(initLoad, 30000);
-  </script>
-</body>
-</html>
+  initLoad();
+</script>
