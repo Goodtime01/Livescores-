@@ -98,7 +98,6 @@
     let tennisData = [];
     let currentDate = new Date();
 
-    // Calendar Engine
     function formatApiDate(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -144,7 +143,6 @@
       initLoad();
     }
 
-    // Universal Share
     async function shareMatch(e, id) {
       e.stopPropagation();
       const m = tennisData.find(x => x.id === id);
@@ -157,12 +155,10 @@
       };
 
       if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-        } catch (err) {}
+        try { await navigator.share(shareData); } catch (err) {}
       } else {
         navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
-          alert("Tennis score & link copied to clipboard! 📋");
+          alert("Match link copied to clipboard! 📋");
         }).catch(() => {
           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
         });
@@ -172,7 +168,7 @@
     async function initLoad() {
       syncCalendarDisplay();
       const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading official tournament matches...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading confirmed tournament matches...</div>';
 
       tennisData = [];
       const dt = formatApiDate(currentDate);
@@ -187,20 +183,9 @@
           const p1 = c.competitors?.[0] || {};
           const p2 = c.competitors?.[1] || {};
 
-          // 5-Layer Name Extraction (Never defaults to "Player 1")
-          let p1Name = p1.athlete?.displayName 
-                    || p1.athlete?.fullName 
-                    || p1.athlete?.name 
-                    || p1.displayName 
-                    || p1.name;
+          let p1Name = p1.athlete?.displayName || p1.athlete?.fullName || p1.athlete?.name || p1.displayName || p1.name;
+          let p2Name = p2.athlete?.displayName || p2.athlete?.fullName || p2.athlete?.name || p2.displayName || p2.name;
 
-          let p2Name = p2.athlete?.displayName 
-                    || p2.athlete?.fullName 
-                    || p2.athlete?.name 
-                    || p2.displayName 
-                    || p2.name;
-
-          // Doubles Check
           if (!p1Name && p1.roster?.athletes?.length) {
             p1Name = p1.roster.athletes.map(a => a.displayName || a.shortName).join(' / ');
           }
@@ -208,7 +193,6 @@
             p2Name = p2.roster.athletes.map(a => a.displayName || a.shortName).join(' / ');
           }
 
-          // Fallback to Event Name (e.g. "Swiatek vs. Sabalenka")
           if ((!p1Name || p1Name === 'Player 1') && ev.name) {
             const parts = ev.name.split(/\s+vs\.?\s+/i);
             if (parts.length >= 2) {
@@ -217,11 +201,10 @@
             }
           }
 
-          if (!p1Name) p1Name = "TBD";
-          if (!p2Name) p2Name = "TBD";
-
-          const p1Lines = p1.linescores || [];
-          const p2Lines = p2.linescores || [];
+          // Filter out unannounced/empty future bracket slots
+          if (!p1Name || p1Name.toLowerCase() === "tbd") p1Name = "TBD";
+          if (!p2Name || p2Name.toLowerCase() === "tbd") p2Name = "TBD";
+          if (p1Name === "TBD" && p2Name === "TBD") return;
 
           tennisData.push({
             id: ev.id,
@@ -231,19 +214,26 @@
             player1Flag: p1.athlete?.flag?.href || '',
             player1Score: p1.score ?? "0",
             player1Winner: p1.winner || false,
-            player1Lines: p1Lines,
+            player1Lines: p1.linescores || [],
             player2: p2Name,
             player2Flag: p2.athlete?.flag?.href || '',
             player2Score: p2.score ?? "0",
             player2Winner: p2.winner || false,
-            player2Lines: p2Lines,
-            status: c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled"
+            player2Lines: p2.linescores || [],
+            status: c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled",
+            state: c.status?.type?.state || "pre"
           });
         });
       } catch (err) {}
 
+      // Prioritize Live and Finished games over upcoming ones
+      tennisData.sort((a, b) => {
+        const order = { 'in': 0, 'post': 1, 'pre': 2 };
+        return (order[a.state] ?? 2) - (order[b.state] ?? 2);
+      });
+
       if (tennisData.length === 0) {
-        container.innerHTML = '<div class="tennis-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches on this date. Tournaments run during scheduled tour weeks. Tap "Today" or use the calendar 📅 above to pick another date!</div>';
+        container.innerHTML = '<div class="tennis-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches with confirmed players right now for this date. Tap ◀ to view yesterday\'s matches or check another date!</div>';
         return;
       }
 
@@ -289,7 +279,6 @@
               <div class="set-total">Sets</div>
             </div>
 
-            <!-- Player 1 -->
             <div class="player-row">
               <div class="player-info ${m.player1Winner ? 'player-winner' : ''}">
                 ${m.player1Flag ? `<img src="${m.player1Flag}">` : '🎾'}
@@ -301,7 +290,6 @@
               </div>
             </div>
 
-            <!-- Player 2 -->
             <div class="player-row">
               <div class="player-info ${m.player2Winner ? 'player-winner' : ''}">
                 ${m.player2Flag ? `<img src="${m.player2Flag}">` : '🎾'}
