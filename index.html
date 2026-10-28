@@ -21,11 +21,6 @@
     .btn-primary { background: #38bdf8; color: #0b1120; border: none; font-weight: 700; }
     .btn-sound.active { background: rgba(34, 197, 94, 0.2); color: #4ade80; border-color: #22c55e; }
 
- 
-
-
-
-
     .view-switcher { display: flex; background: #1e293b; border-radius: 8px; padding: 3px; margin-bottom: 10px; }
     .view-btn { flex: 1; padding: 7px 4px; font-size: 0.75rem; font-weight: 700; border: none; background: transparent; color: #94a3b8; border-radius: 6px; cursor: pointer; text-align: center; }
     .view-btn.active { background: #38bdf8; color: #0b1120; }
@@ -107,7 +102,7 @@
     .mc-slide { display: none; }
     .mc-slide.active { display: block; }
 
-    /* Timeline & Events (Goals, Subs, Cards) */
+    /* Timeline & Events */
     .timeline-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 0.75rem; }
     .timeline-min { font-weight: 800; color: #38bdf8; min-width: 32px; }
     .sub-in { color: #4ade80; font-weight: 700; }
@@ -173,7 +168,6 @@
   </style>
 </head>
 
-
 <body>
 
   <!-- Top 4-Sport Navigation Bar -->
@@ -193,13 +187,37 @@
     </div>
   </header>
 
-  <!-- 1xBet Sports Promo Banner -->
-  <div class="promo-banner">
-    <div>
-      <div class="promo-text">🔥 1xBet Exclusive Match Odds & Bonuses</div>
-      <div class="promo-sub">Highest odds on Premier League, NPFL & Champions League</div>
+  <!-- 1xBet High-Converting Betting Card -->
+  <div style="background: linear-gradient(135deg, #0f2b48 0%, #173d67 100%); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="font-weight:900; font-size:0.85rem; color:#fff; display:flex; align-items:center; gap:6px;">
+        🔥 1xBet Official Partner
+      </span>
+      <span style="background:#facc15; color:#000; font-size:0.65rem; font-weight:900; padding:2px 7px; border-radius:4px; text-transform:uppercase;">
+        300% Bonus
+      </span>
     </div>
-    <a href="https://1xbet.com" target="_blank" class="promo-badge">BET NOW ❯</a>
+    
+    <div style="font-size:0.72rem; color:#cbd5e1; margin-bottom:10px;">
+      Bet on live Football, NPFL & Champions League with highest boosted odds!
+    </div>
+
+    <!-- Live Match Odds Preview -->
+    <div style="display:flex; gap:6px; margin-bottom:10px;">
+      <div style="flex:1; background:#0b1120; border:1px solid #334155; padding:5px; border-radius:6px; text-align:center; font-size:0.7rem; color:#94a3b8;">
+        1 <strong style="color:#38bdf8;">2.15</strong>
+      </div>
+      <div style="flex:1; background:#0b1120; border:1px solid #334155; padding:5px; border-radius:6px; text-align:center; font-size:0.7rem; color:#94a3b8;">
+        X <strong style="color:#38bdf8;">3.40</strong>
+      </div>
+      <div style="flex:1; background:#0b1120; border:1px solid #334155; padding:5px; border-radius:6px; text-align:center; font-size:0.7rem; color:#94a3b8;">
+        2 <strong style="color:#38bdf8;">3.10</strong>
+      </div>
+    </div>
+
+    <a href="https://1xbet.com" target="_blank" style="display:block; text-align:center; background:#facc15; color:#000; text-decoration:none; font-weight:900; font-size:0.8rem; padding:8px 12px; border-radius:6px; letter-spacing:0.5px;">
+      CLAIM BONUS & BET NOW ❯
+    </a>
   </div>
 
   <div class="view-switcher">
@@ -377,13 +395,10 @@
     <div class="mc-banner" id="mcBanner"></div>
 
     <div class="mc-body">
-      <!-- 1. Info: Goals, Assists, Subs, Cards -->
       <div class="mc-slide active" id="mcSlide-info"></div>
-      
-      <!-- 2. Statistics -->
       <div class="mc-slide" id="mcSlide-stats"></div>
       
-      <!-- 3. Pitch: Full 2-Team Pitch + Coaches + Bench -->
+      <!-- 2-Team Tactical Board -->
       <div class="mc-slide" id="mcSlide-lineups">
         <div class="full-pitch" id="twoTeamPitch">
           <div class="pitch-center-line"></div>
@@ -395,17 +410,11 @@
         <div id="benchGridContainer"></div>
       </div>
 
-      <!-- 4. H2H & Standings with Form -->
       <div class="mc-slide" id="mcSlide-h2h"></div>
-
-      <!-- 5. Commentary -->
       <div class="mc-slide" id="mcSlide-comm"></div>
-
-      <!-- 6. News -->
       <div class="mc-slide" id="mcSlide-news"></div>
     </div>
   </div>
-
 
 
 <script>
@@ -583,7 +592,7 @@
       }
     }
 
-    // Match Loader
+    // Match Loader with Exact Local Kickoff Times
     async function initLoad() {
       syncCalendarDisplay();
       const container = document.getElementById("matchList");
@@ -607,7 +616,19 @@
             const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
             const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
 
-            const currentScore = `${home.score ?? "-"}:${away.score ?? "-"}`;
+            // Real Kickoff Time Calculation for upcoming matches
+            let displayStatus = c.status.type.shortDetail || c.status.type.description;
+            let displayHomeScore = home.score ?? "-";
+            let displayAwayScore = away.score ?? "-";
+
+            if (c.status.type.state === "pre") {
+              const kickoff = new Date(ev.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              displayStatus = `⏰ Kickoff: ${kickoff}`;
+              displayHomeScore = "-";
+              displayAwayScore = "-";
+            }
+
+            const currentScore = `${displayHomeScore}:${displayAwayScore}`;
             if (oldScores.has(ev.id) && oldScores.get(ev.id) !== currentScore && c.status.type.state === "in") {
               playGoalAlert();
             }
@@ -618,12 +639,12 @@
               leagueName: data.leagues[0]?.name || code.toUpperCase(),
               home: home.team.shortDisplayName || home.team.name,
               homeLogo: home.team.logo || '',
-              homeScore: home.score ?? "-",
+              homeScore: displayHomeScore,
               away: away.team.shortDisplayName || away.team.name,
               awayLogo: away.team.logo || '',
-              awayScore: away.score ?? "-",
+              awayScore: displayAwayScore,
               state: c.status.type.state,
-              statusText: c.status.type.shortDetail || c.status.type.description,
+              statusText: displayStatus,
               venue: c.venue ? c.venue.fullName : ''
             });
           });
@@ -718,6 +739,8 @@
       }).join("");
     }
 
+
+
 // Flashscore Match Center Engine
     function closeMatchCenter() {
       document.getElementById("matchCenter").classList.remove("open");
@@ -730,7 +753,6 @@
       document.getElementById(`mcSlide-${slide}`).classList.add("active");
     }
 
-    // Country to Flag Emoji Helper
     const FLAG_MAP = {
       "Spain": "🇪🇸", "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Italy": "🇮🇹", "Germany": "🇩🇪", "France": "🇫🇷",
       "Portugal": "🇵🇹", "Netherlands": "🇳🇱", "Brazil": "🇧🇷", "Argentina": "🇦🇷", "Nigeria": "🇳🇬",
@@ -906,7 +928,7 @@
           ${comp.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:8px;">📍 ${comp.venue.fullName || ''}</div>` : ''}
         `;
 
-        // 2. Info Timeline (Goals, Subs, Cards)
+        // 2. Info Timeline
         if (allEvents.length > 0) {
           infoSlide.innerHTML = allEvents.map(e => `
             <div class="timeline-item">
@@ -1196,3 +1218,8 @@
   </script>
 </body>
 </html>
+
+
+
+
+
