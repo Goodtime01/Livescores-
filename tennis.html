@@ -93,6 +93,7 @@
   </div>
 
 
+
 <script>
     let activeTour = "atp";
     let tennisData = [];
@@ -147,93 +148,89 @@
       e.stopPropagation();
       const m = tennisData.find(x => x.id === id);
       if (!m) return;
-
-      const shareData = {
-        title: "Etini Tennis LiveScores",
-        text: `🎾 ${m.player1} (${m.p1Score}) vs ${m.player2} (${m.p2Score})\n🏆 ${m.tournament} (${m.status})\nFollow live:`,
-        url: window.location.href
-      };
-
+      const text = `🎾 ${m.player1} (${m.p1Score}) vs ${m.player2} (${m.p2Score})\n🏆 ${m.tournament} (${m.status})\nFollow live:\nhttps://goodtime01.github.io/Livescores-/tennis.html`;
       if (navigator.share) {
-        try { await navigator.share(shareData); } catch (err) {}
+        try { await navigator.share({ title: "Etini Tennis LiveScores", text, url: window.location.href }); } catch(err){}
       } else {
-        navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
-          alert("Match link copied to clipboard! 📋");
-        }).catch(() => {
-          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
-        });
+        navigator.clipboard.writeText(text).then(() => alert("Match copied to clipboard! 📋")).catch(() => {});
       }
     }
 
     async function initLoad() {
       syncCalendarDisplay();
       const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading confirmed tournament matches...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading tournament matches...</div>';
 
       tennisData = [];
       const dt = formatApiDate(currentDate);
 
       try {
-        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${activeTour}/scoreboard?dates=${dt}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
+        // 1. Try date query
+        let res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${activeTour}/scoreboard?dates=${dt}`);
+        let data = res.ok ? await res.json() : null;
 
-        (data.events || []).forEach(ev => {
-          const c = ev.competitions?.[0] || {};
-          const p1 = c.competitors?.[0] || {};
-          const p2 = c.competitors?.[1] || {};
+        // 2. Fallback: If 0 matches on that exact day, load the active tournament draw
+        if (!data || !data.events || data.events.length === 0) {
+          const liveRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${activeTour}/scoreboard`);
+          if (liveRes.ok) data = await liveRes.json();
+        }
 
-          let p1Name = p1.athlete?.displayName || p1.athlete?.fullName || p1.athlete?.name || p1.displayName || p1.name;
-          let p2Name = p2.athlete?.displayName || p2.athlete?.fullName || p2.athlete?.name || p2.displayName || p2.name;
+        if (data && data.events) {
+          data.events.forEach(ev => {
+            const comp = ev.competitions?.[0] || {};
+            const competitors = ev.competitors || comp.competitors || [];
+            const p1 = competitors[0] || {};
+            const p2 = competitors[1] || {};
 
-          if (!p1Name && p1.roster?.athletes?.length) {
-            p1Name = p1.roster.athletes.map(a => a.displayName || a.shortName).join(' / ');
-          }
-          if (!p2Name && p2.roster?.athletes?.length) {
-            p2Name = p2.roster.athletes.map(a => a.displayName || a.shortName).join(' / ');
-          }
+            let p1Name = p1.athlete?.displayName || p1.athlete?.fullName || p1.athlete?.name || p1.displayName || p1.name;
+            let p2Name = p2.athlete?.displayName || p2.athlete?.fullName || p2.athlete?.name || p2.displayName || p2.name;
 
-          if ((!p1Name || p1Name === 'Player 1') && ev.name) {
-            const parts = ev.name.split(/\s+vs\.?\s+/i);
-            if (parts.length >= 2) {
-              p1Name = parts[0].trim();
-              p2Name = parts[1].trim();
+            // Extract from event name (e.g. "Alcaraz vs. Sinner")
+            if ((!p1Name || p1Name.toLowerCase() === "tbd") && ev.name) {
+              const parts = ev.name.split(/\s+vs\.?\s+/i);
+              if (parts.length >= 2) {
+                p1Name = parts[0].trim();
+                p2Name = parts[1].trim();
+              }
             }
-          }
 
-          // Filter out unannounced/empty future bracket slots
-          if (!p1Name || p1Name.toLowerCase() === "tbd") p1Name = "TBD";
-          if (!p2Name || p2Name.toLowerCase() === "tbd") p2Name = "TBD";
-          if (p1Name === "TBD" && p2Name === "TBD") return;
+            if (!p1Name) p1Name = "Player 1";
+            if (!p2Name) p2Name = "Player 2";
 
-          tennisData.push({
-            id: ev.id,
-            tournament: data.leagues?.[0]?.name || ev.name || (activeTour === 'atp' ? 'ATP Tour' : 'WTA Tour'),
-            round: c.notes?.[0]?.headline || "Main Draw",
-            player1: p1Name,
-            player1Flag: p1.athlete?.flag?.href || '',
-            player1Score: p1.score ?? "0",
-            player1Winner: p1.winner || false,
-            player1Lines: p1.linescores || [],
-            player2: p2Name,
-            player2Flag: p2.athlete?.flag?.href || '',
-            player2Score: p2.score ?? "0",
-            player2Winner: p2.winner || false,
-            player2Lines: p2.linescores || [],
-            status: c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled",
-            state: c.status?.type?.state || "pre"
+            const p1Lines = p1.linescores || [];
+            const p2Lines = p2.linescores || [];
+
+            tennisData.push({
+              id: ev.id,
+              tournament: data.leagues?.[0]?.name || ev.name || (activeTour === 'atp' ? 'ATP Tour' : 'WTA Tour'),
+              round: comp.notes?.[0]?.headline || "Main Draw",
+              player1: p1Name,
+              player1Flag: p1.athlete?.flag?.href || '',
+              player1Score: p1.score ?? "0",
+              player1Winner: p1.winner || false,
+              player1Lines: p1Lines,
+              player2: p2Name,
+              player2Flag: p2.athlete?.flag?.href || '',
+              player2Score: p2.score ?? "0",
+              player2Winner: p2.winner || false,
+              player2Lines: p2Lines,
+              status: comp.status?.type?.shortDetail || comp.status?.type?.description || "Scheduled",
+              state: comp.status?.type?.state || "pre"
+            });
           });
-        });
-      } catch (err) {}
-
-      // Prioritize Live and Finished games over upcoming ones
-      tennisData.sort((a, b) => {
-        const order = { 'in': 0, 'post': 1, 'pre': 2 };
-        return (order[a.state] ?? 2) - (order[b.state] ?? 2);
-      });
+        }
+      } catch (err) {
+        console.error(err);
+      }
 
       if (tennisData.length === 0) {
-        container.innerHTML = '<div class="tennis-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches with confirmed players right now for this date. Tap ◀ to view yesterday\'s matches or check another date!</div>';
+        container.innerHTML = `
+          <div class="tennis-card" style="text-align:center; color:#94a3b8; padding:30px;">
+            <p style="font-weight:700; color:#f8fafc; margin-bottom:8px;">No tournament matches active right now.</p>
+            <p style="font-size:0.75rem;">Tournaments typically run Monday through Sunday during tour weeks.</p>
+            <button onclick="resetToToday()" style="margin-top:12px; background:#22c55e; color:#0b1120; border:none; padding:7px 16px; border-radius:6px; font-weight:800; font-size:0.75rem; cursor:pointer;">Refresh Tournament Board ↻</button>
+          </div>
+        `;
         return;
       }
 
@@ -279,6 +276,7 @@
               <div class="set-total">Sets</div>
             </div>
 
+            <!-- Player 1 -->
             <div class="player-row">
               <div class="player-info ${m.player1Winner ? 'player-winner' : ''}">
                 ${m.player1Flag ? `<img src="${m.player1Flag}">` : '🎾'}
@@ -290,6 +288,7 @@
               </div>
             </div>
 
+            <!-- Player 2 -->
             <div class="player-row">
               <div class="player-info ${m.player2Winner ? 'player-winner' : ''}">
                 ${m.player2Flag ? `<img src="${m.player2Flag}">` : '🎾'}
