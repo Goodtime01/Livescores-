@@ -94,3 +94,201 @@
   <div class="matches-container" id="matchList">
     <div style="text-align:center; padding:30px; color:#94a3b8;">Loading tennis matches...</div>
   </div>
+
+<script>
+    let activeTour = "atp";
+    let tennisData = [];
+    let currentDate = new Date();
+
+    // Calendar Engine
+    function formatApiDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
+    }
+
+    function formatInputDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function syncCalendarDisplay() {
+      const input = document.getElementById("calendarInput");
+      if (input) input.value = formatInputDate(currentDate);
+    }
+
+    function onCalendarSelect(val) {
+      if (!val) return;
+      const [y, m, d] = val.split("-").map(Number);
+      currentDate = new Date(y, m - 1, d);
+      initLoad();
+    }
+
+    function stepDate(delta) {
+      currentDate.setDate(currentDate.getDate() + delta);
+      syncCalendarDisplay();
+      initLoad();
+    }
+
+    function resetToToday() {
+      currentDate = new Date();
+      syncCalendarDisplay();
+      initLoad();
+    }
+
+    function setTour(tour, btn) {
+      activeTour = tour;
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+      initLoad();
+    }
+
+    // Universal Share
+    async function shareMatch(e, id) {
+      e.stopPropagation();
+      const m = tennisData.find(x => x.id === id);
+      if (!m) return;
+
+      const shareData = {
+        title: "Etini Tennis LiveScores",
+        text: `🎾 ${m.p1Name} vs ${m.p2Name}\n🏆 ${m.tournament} (${m.status})\nFollow live:`,
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {}
+      } else {
+        navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
+          alert("Tennis score & link copied to clipboard! 📋");
+        }).catch(() => {
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
+        });
+      }
+    }
+
+    async function initLoad() {
+      syncCalendarDisplay();
+      const container = document.getElementById("matchList");
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading tennis matches...</div>';
+
+      tennisData = [];
+      const dt = formatApiDate(currentDate);
+
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${activeTour}/scoreboard?dates=${dt}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        (data.events || []).forEach(ev => {
+          const c = ev.competitions?.[0] || {};
+          const p1 = c.competitors?.[0] || {};
+          const p2 = c.competitors?.[1] || {};
+
+          tennisData.push({
+            id: ev.id,
+            tournament: data.leagues?.[0]?.name || ev.name || (activeTour === 'atp' ? 'ATP Tour' : 'WTA Tour'),
+            round: c.type?.text || c.notes?.[0]?.headline || 'Main Draw',
+            p1Name: p1.athlete?.displayName || 'Player 1',
+            p1Flag: p1.athlete?.flag?.href || '',
+            p1Score: p1.score ?? '-',
+            p1Lines: p1.linescores || [],
+            p1Win: p1.winner || false,
+            p2Name: p2.athlete?.displayName || 'Player 2',
+            p2Flag: p2.athlete?.flag?.href || '',
+            p2Score: p2.score ?? '-',
+            p2Lines: p2.linescores || [],
+            p2Win: p2.winner || false,
+            state: c.status?.type?.state,
+            status: c.status?.type?.shortDetail || c.status?.type?.description || 'Scheduled'
+          });
+        });
+      } catch (err) {}
+
+      if (tennisData.length === 0) {
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:25px;">No tennis matches scheduled for this date. Use the calendar 📅 above to pick another date!</div>';
+        return;
+      }
+
+      renderMatches();
+    }
+
+    function renderMatches() {
+      const container = document.getElementById("matchList");
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      let list = [...tennisData];
+      if (q) list = list.filter(m => m.p1Name.toLowerCase().includes(q) || m.p2Name.toLowerCase().includes(q) || m.tournament.toLowerCase().includes(q));
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="match-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching players found.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(m => {
+        let badge = m.status;
+        if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.status}</span>`;
+
+        // Render up to 5 set scores (e.g. S1, S2, S3, S4, S5)
+        const setColsCount = Math.max(m.p1Lines.length, m.p2Lines.length, 1);
+        let headerThs = "";
+        for (let i = 0; i < setColsCount; i++) headerThs += `<th class="set-col">S${i + 1}</th>`;
+
+        let p1Tds = "", p2Tds = "";
+        for (let i = 0; i < setColsCount; i++) {
+          const s1 = m.p1Lines[i]?.value ?? "-";
+          const s2 = m.p2Lines[i]?.value ?? "-";
+          p1Tds += `<td class="set-col ${s1 > s2 ? 'active-set' : ''}">${s1}</td>`;
+          p2Tds += `<td class="set-col ${s2 > s1 ? 'active-set' : ''}">${s2}</td>`;
+        }
+
+        return `
+          <div class="match-card">
+            <div class="match-header">
+              <span>${m.tournament} • ${m.round}</span>
+              <button class="share-btn" onclick="shareMatch(event, '${m.id}')">🔗 Share</button>
+            </div>
+            
+            <table class="tennis-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left; color:#94a3b8;">Player</th>
+                  ${headerThs}
+                  <th class="total-sets">Sets</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="${m.p1Win ? 'color:#10b981;' : ''}">
+                  <td class="tennis-player-cell">
+                    ${m.p1Flag ? `<img src="${m.p1Flag}">` : '🎾'}
+                    <span>${m.p1Name} ${m.p1Win ? '✓' : ''}</span>
+                  </td>
+                  ${p1Tds}
+                  <td class="total-sets">${m.p1Score}</td>
+                </tr>
+                <tr style="${m.p2Win ? 'color:#10b981;' : ''}">
+                  <td class="tennis-player-cell">
+                    ${m.p2Flag ? `<img src="${m.p2Flag}">` : '🎾'}
+                    <span>${m.p2Name} ${m.p2Win ? '✓' : ''}</span>
+                  </td>
+                  ${p2Tds}
+                  <td class="total-sets">${m.p2Score}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="match-footer">${badge}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    initLoad();
+    setInterval(initLoad, 30000);
+  </script>
+</body>
+</html>
