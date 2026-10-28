@@ -92,6 +92,7 @@
     <div style="text-align:center; padding:30px; color:#94a3b8;">Loading tennis matches...</div>
   </div>
 
+
 <script>
     let activeTour = "atp";
     let tennisData = [];
@@ -186,16 +187,45 @@
           const p1 = c.competitors?.[0] || {};
           const p2 = c.competitors?.[1] || {};
 
-          // Extract real players & set-by-set linescores
-          const p1Name = p1.athlete?.displayName || p1.athlete?.name || "Player 1";
-          const p2Name = p2.athlete?.displayName || p2.athlete?.name || "Player 2";
+          // 5-Layer Name Extraction (Never defaults to "Player 1")
+          let p1Name = p1.athlete?.displayName 
+                    || p1.athlete?.fullName 
+                    || p1.athlete?.name 
+                    || p1.displayName 
+                    || p1.name;
+
+          let p2Name = p2.athlete?.displayName 
+                    || p2.athlete?.fullName 
+                    || p2.athlete?.name 
+                    || p2.displayName 
+                    || p2.name;
+
+          // Doubles Check
+          if (!p1Name && p1.roster?.athletes?.length) {
+            p1Name = p1.roster.athletes.map(a => a.displayName || a.shortName).join(' / ');
+          }
+          if (!p2Name && p2.roster?.athletes?.length) {
+            p2Name = p2.roster.athletes.map(a => a.displayName || a.shortName).join(' / ');
+          }
+
+          // Fallback to Event Name (e.g. "Swiatek vs. Sabalenka")
+          if ((!p1Name || p1Name === 'Player 1') && ev.name) {
+            const parts = ev.name.split(/\s+vs\.?\s+/i);
+            if (parts.length >= 2) {
+              p1Name = parts[0].trim();
+              p2Name = parts[1].trim();
+            }
+          }
+
+          if (!p1Name) p1Name = "TBD";
+          if (!p2Name) p2Name = "TBD";
 
           const p1Lines = p1.linescores || [];
           const p2Lines = p2.linescores || [];
 
           tennisData.push({
             id: ev.id,
-            tournament: data.leagues?.[0]?.name || ev.name || "ATP / WTA Tour",
+            tournament: data.leagues?.[0]?.name || ev.name || (activeTour === 'atp' ? 'ATP Tour' : 'WTA Tour'),
             round: c.notes?.[0]?.headline || "Main Draw",
             player1: p1Name,
             player1Flag: p1.athlete?.flag?.href || '',
@@ -213,7 +243,7 @@
       } catch (err) {}
 
       if (tennisData.length === 0) {
-        container.innerHTML = '<div class="tennis-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches on this date. Tournaments usually run during scheduled weeks. Use the calendar 📅 above to pick another date!</div>';
+        container.innerHTML = '<div class="tennis-card" style="text-align:center; color:#94a3b8; padding:25px;">No matches on this date. Tournaments run during scheduled tour weeks. Tap "Today" or use the calendar 📅 above to pick another date!</div>';
         return;
       }
 
@@ -233,7 +263,6 @@
       }
 
       container.innerHTML = list.map(m => {
-        // Build Sets headers & values
         const maxSets = Math.max(m.player1Lines.length, m.player2Lines.length, 1);
         let setHeaders = "";
         for (let i = 1; i <= maxSets; i++) setHeaders += `<div class="set-box">S${i}</div>`;
@@ -255,7 +284,6 @@
               <button class="share-btn" onclick="shareMatch(event, '${m.id}')">🔗 Share</button>
             </div>
 
-            <!-- Header Set Labels -->
             <div style="display:flex; justify-content:flex-end; gap:8px; font-size:0.7rem; color:#94a3b8; margin-bottom:4px; font-weight:700;">
               ${setHeaders}
               <div class="set-total">Sets</div>
