@@ -168,6 +168,8 @@
   </style>
 </head>
 
+
+
 <body>
 
   <!-- Top 4-Sport Navigation Bar -->
@@ -215,7 +217,7 @@
       </div>
     </div>
 
-    <a href="https://reffpa.com/L?tag=d_6272495m_14987c_&site=6272495&ad=14987" target="_blank" style="display:block; text-align:center; background:#facc15; color:#000; text-decoration:none; font-weight:900; font-size:0.8rem; padding:8px 12px; border-radius:6px; letter-spacing:0.5px;">
+    <a href="https://1xbet.com" target="_blank" style="display:block; text-align:center; background:#facc15; color:#000; text-decoration:none; font-weight:900; font-size:0.8rem; padding:8px 12px; border-radius:6px; letter-spacing:0.5px;">
       CLAIM BONUS & BET NOW ❯
     </a>
   </div>
@@ -417,6 +419,9 @@
   </div>
 
 
+
+
+
 <script>
     const FEATURED_LEAGUES = [
       "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", 
@@ -616,7 +621,6 @@
             const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
             const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
 
-            // Real Kickoff Time Calculation for upcoming matches
             let displayStatus = c.status.type.shortDetail || c.status.type.description;
             let displayHomeScore = home.score ?? "-";
             let displayAwayScore = away.score ?? "-";
@@ -740,7 +744,6 @@
     }
 
 
-
 // Flashscore Match Center Engine
     function closeMatchCenter() {
       document.getElementById("matchCenter").classList.remove("open");
@@ -753,18 +756,49 @@
       document.getElementById(`mcSlide-${slide}`).classList.add("active");
     }
 
-    const FLAG_MAP = {
-      "Spain": "🇪🇸", "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Italy": "🇮🇹", "Germany": "🇩🇪", "France": "🇫🇷",
-      "Portugal": "🇵🇹", "Netherlands": "🇳🇱", "Brazil": "🇧🇷", "Argentina": "🇦🇷", "Nigeria": "🇳🇬",
-      "Scotland": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "Belgium": "🇧🇪", "Croatia": "🇭🇷", "Turkey": "🇹🇷", "Denmark": "🇩🇰"
+    // Top Managers & Nationalities Directory (Guarantees exact names & flags)
+    const MANAGER_DB = {
+      "Arsenal": { name: "Mikel Arteta", flag: "🇪🇸" },
+      "Chelsea": { name: "Enzo Maresca", flag: "🇮🇹" },
+      "Liverpool": { name: "Arne Slot", flag: "🇳🇱" },
+      "Manchester City": { name: "Pep Guardiola", flag: "🇪🇸" },
+      "Manchester United": { name: "Rúben Amorim", flag: "🇵🇹" },
+      "Tottenham": { name: "Ange Postecoglou", flag: "🇦🇺" },
+      "Aston Villa": { name: "Unai Emery", flag: "🇪🇸" },
+      "Newcastle": { name: "Eddie Howe", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      "Real Madrid": { name: "Carlo Ancelotti", flag: "🇮🇹" },
+      "Barcelona": { name: "Hansi Flick", flag: "🇩🇪" },
+      "Atlético Madrid": { name: "Diego Simeone", flag: "🇦🇷" },
+      "Bayern Munich": { name: "Vincent Kompany", flag: "🇧🇪" },
+      "Bayer Leverkusen": { name: "Xabi Alonso", flag: "🇪🇸" },
+      "Paris Saint-Germain": { name: "Luis Enrique", flag: "🇪🇸" },
+      "Inter Milan": { name: "Simone Inzaghi", flag: "🇮🇹" },
+      "Juventus": { name: "Thiago Motta", flag: "🇮🇹" },
+      "AC Milan": { name: "Paulo Fonseca", flag: "🇵🇹" },
+      "Fenerbahce": { name: "José Mourinho", flag: "🇵🇹" },
+      "Galatasaray": { name: "Okan Buruk", flag: "🇹🇷" },
+      "Benfica": { name: "Bruno Lage", flag: "🇵🇹" },
+      "Sporting CP": { name: "João Pereira", flag: "🇵🇹" },
+      "Porto": { name: "Vítor Bruno", flag: "🇵🇹" },
+      "Al Hilal": { name: "Jorge Jesus", flag: "🇵🇹" },
+      "Al Nassr": { name: "Stefano Pioli", flag: "🇮🇹" }
     };
 
-    function getFlag(country) {
-      return FLAG_MAP[country] || "🏳️";
+    function getManagerInfo(teamName, coachObj) {
+      if (MANAGER_DB[teamName]) return MANAGER_DB[teamName];
+      for (const [key, val] of Object.entries(MANAGER_DB)) {
+        if (teamName.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(teamName.toLowerCase())) {
+          return val;
+        }
+      }
+      if (coachObj && coachObj.displayName && coachObj.displayName.toLowerCase() !== "manager") {
+        return { name: coachObj.displayName, flag: "👔" };
+      }
+      return { name: "Head Coach", flag: "👔" };
     }
 
-    // Full 2-Team Pitch Tactical Board
-    function renderTwoTeamPitch(homeData, awayData) {
+    // Full 2-Team Tactical Pitch
+    function renderTwoTeamPitch(homeData, awayData, hTeamName, aTeamName) {
       const awayHalf = document.getElementById("awayPitchHalf");
       const homeHalf = document.getElementById("homePitchHalf");
       awayHalf.innerHTML = "";
@@ -778,7 +812,7 @@
         return;
       }
 
-      // 1. Away Team (Top Half: GK at top, Forwards near center line)
+      // Away Team (Top Half: GK at top, Forwards near center)
       const aGk = aStarters[0];
       const aOutfield = aStarters.slice(1);
       const aForm = (awayData.formation || "4-3-3").split("-").map(Number);
@@ -801,7 +835,7 @@
       renderRow(awayHalf, [aGk], "jersey-away");
       aSlices.forEach(group => renderRow(awayHalf, group, "jersey-away"));
 
-      // 2. Home Team (Bottom Half: Forwards near center line, GK at bottom)
+      // Home Team (Bottom Half: Forwards near center, GK at bottom)
       const hGk = hStarters[0];
       const hOutfield = hStarters.slice(1);
       const hForm = (homeData.formation || "4-3-3").split("-").map(Number);
@@ -814,18 +848,18 @@
       }
       renderRow(homeHalf, [hGk], "jersey-home");
 
-      // 3. Coaches & Nationalities
-      const hCoach = homeData.coach?.[0] || { displayName: "Manager", country: "England" };
-      const aCoach = awayData.coach?.[0] || { displayName: "Manager", country: "Spain" };
+      // Exact Manager Names & National Flags
+      const hCoach = getManagerInfo(hTeamName, homeData.coach?.[0]);
+      const aCoach = getManagerInfo(aTeamName, awayData.coach?.[0]);
 
       document.getElementById("coachesContainer").innerHTML = `
         <div class="coaches-wrap">
-          <div>👔 <strong>${hCoach.displayName || 'Manager'}</strong> ${getFlag(hCoach.country)} (${homeData.formation || '4-3-3'})</div>
-          <div>👔 <strong>${aCoach.displayName || 'Manager'}</strong> ${getFlag(aCoach.country)} (${awayData.formation || '4-3-3'})</div>
+          <div>${hCoach.flag} <strong>${hCoach.name}</strong> (${homeData.formation || '4-3-3'})</div>
+          <div>${aCoach.flag} <strong>${aCoach.name}</strong> (${awayData.formation || '4-3-3'})</div>
         </div>
       `;
 
-      // 4. Substitutes Grid with Shirt Numbers
+      // Numbered Substitutes
       const hSubs = (homeData.roster || []).filter(p => !p.starter).map(p => `
         <div class="bench-player"><span class="bench-num">#${p.jersey || '-'}</span><span>${p.athlete?.displayName || p.athlete?.shortName}</span></div>
       `).join("");
@@ -848,6 +882,7 @@
       `;
     }
 
+    // Match Center
     async function openMatchCenter(id, code) {
       const mc = document.getElementById("matchCenter");
       mc.classList.add("open");
@@ -862,7 +897,7 @@
       banner.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem;">Loading match center...</div>';
       infoSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading events, subs & cards...</div>';
       statsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading statistics...</div>';
-      h2hSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading H2H & Table...</div>';
+      h2hSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading Last 5 Matches & H2H...</div>';
       commSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading live commentary...</div>';
       newsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading club headlines...</div>';
 
@@ -874,7 +909,10 @@
         const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
         const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
 
-        // Parse Goals, Subs, Cards & Events
+        const homeName = home.team?.shortDisplayName || home.team?.name || 'Home';
+        const awayName = away.team?.shortDisplayName || away.team?.name || 'Away';
+
+        // Parse Goals, Subs, Cards
         const homeGoals = [], awayGoals = [], allEvents = [];
         (comp.details || []).forEach(ev => {
           const min = ev.clock?.displayValue || "";
@@ -892,35 +930,34 @@
             const goalStr = `⚽ ${player || 'Goal'} ${min}${assist}`;
             if (isHome) homeGoals.push(goalStr);
             else awayGoals.push(goalStr);
-            allEvents.push({ min, icon: "⚽", text: `<strong>${player || 'Goal'}</strong> ${assist}`, team: isHome ? home.team?.shortDisplayName : away.team?.shortDisplayName });
+            allEvents.push({ min, icon: "⚽", text: `<strong>${player || 'Goal'}</strong> ${assist}`, team: isHome ? homeName : awayName });
           } else if (textType.includes("sub")) {
             const pIn = ev.athletesInvolved?.[0]?.displayName || "Substitute In";
             const pOut = ev.athletesInvolved?.[1]?.displayName ? ` (Out: ${ev.athletesInvolved[1].displayName})` : "";
-            allEvents.push({ min, icon: "🔁", text: `<span class="sub-in">${pIn}</span> <span class="sub-out">${pOut}</span>`, team: isHome ? home.team?.shortDisplayName : away.team?.shortDisplayName });
+            allEvents.push({ min, icon: "🔁", text: `<span class="sub-in">${pIn}</span> <span class="sub-out">${pOut}</span>`, team: isHome ? homeName : awayName });
           } else if (textType.includes("card")) {
             const icon = textType.includes("red") ? "🟥" : "🟨";
-            allEvents.push({ min, icon, text: `<strong>${player}</strong>`, team: isHome ? home.team?.shortDisplayName : away.team?.shortDisplayName });
+            allEvents.push({ min, icon, text: `<strong>${player}</strong>`, team: isHome ? homeName : awayName });
           } else if (ev.penaltyKick && !ev.scoringPlay) {
-            allEvents.push({ min, icon: "❌", text: `Missed Penalty: ${player}`, team: isHome ? home.team?.shortDisplayName : away.team?.shortDisplayName });
+            allEvents.push({ min, icon: "❌", text: `Missed Penalty: ${player}`, team: isHome ? homeName : awayName });
           }
         });
 
-        // 1. Banner
+        // Banner
         banner.innerHTML = `
           <div class="mc-league">${d.header?.league?.name || code.toUpperCase()}</div>
           <div class="mc-teams">
             <div class="mc-team-block">
               <img src="${home.team?.logos?.[0]?.href || home.team?.logo || ''}">
-              <div class="mc-team-name">${home.team?.shortDisplayName || home.team?.name || 'Home'}</div>
+              <div class="mc-team-name">${homeName}</div>
             </div>
             <div class="mc-score">${home.score ?? 0} : ${away.score ?? 0}</div>
             <div class="mc-team-block">
               <img src="${away.team?.logos?.[0]?.href || away.team?.logo || ''}">
-              <div class="mc-team-name">${away.team?.shortDisplayName || away.team?.name || 'Away'}</div>
+              <div class="mc-team-name">${awayName}</div>
             </div>
           </div>
           <div class="mc-status">${comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled'}</div>
-          
           <div class="mc-scorers-banner">
             <div class="mc-scorers-home">${homeGoals.join("<br>")}</div>
             <div class="mc-scorers-away">${awayGoals.join("<br>")}</div>
@@ -928,7 +965,7 @@
           ${comp.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:8px;">📍 ${comp.venue.fullName || ''}</div>` : ''}
         `;
 
-        // 2. Info Timeline
+        // Info Timeline
         if (allEvents.length > 0) {
           infoSlide.innerHTML = allEvents.map(e => `
             <div class="timeline-item">
@@ -941,7 +978,7 @@
           infoSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No events recorded yet.</div>';
         }
 
-        // 3. Stats Slide
+        // Stats
         if (d.boxscore?.teams?.length >= 2) {
           const h = {}, a = {};
           d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
@@ -975,61 +1012,70 @@
           statsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Detailed stats will update at kickoff.</div>';
         }
 
-        // 4. Lineups: Single Full 2-Team Tactical Board
+        // Lineups: Single Full 2-Team Tactical Board + Real Managers
         if (d.rosters && d.rosters.length >= 2) {
-          renderTwoTeamPitch(d.rosters[0], d.rosters[1]);
+          renderTwoTeamPitch(d.rosters[0], d.rosters[1], homeName, awayName);
         }
 
-        // 5. H2H & Table Slide
+        // Previous 5 Matches for EACH Team (Opponents, Scores & W/D/L) + H2H
         try {
-          const sRes = await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`);
-          const sData = await sRes.json();
-          const entries = sData.children?.[0]?.standings?.entries || sData.standings?.[0]?.entries || [];
-          
-          let tableRows = "";
-          entries.forEach((e, idx) => {
-            const stats = e.stats || [];
-            const getStat = (n) => stats.find(s => s.name === n)?.displayValue ?? "0";
-            const isMatchTeam = e.team?.id === home.id || e.team?.id === away.id;
-            const rawForm = (e.form || getStat('form') || "WWDLL").slice(-5).toUpperCase();
-            const formHtml = rawForm.split("").map(c => c === "W" ? '<span class="badge-w">🟢</span>' : (c === "D" ? '<span class="badge-d">🟠</span>' : '<span class="badge-l">🔴</span>')).join("");
+          const [hSchedRes, aSchedRes] = await Promise.allSettled([
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${home.id}/schedule`),
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${away.id}/schedule`)
+          ]);
 
-            tableRows += `
-              <tr style="${isMatchTeam ? 'background:rgba(56,189,248,0.15);' : ''}">
-                <td>${idx + 1}</td>
-                <td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td>
-                <td>${getStat("gamesPlayed")}</td>
-                <td>${getStat("wins")}</td>
-                <td>${getStat("ties")}</td>
-                <td>${getStat("losses")}</td>
-                <td class="pts">${getStat("points")}</td>
-                <td><div class="form-badges">${formHtml}</div></td>
-              </tr>
-            `;
-          });
+          const parseLast5 = (schedData, teamId) => {
+            const completed = (schedData.events || []).filter(e => e.competitions?.[0]?.status?.type?.state === 'post').slice(-5).reverse();
+            if (!completed.length) return '<div style="font-size:0.7rem; color:#94a3b8; padding:4px 0;">No previous matches recorded.</div>';
+
+            return completed.map(ev => {
+              const comp = ev.competitions[0];
+              const us = comp.competitors.find(c => c.id === teamId) || comp.competitors[0];
+              const opp = comp.competitors.find(c => c.id !== teamId) || comp.competitors[1];
+              const ourScore = parseInt(us.score?.displayValue ?? us.score ?? 0);
+              const oppScore = parseInt(opp.score?.displayValue ?? opp.score ?? 0);
+
+              let badge = '<span class="badge-d">🟠 D</span>';
+              if (ourScore > oppScore) badge = '<span class="badge-w">🟢 W</span>';
+              else if (ourScore < oppScore) badge = '<span class="badge-l">🔴 L</span>';
+
+              return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #334155; font-size:0.72rem;">
+                  <span style="font-weight:600;">vs ${opp.team?.shortDisplayName || opp.team?.name}</span>
+                  <span style="font-weight:800; color:#38bdf8;">${ourScore} : ${oppScore}</span>
+                  <span>${badge}</span>
+                </div>
+              `;
+            }).join("");
+          };
+
+          const hLast5Html = hSchedRes.status === 'fulfilled' && hSchedRes.value.ok ? parseLast5(await hSchedRes.value.json(), home.id) : '';
+          const aLast5Html = aSchedRes.status === 'fulfilled' && aSchedRes.value.ok ? parseLast5(await aSchedRes.value.json(), away.id) : '';
 
           h2hSlide.innerHTML = `
-            <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin-bottom:8px;">⚔️ Head-to-Head Clash</div>
+            <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin-bottom:8px;">⚔️ Current Head-to-Head</div>
             <div class="match-card" style="padding:10px; margin-bottom:14px;">
               <div class="h2h-match">
-                <span class="h2h-teams">${home.team?.shortDisplayName} vs ${away.team?.shortDisplayName}</span>
+                <span class="h2h-teams">${homeName} vs ${awayName}</span>
                 <span class="h2h-score">${home.score ?? 0} : ${away.score ?? 0}</span>
               </div>
             </div>
 
-            <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin-bottom:8px;">🏆 League Table & 5-Game Form</div>
-            <div class="table-wrapper">
-              <table class="standings-table">
-                <thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>PTS</th><th>Form</th></tr></thead>
-                <tbody>${tableRows}</tbody>
-              </table>
+            <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin-bottom:6px;">📈 ${homeName} – Previous 5 Games</div>
+            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">
+              ${hLast5Html}
+            </div>
+
+            <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin-bottom:6px;">📈 ${awayName} – Previous 5 Games</div>
+            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">
+              ${aLast5Html}
             </div>
           `;
         } catch(e) {
-          h2hSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">H2H table currently unavailable.</div>';
+          h2hSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Previous matches data unavailable.</div>';
         }
 
-        // 6. Commentary Feed
+        // Commentary
         const commList = d.commentary || d.plays || [];
         if (commList.length > 0) {
           commSlide.innerHTML = commList.map(item => `
@@ -1049,7 +1095,7 @@
           commSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Live play-by-play commentary is active during match play.</div>';
         }
 
-        // 7. News Slide
+        // News
         fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/news`)
           .then(r => r.json())
           .then(nData => {
@@ -1068,10 +1114,10 @@
               newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No club news at this moment.</div>';
             }
           })
-          .catch(() => {
+   
+.catch(() => {
             newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Club news currently unavailable.</div>';
           });
-
       } catch (err) {
         banner.innerHTML = '<div style="color:#ef4444; font-size:0.8rem;">Could not load match details.</div>';
       }
@@ -1090,12 +1136,7 @@
           return;
         }
 
-        let html = `
-          <table class="standings-table">
-            <thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th><th>Form</th></tr></thead>
-            <tbody>
-        `;
-
+        let html = `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th><th>Form</th></tr></thead><tbody>`;
         entries.forEach((e, i) => {
           const s = (name) => e.stats?.find(x => x.name === name)?.displayValue ?? "0";
           const gf = s('pointsFor') || s('goalsFor') || "0";
@@ -1106,23 +1147,8 @@
           const rawForm = (e.form || s('form') || "WWDLL").slice(-5).toUpperCase();
           const formHtml = rawForm.split("").map(c => c === "W" ? '<span class="badge-w">🟢</span>' : (c === "D" ? '<span class="badge-d">🟠</span>' : '<span class="badge-l">🔴</span>')).join("");
 
-          html += `
-            <tr>
-              <td>${i + 1}</td>
-              <td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td>
-              <td>${s('gamesPlayed')}</td>
-              <td>${s('wins')}</td>
-              <td>${s('ties')}</td>
-              <td>${s('losses')}</td>
-              <td>${gf}</td>
-              <td>${ga}</td>
-              <td class="${gdClass}">${gdFormatted}</td>
-              <td class="pts">${s('points')}</td>
-              <td><div class="form-badges">${formHtml}</div></td>
-            </tr>
-          `;
+          html += `<tr><td>${i + 1}</td><td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td><td>${s('gamesPlayed')}</td><td>${s('wins')}</td><td>${s('ties')}</td><td>${s('losses')}</td><td>${gf}</td><td>${ga}</td><td class="${gdClass}">${gdFormatted}</td><td class="pts">${s('points')}</td><td><div class="form-badges">${formHtml}</div></td></tr>`;
         });
-
         html += `</tbody></table>`;
         box.innerHTML = html;
       } catch (e) {
@@ -1134,7 +1160,6 @@
     async function loadLeaders(code) {
       const box = document.getElementById("leadersWrapper");
       box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading League Leaders...</div>';
-
       try {
         const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
         const data = await res.json();
@@ -1155,17 +1180,10 @@
         const topAssists = Object.entries(assistsMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
         let html = `<h3 style="font-size:0.85rem; color:#38bdf8; margin-bottom:8px;">👟 Top Goal Scorers</h3>`;
-        html += topScorers.length ? topScorers.map(([n, g], i) => `
-          <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;">
-            <span>#${i+1} <strong>${n}</strong></span><span style="color:#38bdf8; font-weight:bold;">${g} Goals</span>
-          </div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
+        html += topScorers.length ? topScorers.map(([n, g], i) => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;"><span>#${i+1} <strong>${n}</strong></span><span style="color:#38bdf8; font-weight:bold;">${g} Goals</span></div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
 
         html += `<h3 style="font-size:0.85rem; color:#38bdf8; margin:16px 0 8px 0;">🎯 Top Playmakers (Assists)</h3>`;
-        html += topAssists.length ? topAssists.map(([n, a], i) => `
-          <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;">
-            <span>#${i+1} <strong>${n}</strong></span><span style="color:#22c55e; font-weight:bold;">${a} Assists</span>
-          </div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
-
+        html += topAssists.length ? topAssists.map(([n, a], i) => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;"><span>#${i+1} <strong>${n}</strong></span><span style="color:#22c55e; font-weight:bold;">${a} Assists</span></div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
         box.innerHTML = html;
       } catch (e) {
         box.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Leaders data unavailable.</div>';
@@ -1212,14 +1230,8 @@
       }
     }
 
-    // Launch App
     initLoad();
     setInterval(initLoad, 30000);
   </script>
 </body>
 </html>
-
-
-
-
-
