@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etini LiveScores - Ice Hockey</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+
+    /* Multi-Sport Ribbon */
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav::-webkit-scrollbar { display: none; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
+    .sport-btn.active { background: #06b6d4; color: #0b1120; border-color: #06b6d4; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    header h1 { font-size: 1.2rem; color: #06b6d4; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
+    .btn-primary { background: #06b6d4; color: #0b1120; border: none; }
+
+    /* Date Bar */
+    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; border-radius: 8px; padding: 6px 8px; margin-bottom: 10px; gap: 6px; }
+    .date-nav-btn { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+    .date-picker-wrap { display: flex; align-items: center; gap: 6px; background: #0b1120; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; flex: 1; justify-content: center; }
+    .date-picker-input { background: transparent; border: none; color: #06b6d4; font-weight: 700; font-size: 0.8rem; outline: none; color-scheme: dark; font-family: inherit; width: 100%; text-align: center; cursor: pointer; }
+    .today-btn { background: #06b6d4; color: #0b1120; border: none; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
+
+    .search-box { margin-bottom: 10px; }
+    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
+
+    /* Hockey Match Cards */
+    .matches-container { display: flex; flex-direction: column; gap: 10px; }
+    .hockey-card { background: #1e293b; border-radius: 10px; padding: 12px 14px; border: 1px solid #334155; cursor: pointer; }
+    .hockey-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; }
+    .share-btn { background: #0284c7; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+
+    .match-body { display: flex; justify-content: space-between; align-items: center; }
+    .team { width: 38%; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .team img { width: 24px; height: 24px; object-fit: contain; }
+    .team.away { justify-content: flex-end; text-align: right; }
+    .score-box { background: #0b1120; padding: 6px 12px; border-radius: 6px; font-size: 1.2rem; font-weight: 900; color: #06b6d4; min-width: 60px; text-align: center; }
+    .match-footer { font-size: 0.72rem; text-align: center; color: #fbbf24; font-weight: 600; margin-top: 8px; }
+
+    /* Period Breakdown (P1, P2, P3, OT, SOG) */
+    .period-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #334155; text-align: center; display: none; }
+    .period-table.open { display: table; }
+    .period-table th { color: #94a3b8; padding: 4px; font-weight: 600; }
+    .period-table td { padding: 4px; font-weight: 700; }
+    .venue-tag { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 6px; font-style: italic; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; }
+    .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- Multi-Sport Ribbon -->
+  <div class="sport-nav">
+    <a href="index.html" class="sport-btn">⚽ Football</a>
+    <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
+    <a href="combat.html" class="sport-btn">🥊 Combat</a>
+    <a href="tennis.html" class="sport-btn">🎾 Tennis</a>
+    <a href="cricket.html" class="sport-btn">🏏 Cricket</a>
+    <a href="hockey.html" class="sport-btn active">🏒 Hockey (NHL)</a>
+  </div>
+
+  <header>
+    <h1>🏒 Etini LiveScores</h1>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
+  </header>
+
+  <!-- Calendar Bar -->
+  <div class="date-bar">
+    <button class="date-nav-btn" onclick="stepDate(-1)">◀</button>
+    <div class="date-picker-wrap">
+      <span>📅</span>
+      <input type="date" id="calendarInput" class="date-picker-input" onchange="onCalendarSelect(this.value)" />
+    </div>
+    <button class="date-nav-btn" onclick="stepDate(1)">▶</button>
+    <button class="today-btn" onclick="resetToToday()">Today</button>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search team (e.g. Bruins, Rangers, Oilers)..." oninput="renderMatches()" />
+  </div>
+
+  <div class="matches-container" id="matchList">
+    <div style="text-align:center; padding:30px; color:#94a3b8;">Loading NHL hockey games...</div>
+  </div>
+
+<script>
+    let matchesData = [];
+    let currentDate = new Date();
+
+    // Calendar Engine
+    function formatApiDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
+    }
+
+    function formatInputDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function syncCalendarDisplay() {
+      const input = document.getElementById("calendarInput");
+      if (input) input.value = formatInputDate(currentDate);
+    }
+
+    function onCalendarSelect(val) {
+      if (!val) return;
+      const [y, m, d] = val.split("-").map(Number);
+      currentDate = new Date(y, m - 1, d);
+      initLoad();
+    }
+
+    function stepDate(delta) {
+      currentDate.setDate(currentDate.getDate() + delta);
+      syncCalendarDisplay();
+      initLoad();
+    }
+
+    function resetToToday() {
+      currentDate = new Date();
+      syncCalendarDisplay();
+      initLoad();
+    }
+
+    // Universal Share
+    async function shareMatch(e, id) {
+      e.stopPropagation();
+      const m = matchesData.find(x => x.id === id);
+      if (!m) return;
+
+      const shareData = {
+        title: "Etini NHL LiveScores",
+        text: `🏒 ${m.home} ${m.homeScore} - ${m.awayScore} ${m.away}\n🏆 ${m.leagueName} (${m.statusText})\nFollow live:`,
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        try { await navigator.share(shareData); } catch (err) {}
+      } else {
+        navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
+          alert("Hockey score & link copied to clipboard! 📋");
+        }).catch(() => {
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
+        });
+      }
+    }
+
+    function togglePeriods(id) {
+      const el = document.getElementById(`pt-${id}`);
+      if (el) el.classList.toggle("open");
+    }
+
+    async function initLoad() {
+      syncCalendarDisplay();
+      const container = document.getElementById("matchList");
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading NHL games...</div>';
+
+      matchesData = [];
+      const dt = formatApiDate(currentDate);
+
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=${dt}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        (data.events || []).forEach(ev => {
+          const c = ev.competitions[0];
+          const home = c.competitors.find(x => x.homeAway === "home") || c.competitors[0];
+          const away = c.competitors.find(x => x.homeAway === "away") || c.competitors[1];
+
+          // Periods Linescores (P1, P2, P3, OT, SO)
+          const homeLines = home.linescores || [];
+          const awayLines = away.linescores || [];
+
+          matchesData.push({
+            id: ev.id,
+            leagueName: data.leagues?.[0]?.name || "NHL",
+            home: home.team?.shortDisplayName || home.team?.name || "Home",
+            homeLogo: home.team?.logo || '',
+            homeScore: home.score ?? "-",
+            homeLines: homeLines,
+            away: away.team?.shortDisplayName || away.team?.name || "Away",
+            awayLogo: away.team?.logo || '',
+            awayScore: away.score ?? "-",
+            awayLines: awayLines,
+            state: c.status?.type?.state || "pre",
+            statusText: c.status?.type?.shortDetail || c.status?.type?.description || "Scheduled",
+            venue: c.venue ? `${c.venue.fullName || ''} (${c.venue.address?.city || ''})` : ''
+          });
+        });
+      } catch (err) {}
+
+      if (matchesData.length === 0) {
+        container.innerHTML = '<div class="hockey-card" style="text-align:center; color:#94a3b8; padding:25px;">No NHL games on this date. Use the calendar 📅 above to pick another date!</div>';
+        return;
+      }
+
+      renderMatches();
+    }
+
+    function renderMatches() {
+      const container = document.getElementById("matchList");
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      let list = [...matchesData];
+      if (q) list = list.filter(m => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q));
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="hockey-card" style="text-align:center; color:#94a3b8; padding:20px;">No matching teams found.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(m => {
+        let badge = m.statusText;
+        if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusText}</span>`;
+
+        let periodHtml = "";
+        if (m.homeLines.length > 0) {
+          let headers = m.homeLines.map((_, i) => `<th>${i < 3 ? 'P' + (i + 1) : (i === 3 ? 'OT' : 'SO')}</th>`).join('');
+          let homeScores = m.homeLines.map(l => `<td>${l.value ?? '-'}</td>`).join('');
+          let awayScores = m.awayLines.map(l => `<td>${l.value ?? '-'}</td>`).join('');
+
+          periodHtml = `
+            <table class="period-table" id="pt-${m.id}">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Team</th>
+                  ${headers}
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="text-align:left;">${m.home}</td>
+                  ${homeScores}
+                  <td style="color:#06b6d4;">${m.homeScore}</td>
+                </tr>
+                <tr>
+                  <td style="text-align:left;">${m.away}</td>
+                  ${awayScores}
+                  <td style="color:#06b6d4;">${m.awayScore}</td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        }
+
+        return `
+          <div class="hockey-card" onclick="togglePeriods('${m.id}')">
+            <div class="hockey-header">
+              <span>${m.leagueName}</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button class="share-btn" onclick="shareMatch(event, '${m.id}')">🔗 Share</button>
+                <span style="color:#06b6d4;">Periods ▾</span>
+              </div>
+            </div>
+            <div class="match-body">
+              <div class="team">${m.homeLogo ? `<img src="${m.homeLogo}">` : ''}<span>${m.home}</span></div>
+              <div class="score-box">${m.homeScore} : ${m.awayScore}</div>
+              <div class="team away"><span>${m.away}</span>${m.awayLogo ? `<img src="${m.awayLogo}">` : ''}</div>
+            </div>
+            <div class="match-footer">${badge}</div>
+            ${periodHtml}
+            ${m.venue ? `<div class="venue-tag">🏟️ ${m.venue}</div>` : ''}
+          </div>
+        `;
+      }).join("");
+    }
+
+    initLoad();
+    setInterval(initLoad, 30000);
+  </script>
+</body>
+</html>
