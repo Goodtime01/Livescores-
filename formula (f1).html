@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etini LiveScores - Formula 1</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+
+    /* Multi-Sport Ribbon */
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav::-webkit-scrollbar { display: none; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
+    .sport-btn.active { background: #e10600; color: #fff; border-color: #e10600; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    header h1 { font-size: 1.2rem; color: #e10600; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
+    .btn-primary { background: #e10600; color: #fff; border: none; }
+
+    .search-box { margin-bottom: 12px; }
+    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
+
+    /* F1 Grand Prix Card */
+    .f1-card { background: #1e293b; border-radius: 12px; padding: 14px; border: 1px solid #334155; margin-bottom: 12px; }
+    .f1-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
+    .f1-race-name { font-size: 1.05rem; font-weight: 900; color: #f8fafc; margin-bottom: 4px; }
+    .f1-circuit { font-size: 0.72rem; color: #38bdf8; margin-bottom: 10px; }
+    .share-btn { background: #0284c7; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+
+    /* Driver Leaderboard Table */
+    .f1-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 8px; }
+    .f1-table th { background: #0b1120; color: #94a3b8; padding: 6px; font-size: 0.68rem; text-transform: uppercase; text-align: left; }
+    .f1-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
+    .pos-cell { font-weight: 900; color: #e10600; width: 26px; }
+    .driver-name { font-weight: 700; color: #f8fafc; }
+    .team-name { font-size: 0.68rem; color: #94a3b8; }
+    .pts-cell { font-weight: 800; color: #38bdf8; text-align: right; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; }
+    .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- Full Multi-Sport Ribbon -->
+  <div class="sport-nav">
+    <a href="index.html" class="sport-btn">⚽ Football</a>
+    <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
+    <a href="combat.html" class="sport-btn">🥊 Combat</a>
+    <a href="tennis.html" class="sport-btn">🎾 Tennis</a>
+    <a href="cricket.html" class="sport-btn">🏏 Cricket</a>
+    <a href="hockey.html" class="sport-btn">🏒 Hockey</a>
+    <a href="baseball.html" class="sport-btn">⚾ Baseball</a>
+    <a href="rugby.html" class="sport-btn">🏉 Rugby</a>
+    <a href="f1.html" class="sport-btn active">🏎️ Formula 1</a>
+  </div>
+
+  <header>
+    <h1>🏎️ Etini LiveScores</h1>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search driver or team (e.g. Verstappen, Hamilton, Ferrari)..." oninput="renderRaces()" />
+  </div>
+
+  <div id="raceContainer">
+    <div style="text-align:center; padding:30px; color:#94a3b8;">Loading Formula 1 Grand Prix standings...</div>
+  </div>
+
+
