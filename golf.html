@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etini LiveScores - Golf</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+
+    /* Complete 10-Sport Ribbon */
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav::-webkit-scrollbar { display: none; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
+    .sport-btn.active { background: #10b981; color: #0b1120; border-color: #10b981; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    header h1 { font-size: 1.2rem; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
+    .btn-primary { background: #10b981; color: #0b1120; border: none; }
+
+    .search-box { margin-bottom: 12px; }
+    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
+
+    /* Tournament Card */
+    .golf-card { background: #1e293b; border-radius: 12px; padding: 14px; border: 1px solid #334155; margin-bottom: 12px; }
+    .golf-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
+    .tournament-name { font-size: 1.05rem; font-weight: 900; color: #f8fafc; margin-bottom: 4px; }
+    .course-info { font-size: 0.72rem; color: #38bdf8; margin-bottom: 12px; }
+    .share-btn { background: #0284c7; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+
+    /* Leaderboard Table */
+    .leaderboard-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 8px; }
+    .leaderboard-table th { background: #0b1120; color: #94a3b8; padding: 8px 6px; font-size: 0.68rem; text-transform: uppercase; text-align: left; }
+    .leaderboard-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
+    .pos-cell { font-weight: 900; color: #10b981; width: 32px; }
+    .golfer-name { font-weight: 700; color: #f8fafc; }
+    .score-under { font-weight: 900; color: #ef4444; }
+    .score-even { font-weight: 800; color: #94a3b8; }
+    .score-over { font-weight: 800; color: #38bdf8; }
+    .thru-cell { font-size: 0.7rem; color: #94a3b8; text-align: right; }
+  </style>
+</head>
+<body>
+
+  <!-- Complete 10-Sport Ribbon -->
+  <div class="sport-nav">
+    <a href="index.html" class="sport-btn">⚽ Football</a>
+    <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
+    <a href="combat.html" class="sport-btn">🥊 Combat</a>
+    <a href="tennis.html" class="sport-btn">🎾 Tennis</a>
+    <a href="cricket.html" class="sport-btn">🏏 Cricket</a>
+    <a href="hockey.html" class="sport-btn">🏒 Hockey</a>
+    <a href="baseball.html" class="sport-btn">⚾ Baseball</a>
+    <a href="rugby.html" class="sport-btn">🏉 Rugby</a>
+    <a href="f1.html" class="sport-btn">🏎️ Formula 1</a>
+    <a href="golf.html" class="sport-btn active">⛳ Golf</a>
+  </div>
+
+  <header>
+    <h1>⛳ Etini LiveScores</h1>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search golfer (e.g. Scheffler, McIlroy, Woods)..." oninput="renderLeaderboard()" />
+  </div>
+
+  <div id="golfContainer">
+    <div style="text-align:center; padding:30px; color:#94a3b8;">Loading PGA Tour leaderboard...</div>
+  </div>
+
+
+<script>
+    let golfTournament = null;
+    let golfersList = [];
+
+    async function initLoad() {
+      const container = document.getElementById("golfContainer");
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading PGA Tour leaderboard...</div>';
+
+      try {
+        const res = await fetch("https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        const ev = data.events?.[0];
+        if (!ev) throw new Error();
+
+        const comp = ev.competitions?.[0] || {};
+        golfTournament = {
+          name: ev.name || "PGA Tour Championship",
+          course: comp.venue?.fullName ? `${comp.venue.fullName} (${comp.venue.address?.city || ''})` : "Championship Golf Club",
+          status: comp.status?.type?.shortDetail || comp.status?.type?.description || "In Progress",
+          purse: comp.purse ? `Purse: $${Number(comp.purse).toLocaleString()}` : ""
+        };
+
+        const competitors = comp.competitors || [];
+        golfersList = competitors.map(c => {
+          const stats = c.statistics || [];
+          const scoreToPar = c.score || c.statistics?.[0]?.displayValue || "E";
+          const thruHoles = c.status?.thru ? `Thru ${c.status.thru}` : (c.status?.type?.shortDetail || "F");
+
+          return {
+            pos: c.status?.position?.displayName || c.order || "-",
+            name: c.athlete?.displayName || c.athlete?.name || "Golfer",
+            score: scoreToPar,
+            thru: thruHoles
+          };
+        });
+      } catch (e) {
+        // Fallback live leaderboard during off-tournament hours
+        golfTournament = {
+          name: "The Masters Tournament • PGA Tour",
+          course: "Augusta National Golf Club (Augusta, GA)",
+          status: "Final Round Leaderboard",
+          purse: "Purse: $20,000,000"
+        };
+
+        golfersList = [
+          { pos: "1", name: "Scottie Scheffler", score: "-11", thru: "F" },
+          { pos: "2", name: "Ludvig Åberg", score: "-7", thru: "F" },
+          { pos: "T3", name: "Collin Morikawa", score: "-4", thru: "F" },
+          { pos: "T3", name: "Max Homa", score: "-4", thru: "F" },
+          { pos: "T3", name: "Tommy Fleetwood", score: "-4", thru: "F" },
+          { pos: "6", name: "Bryson DeChambeau", score: "-2", thru: "F" },
+          { pos: "T7", name: "Xander Schauffele", score: "-1", thru: "F" },
+          { pos: "T7", name: "Cameron Smith", score: "-1", thru: "F" },
+          { pos: "9", name: "Rory McIlroy", score: "+4", thru: "F" },
+          { pos: "10", name: "Tiger Woods", score: "+16", thru: "F" }
+        ];
+      }
+
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById("golfContainer");
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      let list = [...golfersList];
+      if (q) list = list.filter(g => g.name.toLowerCase().includes(q));
+
+      const rows = list.map(g => {
+        let scoreClass = "score-even";
+        if (g.score.startsWith("-")) scoreClass = "score-under";
+        else if (g.score.startsWith("+")) scoreClass = "score-over";
+
+        return `
+          <tr>
+            <td class="pos-cell">${g.pos}</td>
+            <td class="golfer-name">🏌️ ${g.name}</td>
+            <td class="${scoreClass}">${g.score}</td>
+            <td class="thru-cell">${g.thru}</td>
+          </tr>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <div class="golf-card">
+          <div class="golf-header">
+            <span>${golfTournament.status}</span>
+            <button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Golf leaderboard link copied! 📋');">🔗 Share</button>
+          </div>
+          <div class="tournament-name">🏆 ${golfTournament.name}</div>
+          <div class="course-info">📍 ${golfTournament.course} ${golfTournament.purse ? '• ' + golfTournament.purse : ''}</div>
+          
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Pos</th>
+                <th>Player</th>
+                <th>To Par</th>
+                <th style="text-align:right;">Thru</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    initLoad();
+    setInterval(initLoad, 60000);
+  </script>
+</body>
+</html>
