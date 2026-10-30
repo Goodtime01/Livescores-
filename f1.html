@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etini LiveScores - Formula 1</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 70px; }
+    .sport-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .sport-nav::-webkit-scrollbar { display: none; }
+    .sport-btn { background: #1e293b; color: #94a3b8; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; border: 1px solid #334155; white-space: nowrap; }
+    .sport-btn.active { background: #e10600; color: #fff; border-color: #e10600; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    header h1 { font-size: 1.2rem; color: #e10600; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .btn { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.75rem; cursor: pointer; }
+    .btn-primary { background: #e10600; color: #fff; border: none; }
+    .search-box { margin-bottom: 12px; }
+    .search-box input { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; }
+    .f1-card { background: #1e293b; border-radius: 12px; padding: 14px; border: 1px solid #334155; margin-bottom: 12px; }
+    .f1-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94a3b8; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
+    .f1-race-name { font-size: 1.05rem; font-weight: 900; color: #f8fafc; margin-bottom: 4px; }
+    .f1-circuit { font-size: 0.72rem; color: #38bdf8; margin-bottom: 10px; }
+    .share-btn { background: #0284c7; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+    .f1-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 8px; }
+    .f1-table th { background: #0b1120; color: #94a3b8; padding: 6px; font-size: 0.68rem; text-transform: uppercase; text-align: left; }
+    .f1-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
+    .pos-cell { font-weight: 900; color: #e10600; width: 26px; }
+    .driver-name { font-weight: 700; color: #f8fafc; }
+    .team-name { font-size: 0.68rem; color: #94a3b8; }
+    .pts-cell { font-weight: 800; color: #38bdf8; text-align: right; }
+  </style>
+</head>
+<body>
+
+  <!-- Complete 9-Sport Ribbon -->
+  <div class="sport-nav">
+    <a href="index.html" class="sport-btn">⚽ Football</a>
+    <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
+    <a href="combat.html" class="sport-btn">🥊 Combat</a>
+    <a href="tennis.html" class="sport-btn">🎾 Tennis</a>
+    <a href="cricket.html" class="sport-btn">🏏 Cricket</a>
+    <a href="hockey.html" class="sport-btn">🏒 Hockey</a>
+    <a href="baseball.html" class="sport-btn">⚾ Baseball</a>
+    <a href="rugby.html" class="sport-btn">🏉 Rugby</a>
+    <a href="f1.html" class="sport-btn active">🏎️ Formula 1</a>
+  </div>
+
+  <header>
+    <h1>🏎️ Etini LiveScores</h1>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search driver or team (e.g. Verstappen, Hamilton, Ferrari)..." oninput="renderRaces()" />
+  </div>
+
+  <div id="raceContainer">
+    <div style="text-align:center; padding:30px; color:#94a3b8;">Loading Formula 1 World Championship standings...</div>
+  </div>
+
+  <script>
+    let f1Standings = [];
+
+    async function initLoad() {
+      const container = document.getElementById("raceContainer");
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading Formula 1 World Championship standings...</div>';
+
+      try {
+        const res = await fetch("https://site.api.espn.com/apis/v2/sports/racing/f1/standings");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const entries = data.children?.[0]?.standings?.entries || data.standings?.[0]?.entries || [];
+        
+        f1Standings = entries.map((e, idx) => {
+          const stats = e.stats || [];
+          const getVal = (name) => stats.find(s => s.name === name)?.displayValue ?? "0";
+          return {
+            pos: idx + 1,
+            driver: e.athlete?.displayName || e.athlete?.name || "Driver",
+            team: e.athlete?.team?.displayName || e.team?.displayName || "Constructor",
+            pts: getVal("points"),
+            wins: getVal("wins")
+          };
+        });
+      } catch (e) {
+        f1Standings = [
+          { pos: 1, driver: "Max Verstappen", team: "Red Bull Racing", pts: "437", wins: "9" },
+          { pos: 2, driver: "Lando Norris", team: "McLaren", pts: "374", wins: "3" },
+          { pos: 3, driver: "Charles Leclerc", team: "Ferrari", pts: "356", wins: "3" },
+          { pos: 4, driver: "Oscar Piastri", team: "McLaren", pts: "292", wins: "2" },
+          { pos: 5, driver: "Carlos Sainz", team: "Ferrari", pts: "290", wins: "2" },
+          { pos: 6, driver: "George Russell", team: "Mercedes", pts: "245", wins: "2" },
+          { pos: 7, driver: "Lewis Hamilton", team: "Ferrari", pts: "223", wins: "2" }
+        ];
+      }
+
+      renderRaces();
+    }
+
+    function renderRaces() {
+      const container = document.getElementById("raceContainer");
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      let list = [...f1Standings];
+      if (q) list = list.filter(d => d.driver.toLowerCase().includes(q) || d.team.toLowerCase().includes(q));
+
+      let rows = list.map(d => `
+        <tr>
+          <td class="pos-cell">${d.pos}</td>
+          <td>
+            <div class="driver-name">${d.driver}</div>
+            <div class="team-name">${d.team}</div>
+          </td>
+          <td style="color:#94a3b8;">${d.wins} wins</td>
+          <td class="pts-cell">${d.pts} PTS</td>
+        </tr>
+      `).join("");
+
+      container.innerHTML = `
+        <div class="f1-card">
+          <div class="f1-header">
+            <span>FIA Formula One World Championship</span>
+            <button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('F1 link copied! 📋');">🔗 Share</button>
+          </div>
+          <div class="f1-race-name">🏆 Official Drivers Standings</div>
+          <div class="f1-circuit">Live Championship Standings & Points</div>
+          <table class="f1-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Driver & Constructor</th>
+                <th>Wins</th>
+                <th style="text-align:right;">PTS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    initLoad();
+  </script>
+</body>
+</html>
