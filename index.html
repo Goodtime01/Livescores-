@@ -4,21 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Etini LiveScores</title>
-
-
-
-<link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#38bdf8" />
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-      });
-    }
-  </script>
-
-
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0b1120; color: #f8fafc; padding: 14px; min-height: 100vh; padding-bottom: 75px; }
@@ -123,7 +108,7 @@
     .sub-in { color: #4ade80; font-weight: 700; }
     .sub-out { color: #f87171; font-size: 0.7rem; }
 
-    /* Full-Pitch Team Tactical Board */
+    /* Full-Pitch 2-Team Tactical Board */
     .full-pitch { background: linear-gradient(180deg, #14532d 0%, #166534 50%, #14532d 100%); border: 2px solid #22c55e; border-radius: 14px; padding: 12px 6px; position: relative; min-height: 520px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.6); }
     .pitch-center-line { position: absolute; top: 50%; left: 0; right: 0; border-top: 2px solid rgba(255,255,255,0.4); pointer-events: none; }
     .pitch-center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75px; height: 75px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; pointer-events: none; }
@@ -183,22 +168,16 @@
   </style>
 </head>
 
-
-
 <body>
 
-<!-- Complete All-Sports Navigation Bar -->
+  <!-- Top 4-Sport Navigation Bar -->
   <div class="sport-nav">
     <a href="index.html" class="sport-btn active">⚽ Football</a>
     <a href="basketball.html" class="sport-btn">🏀 Basketball</a>
     <a href="combat.html" class="sport-btn">🥊 Combat</a>
     <a href="tennis.html" class="sport-btn">🎾 Tennis</a>
-    <a href="cricket.html" class="sport-btn">🏏 Cricket</a>
-    <a href="hockey.html" class="sport-btn">🏒 Hockey</a>
-    <a href="baseball.html" class="sport-btn">⚾ Baseball</a>
-    <a href="rugby.html" class="sport-btn">🏉 Rugby</a>
-    <a href="f1.html" class="sport-btn">🏎️ Formula 1</a>
   </div>
+
   <header>
     <h1>⚽ Etini LiveScores</h1>
     <div class="header-btns">
@@ -438,42 +417,60 @@
   </div>
 
 
-
-
 <script>
-    const FEATURED_LEAGUES = ["eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", "ger.1", "fra.1", "bra.1", "ksa.1", "ned.1"];
-    let currentView = "matches", activeLeague = "ALL", matchesData = [];
+    const FEATURED_LEAGUES = [
+      "eng.1", "nga.1", "uefa.champions", "esp.1", "ita.1", 
+      "ger.1", "fra.1", "bra.1", "ksa.1", "ned.1"
+    ];
+
+    let currentView = "matches";
+    let activeLeague = "ALL";
+    let matchesData = [];
     let favTeams = JSON.parse(localStorage.getItem("etini_favs") || "[]");
     let userPollVotes = JSON.parse(localStorage.getItem("etini_poll_votes") || "{}");
-    let soundEnabled = true, currentDate = new Date();
+    let soundEnabled = true;
+    let currentDate = new Date();
 
+    // Calendar Engine
     function formatApiDate(d) {
-      return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
     }
+
     function formatInputDate(d) {
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
     }
+
     function syncCalendarDisplay() {
-      const el = document.getElementById("calendarInput");
-      if (el) el.value = formatInputDate(currentDate);
+      const input = document.getElementById("calendarInput");
+      if (input) input.value = formatInputDate(currentDate);
     }
-    function onCalendarSelect(v) {
-      if (!v) return;
-      const [y,m,d] = v.split("-").map(Number);
-      currentDate = new Date(y, m-1, d);
+
+    function onCalendarSelect(val) {
+      if (!val) return;
+      const [y, m, d] = val.split("-").map(Number);
+      currentDate = new Date(y, m - 1, d);
       initLoad();
     }
+
     function stepDate(delta) {
       currentDate.setDate(currentDate.getDate() + delta);
       syncCalendarDisplay();
       initLoad();
     }
+
     function resetToToday() {
       currentDate = new Date();
       syncCalendarDisplay();
       initLoad();
     }
 
+    // Audio & Alerts
     function toggleSound() {
       soundEnabled = !soundEnabled;
       const btn = document.getElementById("soundBtn");
@@ -486,31 +483,34 @@
       if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
         osc.type = "triangle";
         osc.frequency.setValueAtTime(587.33, ctx.currentTime);
         osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(); osc.stop(ctx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
       } catch (e) {}
     }
 
-    function setView(v) {
-      currentView = v;
-      document.getElementById("btnMat").classList.toggle("active", v === "matches");
-      document.getElementById("btnStd").classList.toggle("active", v === "standings");
-      document.getElementById("btnLdr").classList.toggle("active", v === "leaders");
-      document.getElementById("matchesView").style.display = v === "matches" ? "block" : "none";
-      document.getElementById("standingsView").style.display = v === "standings" ? "block" : "none";
-      document.getElementById("leadersView").style.display = v === "leaders" ? "block" : "none";
-      document.getElementById("searchBox").style.display = v === "matches" ? "block" : "none";
-      document.getElementById("dateBar").style.display = v === "matches" ? "flex" : "none";
+    function setView(view) {
+      currentView = view;
+      document.getElementById("btnMat").classList.toggle("active", view === "matches");
+      document.getElementById("btnStd").classList.toggle("active", view === "standings");
+      document.getElementById("btnLdr").classList.toggle("active", view === "leaders");
+      document.getElementById("matchesView").style.display = view === "matches" ? "block" : "none";
+      document.getElementById("standingsView").style.display = view === "standings" ? "block" : "none";
+      document.getElementById("leadersView").style.display = view === "leaders" ? "block" : "none";
+      document.getElementById("searchBox").style.display = view === "matches" ? "block" : "none";
+      document.getElementById("dateBar").style.display = view === "matches" ? "flex" : "none";
 
       const target = activeLeague === "ALL" ? "eng.1" : activeLeague;
-      if (v === "standings") loadStandings(target);
-      else if (v === "leaders") loadLeaders(target);
+      if (view === "standings") loadStandings(target);
+      else if (view === "leaders") loadLeaders(target);
       else renderMatches();
     }
 
@@ -519,6 +519,7 @@
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       const matchTab = Array.from(document.querySelectorAll(".tab")).find(t => t.getAttribute("onclick")?.includes(`'${code}'`));
       if (matchTab) matchTab.classList.add("active");
+
       if (currentView === "matches") initLoad();
       else if (currentView === "standings") loadStandings(code === "ALL" ? "eng.1" : code);
       else loadLeaders(code === "ALL" ? "eng.1" : code);
@@ -528,8 +529,10 @@
       activeLeague = code;
       const select = document.getElementById("leagueSelect");
       if (select) select.value = code;
+
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       if (btn) btn.classList.add("active");
+
       if (currentView === "matches") initLoad();
       else if (currentView === "standings") loadStandings(code === "ALL" ? "eng.1" : code);
       else loadLeaders(code === "ALL" ? "eng.1" : code);
@@ -537,17 +540,21 @@
 
     function toggleFav(e, team) {
       e.stopPropagation();
-      favTeams = favTeams.includes(team) ? favTeams.filter(t => t !== team) : [...favTeams, team];
+      if (favTeams.includes(team)) favTeams = favTeams.filter(t => t !== team);
+      else favTeams.push(team);
       localStorage.setItem("etini_favs", JSON.stringify(favTeams));
       renderMatches();
     }
 
+    // Community Prediction Polls with Supabase
     async function voteMatch(e, matchId, choice) {
       e.stopPropagation();
       if (userPollVotes[matchId]) return alert("You already voted on this match! 🗳️");
+      
       userPollVotes[matchId] = choice;
       localStorage.setItem("etini_poll_votes", JSON.stringify(userPollVotes));
       renderMatches();
+
       try {
         await fetch("https://zqfcquyuxmbjehgrktht.supabase.co/rest/v1/votes", {
           method: "POST",
@@ -557,296 +564,44 @@
             "Content-Type": "application/json",
             "Prefer": "return=minimal"
           },
-          body: JSON.stringify({ match_id: String(matchId), choice })
+          body: JSON.stringify({ match_id: String(matchId), choice: choice })
         });
       } catch (err) {}
     }
 
+    // Universal Share
     async function shareMatch(e, id) {
       e.stopPropagation();
       const m = matchesData.find(x => x.id === id);
       if (!m) return;
+
       const shareData = {
         title: "Etini LiveScores",
         text: `⚽ ${m.home} ${m.homeScore} - ${m.awayScore} ${m.away}\n🏆 ${m.leagueName} (${m.statusText})\nFollow live:`,
         url: "https://goodtime01.github.io/Livescores-/"
       };
+
       if (navigator.share) {
         try { await navigator.share(shareData); } catch (err) {}
       } else {
         navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`).then(() => {
-          alert("Match score copied! 📋");
+          alert("Match score & link copied to clipboard! 📋");
         }).catch(() => {
           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, "_blank");
         });
       }
     }
 
-    // Complete Database of Your 96 Managers & Flags
-    const MANAGER_DB = {
-      // England
-      "Arsenal": { name: "Mikel Arteta", flag: "🇪🇸" },
-      "Aston Villa": { name: "Unai Emery", flag: "🇪🇸" },
-      "Bournemouth": { name: "Marco Rose", flag: "🇩🇪" },
-      "Brentford": { name: "Keith Andrews", flag: "🇮🇪" },
-      "Brighton": { name: "Fabian Hurzeler", flag: "🇩🇪" },
-      "Chelsea": { name: "Xabi Alonso", flag: "🇪🇸" },
-      "Coventry City": { name: "Frank Lampard", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Crystal Palace": { name: "Pierre Sage", flag: "🇫🇷" },
-      "Everton": { name: "David Moyes", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-      "Fulham": { name: "Alvaro Arbeloa", flag: "🇪🇸" },
-      "Hull City": { name: "Sergej Jakirovic", flag: "🇭🇷" },
-      "Ipswich Town": { name: "Gary O'Neil", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Leeds United": { name: "Daniel Farke", flag: "🇩🇪" },
-      "Liverpool": { name: "Andoni Iraola", flag: "🇪🇸" },
-      "Manchester City": { name: "Enzo Maresca", flag: "🇮🇹" },
-      "Manchester United": { name: "Michael Carrick", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Newcastle United": { name: "Matthias Jaissle", flag: "🇩🇪" },
-      "Nottingham Forest": { name: "Oliver Glasner", flag: "🇦🇹" },
-      "Sunderland": { name: "Regis Le Bris", flag: "🇫🇷" },
-      "Tottenham Hotspur": { name: "Roberto De Zerbi", flag: "🇮🇹" },
-
-      // Spain
-      "Alaves": { name: "Quique Sanchez Flores", flag: "🇪🇸" },
-      "Athletic Club": { name: "Edin Terzic", flag: "🇩🇪" },
-      "Atletico Madrid": { name: "Diego Simeone", flag: "🇦🇷" },
-      "Barcelona": { name: "Hansi Flick", flag: "🇩🇪" },
-      "Real Betis": { name: "Manuel Pellegrini", flag: "🇨🇱" },
-      "Celta Vigo": { name: "Claudio Giraldez", flag: "🇪🇸" },
-      "Deportivo La Coruna": { name: "Antonio Hidalgo", flag: "🇪🇸" },
-      "Elche": { name: "Martin Anselmi", flag: "🇦🇷" },
-      "Getafe": { name: "Jose Bordalas", flag: "🇪🇸" },
-      "Levante": { name: "Luis Castro", flag: "🇵🇹" },
-      "Malaga": { name: "Juanfran Funes", flag: "🇪🇸" },
-      "Osasuna": { name: "Luis Miguel Ramis", flag: "🇪🇸" },
-      "Racing Santander": { name: "Jose Alberto Lopez", flag: "🇪🇸" },
-      "Rayo Vallecano": { name: "Benat San Jose", flag: "🇪🇸" },
-      "Real Madrid": { name: "Jose Mourinho", flag: "🇵🇹" },
-      "Real Sociedad": { name: "Pellegrino Matarazzo", flag: "🇺🇸" },
-      "Sevilla": { name: "Luis Garcia Plaza", flag: "🇪🇸" },
-      "Valencia": { name: "Carlos Corberan", flag: "🇪🇸" },
-      "Villarreal": { name: "Inigo Perez", flag: "🇪🇸" },
-      "Espanyol": { name: "Manolo Gonzalez", flag: "🇪🇸" },
-
-      // Italy
-      "AC Milan": { name: "Ruben Amorim", flag: "🇵🇹" },
-      "Atalanta": { name: "Maurizio Sarri", flag: "🇮🇹" },
-      "Bologna": { name: "Domenico Tedesco", flag: "🇩🇪" },
-      "Cagliari": { name: "Fabio Pisacane", flag: "🇮🇹" },
-      "Como": { name: "Cesc Fabregas", flag: "🇪🇸" },
-      "Fiorentina": { name: "Fabio Grosso", flag: "🇮🇹" },
-      "Frosinone": { name: "Massimiliano Alvini", flag: "🇮🇹" },
-      "Genoa": { name: "Daniele De Rossi", flag: "🇮🇹" },
-      "Inter": { name: "Cristian Chivu", flag: "🇷🇴" },
-      "Juventus": { name: "Luciano Spalletti", flag: "🇮🇹" },
-      "Lazio": { name: "Gennaro Gattuso", flag: "🇮🇹" },
-      "Lecce": { name: "Eusebio Di Francesco", flag: "🇮🇹" },
-      "Monza": { name: "Ivan Juric", flag: "🇭🇷" },
-      "Napoli": { name: "Massimiliano Allegri", flag: "🇮🇹" },
-      "Parma": { name: "Carlos Cuesta", flag: "🇪🇸" },
-      "Roma": { name: "Gian Piero Gasperini", flag: "🇮🇹" },
-      "Sassuolo": { name: "Alberto Aquilani", flag: "🇮🇹" },
-      "Torino": { name: "Ignazio Abate", flag: "🇮🇹" },
-      "Udinese": { name: "Kosta Runjaic", flag: "🇩🇪" },
-      "Venezia": { name: "Giovanni Stroppa", flag: "🇮🇹" },
-
-      // Germany
-      "Augsburg": { name: "Manuel Baum", flag: "🇩🇪" },
-      "Bayer Leverkusen": { name: "Carles Martinez", flag: "🇪🇸" },
-      "Bayern Munich": { name: "Vincent Kompany", flag: "🇧🇪" },
-      "Borussia Dortmund": { name: "Niko Kovac", flag: "🇭🇷" },
-      "Borussia Monchengladbach": { name: "Alexander Blessin", flag: "🇩🇪" },
-      "Eintracht Frankfurt": { name: "Adi Hutter", flag: "🇦🇹" },
-      "Elversberg": { name: "Vincent Wagner", flag: "🇩🇪" },
-      "Freiburg": { name: "Julian Schuster", flag: "🇩🇪" },
-      "Hamburg SV": { name: "Merlin Polzin", flag: "🇩🇪" },
-      "Hoffenheim": { name: "Christian Ilzer", flag: "🇦🇹" },
-      "Koln": { name: "Rene Wagner", flag: "🇩🇪" },
-      "Mainz 05": { name: "Urs Fischer", flag: "🇨🇭" },
-      "Paderborn": { name: "Ralf Kettemann", flag: "🇩🇪" },
-      "RB Leipzig": { name: "Martin Demichelis", flag: "🇦🇷" },
-      "Schalke 04": { name: "Miron Muslic", flag: "🇧🇦" },
-      "Stuttgart": { name: "Sebastian Hoeness", flag: "🇩🇪" },
-      "Union Berlin": { name: "Mauro Lustrinelli", flag: "🇨🇭" },
-      "Werder Bremen": { name: "Daniel Thioune", flag: "🇩🇪" },
-
-      // France
-      "PSG": { name: "Luis Enrique", flag: "🇪🇸" },
-      "Marseille": { name: "Bruno Genesio", flag: "🇫🇷" },
-      "Monaco": { name: "Filipe Luis", flag: "🇧🇷" },
-      "Lille": { name: "Davide Ancelotti", flag: "🇮🇹" },
-      "Lyon": { name: "Paulo Fonseca", flag: "🇵🇹" },
-      "Lens": { name: "Pierre Sage", flag: "🇫🇷" },
-      "Rennes": { name: "Habib Beye", flag: "🇸🇳" },
-      "Strasbourg": { name: "Liam Rosenior", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Nice": { name: "Olivier Pantaloni", flag: "🇫🇷" },
-      "Toulouse": { name: "Stephane Dumont", flag: "🇫🇷" },
-      "Auxerre": { name: "Will Still", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Brest": { name: "Julien Lachuer", flag: "🇫🇷" },
-      "Lorient": { name: "Alexandre Dujeux", flag: "🇫🇷" },
-      "Le Havre": { name: "Didier Digard", flag: "🇫🇷" },
-      "Paris FC": { name: "Liam Rosenior", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-      "Troyes": { name: "Stephane Dumont", flag: "🇫🇷" },
-      "Le Mans": { name: "Patrick Videira", flag: "🇫🇷" },
-      "Metz": { name: "Frederic Antonetti", flag: "🇫🇷" }
-    };
-
-    function getManagerInfo(teamName, coachObj) {
-      for (const [key, val] of Object.entries(MANAGER_DB)) {
-        if (teamName.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(teamName.toLowerCase())) {
-          return val;
-        }
-      }
-      if (coachObj && coachObj.displayName && coachObj.displayName.toLowerCase() !== "manager") {
-        return { name: coachObj.displayName, flag: "👔" };
-      }
-      return { name: "Head Coach", flag: "👔" };
-    }
-
-    function getPlayerRating(player, isWinner, isGoal, isAssist, isCard) {
-      let seed = (player.athlete?.displayName || "Player").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-      let base = 6.2 + (seed % 15) / 10;
-      if (isWinner) base += 0.4;
-      if (isGoal) base += 1.2;
-      if (isAssist) base += 0.7;
-      if (isCard) base -= 0.6;
-      base = Math.min(9.6, Math.max(5.5, base));
-      return base.toFixed(1);
-    }
-
-    function getRatingBadge(rating) {
-      let color = "#ef4444";
-      if (rating >= 7.5) color = "#22c55e";
-      else if (rating >= 6.7) color = "#f59e0b";
-      return `<span style="background:${color}; color:#000; font-weight:900; font-size:0.62rem; padding:1px 5px; border-radius:4px; margin-top:2px; box-shadow:0 1px 3px rgba(0,0,0,0.5);">${rating}</span>`;
-    }
-
-    function renderTwoTeamPitch(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents) {
-      const pitch = document.getElementById("twoTeamPitch");
-      pitch.style.background = "repeating-linear-gradient(180deg, #15803d 0px, #15803d 40px, #166534 40px, #166534 80px)";
-      pitch.style.position = "relative";
-      pitch.style.border = "3px solid #fff";
-      pitch.style.minHeight = "580px";
-
-      const hStarters = (homeData.roster || []).filter(p => p.starter);
-      const aStarters = (awayData.roster || []).filter(p => p.starter);
-
-      if (hStarters.length < 11 || aStarters.length < 11) {
-        pitch.innerHTML = '<div style="text-align:center; color:#fff; padding:180px 0; font-weight:700;">Tactical pitch will appear once official Starting XIs are announced 1 hour before kickoff.</div>';
-        return;
-      }
-
-      pitch.innerHTML = `
-        <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:180px; height:70px; border:2px solid rgba(255,255,255,0.7); border-top:none; pointer-events:none;"></div>
-        <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:80px; height:30px; border:2px solid rgba(255,255,255,0.7); border-top:none; pointer-events:none;"></div>
-        <div style="position:absolute; top:50%; left:0; right:0; border-top:2px solid rgba(255,255,255,0.8); pointer-events:none;"></div>
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:80px; height:80px; border:2px solid rgba(255,255,255,0.8); border-radius:50%; pointer-events:none;"></div>
-        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:180px; height:70px; border:2px solid rgba(255,255,255,0.7); border-bottom:none; pointer-events:none;"></div>
-        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80px; height:30px; border:2px solid rgba(255,255,255,0.7); border-bottom:none; pointer-events:none;"></div>
-        <div id="awayPitchHalf"></div>
-        <div id="homePitchHalf"></div>
-      `;
-
-      const newAwayHalf = document.getElementById("awayPitchHalf");
-      const newHomeHalf = document.getElementById("homePitchHalf");
-
-      const aGk = aStarters[0];
-      const aOutfield = aStarters.slice(1);
-      const aForm = (awayData.formation || "4-3-3").split("-").map(Number);
-      let aSlices = [], aIdx = 0;
-      aForm.forEach(n => { aSlices.push(aOutfield.slice(aIdx, aIdx + n)); aIdx += n; });
-
-      const renderPlayerNode = (p, jerseyClass, isTeamWon) => {
-        const pName = p.athlete?.displayName || p.athlete?.shortName || '';
-        const isGoal = matchEvents.some(e => e.text.includes(pName) && e.icon === "⚽");
-        const isAssist = matchEvents.some(e => e.text.includes(pName) && e.text.includes("Assist"));
-        const isCard = matchEvents.some(e => e.text.includes(pName) && (e.icon === "🟨" || e.icon === "🟥"));
-        const rating = getPlayerRating(p, isTeamWon, isGoal, isAssist, isCard);
-        const ratingHtml = isFinished ? getRatingBadge(rating) : '';
-
-        return `
-          <div class="pitch-player">
-            <div class="jersey-circle ${jerseyClass}">${p.jersey || '•'}</div>
-            <div class="player-name">${pName.split(' ').pop()}</div>
-            ${ratingHtml}
-          </div>
-        `;
-      };
-
-      const renderRow = (target, players, jerseyClass, isTeamWon) => {
-        const row = document.createElement("div");
-        row.className = "pitch-row";
-        row.innerHTML = players.map(p => renderPlayerNode(p, jerseyClass, isTeamWon)).join("");
-        target.appendChild(row);
-      };
-
-      renderRow(newAwayHalf, [aGk], "jersey-away", awayWon);
-      aSlices.forEach(group => renderRow(newAwayHalf, group, "jersey-away", awayWon));
-
-      const hGk = hStarters[0];
-      const hOutfield = hStarters.slice(1);
-      const hForm = (homeData.formation || "4-3-3").split("-").map(Number);
-      let hSlices = [], hIdx = 0;
-      hForm.forEach(n => { hSlices.push(hOutfield.slice(hIdx, hIdx + n)); hIdx += n; });
-
-      for (let i = hSlices.length - 1; i >= 0; i--) {
-        renderRow(newHomeHalf, hSlices[i], "jersey-home", homeWon);
-      }
-      renderRow(newHomeHalf, [hGk], "jersey-home", homeWon);
-
-      const hCoach = getManagerInfo(hTeamName, homeData.coach?.[0]);
-      const aCoach = getManagerInfo(aTeamName, awayData.coach?.[0]);
-
-      document.getElementById("coachesContainer").innerHTML = `
-        <div class="coaches-wrap">
-          <div>${hCoach.flag} <strong>${hCoach.name}</strong> (${homeData.formation || '4-3-3'})</div>
-          <div>${aCoach.flag} <strong>${aCoach.name}</strong> (${awayData.formation || '4-3-3'})</div>
-        </div>
-      `;
-
-      const renderBenchPlayer = (p, teamName, isTeamWon) => {
-        const pName = p.athlete?.displayName || p.athlete?.shortName || '';
-        const subEvent = matchEvents.find(e => e.icon === "🔁" && e.text.includes(pName) && e.team === teamName);
-        let subTag = '';
-        if (subEvent) {
-          const rating = getPlayerRating(p, isTeamWon, false, false, false);
-          subTag = `<span style="color:#4ade80; font-size:0.65rem; margin-left:auto;">Subbed in ${subEvent.min}' • ⭐ ${rating}</span>`;
-        }
-        return `
-          <div class="bench-player">
-            <span class="bench-num">#${p.jersey || '-'}</span>
-            <span>${pName}</span>
-            ${subTag}
-          </div>
-        `;
-      };
-
-      const hSubs = (homeData.roster || []).filter(p => !p.starter).map(p => renderBenchPlayer(p, hTeamName, homeWon)).join("");
-      const aSubs = (awayData.roster || []).filter(p => !p.starter).map(p => renderBenchPlayer(p, aTeamName, awayWon)).join("");
-
-      document.getElementById("benchGridContainer").innerHTML = `
-        <div class="bench-grid">
-          <div class="bench-col">
-            <div class="bench-title">${hTeamName} Bench</div>
-            ${hSubs || '<div style="font-size:0.7rem; color:#94a3b8;">N/A</div>'}
-          </div>
-          <div class="bench-col">
-            <div class="bench-title">${aTeamName} Bench</div>
-            ${aSubs || '<div style="font-size:0.7rem; color:#94a3b8;">N/A</div>'}
-          </div>
-        </div>
-      `;
-    }
-
-
-
-async function initLoad() {
+    // Match Loader with Exact Local Kickoff Times
+    async function initLoad() {
       syncCalendarDisplay();
       const container = document.getElementById("matchList");
-      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading fixtures & scores...</div>';
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading match fixtures...</div>';
+
       const oldScores = new Map(matchesData.map(m => [m.id, `${m.homeScore}:${m.awayScore}`]));
       matchesData = [];
       const dt = formatApiDate(currentDate);
+
       const targets = activeLeague === "ALL" ? FEATURED_LEAGUES : [activeLeague];
 
       for (const code of targets) {
@@ -903,6 +658,7 @@ async function initLoad() {
     function renderMatches() {
       const container = document.getElementById("matchList");
       const q = document.getElementById("searchInput").value.toLowerCase().trim();
+
       let list = [...matchesData];
       if (q) list = list.filter(m => m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || m.leagueName.toLowerCase().includes(q));
 
@@ -920,33 +676,45 @@ async function initLoad() {
       container.innerHTML = list.map(m => {
         let badge = m.statusText;
         if (m.state === "in") badge = `<span class="status-badge"><span class="live-dot"></span> LIVE - ${m.statusText}</span>`;
+
         const isFav = favTeams.includes(m.home) || favTeams.includes(m.away);
         const userChoice = userPollVotes[m.id];
-        const seed = m.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        let hPct = 40 + (seed % 25), dPct = 15 + (seed % 15), aPct = 100 - (hPct + dPct);
 
-        let pollHtml = !userChoice ? `
-          <div class="poll-box">
-            <div class="poll-header"><span>🗳️ Community Prediction</span><span>Vote below</span></div>
-            <div class="poll-btns">
-              <button class="poll-btn" onclick="voteMatch(event, '${m.id}', 'home')">${m.home}</button>
-              <button class="poll-btn" onclick="voteMatch(event, '${m.id}', 'draw')">Draw</button>
-              <button class="poll-btn" onclick="voteMatch(event, '${m.id}', 'away')">${m.away}</button>
+        // Seeded prediction percentages
+        const seed = m.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        let hPct = 40 + (seed % 25);
+        let dPct = 15 + (seed % 15);
+        let aPct = 100 - (hPct + dPct);
+
+        let pollHtml = "";
+        if (!userChoice) {
+          pollHtml = `
+            <div class="poll-box">
+              <div class="poll-header"><span>🗳️ Community Prediction</span><span>Vote below</span></div>
+              <div class="poll-btns">
+                <button class="poll-btn" onclick="voteMatch(event, '${m.id}', 'home')">${m.home}</button>
+                <button class="poll-btn" onclick="voteMatch(event, '${m.id}', 'draw')">Draw</button>
+                <button class="poll-btn" onclick="voteMatch(event, '${m.id}', 'away')">${m.away}</button>
+              </div>
             </div>
-          </div>
-        ` : `
-          <div class="poll-box">
-            <div class="poll-header"><span>🗳️ Live Fan Votes</span><span style="color:#38bdf8;">Your Pick: ${userChoice.toUpperCase()}</span></div>
-            <div class="poll-bar-wrap">
-              <div class="poll-bar-home" style="width:${hPct}%;"></div>
-              <div class="poll-bar-draw" style="width:${dPct}%;"></div>
-              <div class="poll-bar-away" style="width:${aPct}%;"></div>
+          `;
+        } else {
+          pollHtml = `
+            <div class="poll-box">
+              <div class="poll-header"><span>🗳️ Live Fan Votes</span><span style="color:#38bdf8;">Your Pick: ${userChoice.toUpperCase()}</span></div>
+              <div class="poll-bar-wrap">
+                <div class="poll-bar-home" style="width:${hPct}%;"></div>
+                <div class="poll-bar-draw" style="width:${dPct}%;"></div>
+                <div class="poll-bar-away" style="width:${aPct}%;"></div>
+              </div>
+              <div class="poll-labels">
+                <span>${m.home} ${hPct}%</span>
+                <span>Draw ${dPct}%</span>
+                <span>${m.away} ${aPct}%</span>
+              </div>
             </div>
-            <div class="poll-labels">
-              <span>${m.home} ${hPct}%</span><span>Draw ${dPct}%</span><span>${m.away} ${aPct}%</span>
-            </div>
-          </div>
-        `;
+          `;
+        }
 
         return `
           <div class="match-card ${isFav ? 'is-favorite' : ''}" onclick="openMatchCenter('${m.id}', '${m.leagueCode}')">
@@ -970,6 +738,145 @@ async function initLoad() {
       }).join("");
     }
 
+// Flashscore Match Center Engine
+    function closeMatchCenter() {
+      document.getElementById("matchCenter").classList.remove("open");
+    }
+
+    function switchMcSlide(slide, btn) {
+      document.querySelectorAll(".mc-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".mc-slide").forEach(s => s.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`mcSlide-${slide}`).classList.add("active");
+    }
+
+    // Top Managers & Nationalities Directory (Guarantees exact names & flags)
+    const MANAGER_DB = {
+      "Arsenal": { name: "Mikel Arteta", flag: "🇪🇸" },
+      "Chelsea": { name: "Enzo Maresca", flag: "🇮🇹" },
+      "Liverpool": { name: "Arne Slot", flag: "🇳🇱" },
+      "Manchester City": { name: "Pep Guardiola", flag: "🇪🇸" },
+      "Manchester United": { name: "Rúben Amorim", flag: "🇵🇹" },
+      "Tottenham": { name: "Ange Postecoglou", flag: "🇦🇺" },
+      "Aston Villa": { name: "Unai Emery", flag: "🇪🇸" },
+      "Newcastle": { name: "Eddie Howe", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      "Real Madrid": { name: "Carlo Ancelotti", flag: "🇮🇹" },
+      "Barcelona": { name: "Hansi Flick", flag: "🇩🇪" },
+      "Atlético Madrid": { name: "Diego Simeone", flag: "🇦🇷" },
+      "Bayern Munich": { name: "Vincent Kompany", flag: "🇧🇪" },
+      "Bayer Leverkusen": { name: "Xabi Alonso", flag: "🇪🇸" },
+      "Paris Saint-Germain": { name: "Luis Enrique", flag: "🇪🇸" },
+      "Inter Milan": { name: "Simone Inzaghi", flag: "🇮🇹" },
+      "Juventus": { name: "Thiago Motta", flag: "🇮🇹" },
+      "AC Milan": { name: "Paulo Fonseca", flag: "🇵🇹" },
+      "Fenerbahce": { name: "José Mourinho", flag: "🇵🇹" },
+      "Galatasaray": { name: "Okan Buruk", flag: "🇹🇷" },
+      "Benfica": { name: "Bruno Lage", flag: "🇵🇹" },
+      "Sporting CP": { name: "João Pereira", flag: "🇵🇹" },
+      "Porto": { name: "Vítor Bruno", flag: "🇵🇹" },
+      "Al Hilal": { name: "Jorge Jesus", flag: "🇵🇹" },
+      "Al Nassr": { name: "Stefano Pioli", flag: "🇮🇹" }
+    };
+
+    function getManagerInfo(teamName, coachObj) {
+      if (MANAGER_DB[teamName]) return MANAGER_DB[teamName];
+      for (const [key, val] of Object.entries(MANAGER_DB)) {
+        if (teamName.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(teamName.toLowerCase())) {
+          return val;
+        }
+      }
+      if (coachObj && coachObj.displayName && coachObj.displayName.toLowerCase() !== "manager") {
+        return { name: coachObj.displayName, flag: "👔" };
+      }
+      return { name: "Head Coach", flag: "👔" };
+    }
+
+    // Full 2-Team Tactical Pitch
+    function renderTwoTeamPitch(homeData, awayData, hTeamName, aTeamName) {
+      const awayHalf = document.getElementById("awayPitchHalf");
+      const homeHalf = document.getElementById("homePitchHalf");
+      awayHalf.innerHTML = "";
+      homeHalf.innerHTML = "";
+
+      const hStarters = (homeData.roster || []).filter(p => p.starter);
+      const aStarters = (awayData.roster || []).filter(p => p.starter);
+
+      if (hStarters.length < 11 || aStarters.length < 11) {
+        document.getElementById("twoTeamPitch").innerHTML = '<div style="text-align:center; color:#fff; padding:180px 0; font-weight:700;">Tactical 2-team pitch will appear once official Starting XIs are announced 1 hour before kickoff.</div>';
+        return;
+      }
+
+      // Away Team (Top Half: GK at top, Forwards near center)
+      const aGk = aStarters[0];
+      const aOutfield = aStarters.slice(1);
+      const aForm = (awayData.formation || "4-3-3").split("-").map(Number);
+      let aSlices = [];
+      let aIdx = 0;
+      aForm.forEach(n => { aSlices.push(aOutfield.slice(aIdx, aIdx + n)); aIdx += n; });
+
+      const renderRow = (target, players, jerseyClass) => {
+        const row = document.createElement("div");
+        row.className = "pitch-row";
+        row.innerHTML = players.map(p => `
+          <div class="pitch-player">
+            <div class="jersey-circle ${jerseyClass}">${p.jersey || '•'}</div>
+            <div class="player-name">${(p.athlete?.shortName || p.athlete?.displayName || '').split(' ').pop()}</div>
+          </div>
+        `).join("");
+        target.appendChild(row);
+      };
+
+      renderRow(awayHalf, [aGk], "jersey-away");
+      aSlices.forEach(group => renderRow(awayHalf, group, "jersey-away"));
+
+      // Home Team (Bottom Half: Forwards near center, GK at bottom)
+      const hGk = hStarters[0];
+      const hOutfield = hStarters.slice(1);
+      const hForm = (homeData.formation || "4-3-3").split("-").map(Number);
+      let hSlices = [];
+      let hIdx = 0;
+      hForm.forEach(n => { hSlices.push(hOutfield.slice(hIdx, hIdx + n)); hIdx += n; });
+
+      for (let i = hSlices.length - 1; i >= 0; i--) {
+        renderRow(homeHalf, hSlices[i], "jersey-home");
+      }
+      renderRow(homeHalf, [hGk], "jersey-home");
+
+      // Exact Manager Names & National Flags
+      const hCoach = getManagerInfo(hTeamName, homeData.coach?.[0]);
+      const aCoach = getManagerInfo(aTeamName, awayData.coach?.[0]);
+
+      document.getElementById("coachesContainer").innerHTML = `
+        <div class="coaches-wrap">
+          <div>${hCoach.flag} <strong>${hCoach.name}</strong> (${homeData.formation || '4-3-3'})</div>
+          <div>${aCoach.flag} <strong>${aCoach.name}</strong> (${awayData.formation || '4-3-3'})</div>
+        </div>
+      `;
+
+      // Numbered Substitutes
+      const hSubs = (homeData.roster || []).filter(p => !p.starter).map(p => `
+        <div class="bench-player"><span class="bench-num">#${p.jersey || '-'}</span><span>${p.athlete?.displayName || p.athlete?.shortName}</span></div>
+      `).join("");
+
+      const aSubs = (awayData.roster || []).filter(p => !p.starter).map(p => `
+        <div class="bench-player"><span class="bench-num">#${p.jersey || '-'}</span><span>${p.athlete?.displayName || p.athlete?.shortName}</span></div>
+      `).join("");
+
+      document.getElementById("benchGridContainer").innerHTML = `
+        <div class="bench-grid">
+          <div class="bench-col">
+            <div class="bench-title">${homeData.team?.shortDisplayName || 'Home'} Bench</div>
+            ${hSubs || '<div style="font-size:0.7rem; color:#94a3b8;">N/A</div>'}
+          </div>
+          <div class="bench-col">
+            <div class="bench-title">${awayData.team?.shortDisplayName || 'Away'} Bench</div>
+            ${aSubs || '<div style="font-size:0.7rem; color:#94a3b8;">N/A</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    // Match Center
     async function openMatchCenter(id, code) {
       const mc = document.getElementById("matchCenter");
       mc.classList.add("open");
@@ -991,20 +898,21 @@ async function initLoad() {
       try {
         const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
         const d = await res.json();
+
         const comp = d.header?.competitions?.[0] || {};
         const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
         const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
+
         const homeName = home.team?.shortDisplayName || home.team?.name || 'Home';
         const awayName = away.team?.shortDisplayName || away.team?.name || 'Away';
-        const isFinished = comp.status?.type?.state === 'post';
-        const homeScoreNum = parseInt(home.score ?? 0);
-        const awayScoreNum = parseInt(away.score ?? 0);
 
+        // Parse Goals, Subs, Cards
         const homeGoals = [], awayGoals = [], allEvents = [];
         (comp.details || []).forEach(ev => {
           const min = ev.clock?.displayValue || "";
           const isHome = ev.team?.id === home.id;
           const textType = ev.type?.text?.toLowerCase() || "";
+
           let player = ev.athletesInvolved?.[0]?.displayName || ev.participants?.[0]?.athlete?.displayName || ev.athlete?.displayName || "";
           if (!player && ev.text) {
             const clean = ev.text.split('(')[0].replace(/Goal!|Goal\s*-\s*[^.]+\./gi, '').trim();
@@ -1069,9 +977,13 @@ async function initLoad() {
           const h = {}, a = {};
           d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
           d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
-          const hPoss = parseInt(h["possessionPct"] || "50"), aPoss = 100 - hPoss;
-          const hShots = parseInt(h["totalShots"] || "0"), aShots = parseInt(a["totalShots"] || "0");
-          const hOnTarget = parseInt(h["shotsOnTarget"] || "0"), aOnTarget = parseInt(a["shotsOnTarget"] || "0");
+
+          const hPoss = parseInt(h["possessionPct"] || "50");
+          const aPoss = 100 - hPoss;
+          const hShots = parseInt(h["totalShots"] || "0");
+          const aShots = parseInt(a["totalShots"] || "0");
+          const hOnTarget = parseInt(h["shotsOnTarget"] || "0");
+          const aOnTarget = parseInt(a["shotsOnTarget"] || "0");
 
           statsSlide.innerHTML = `
             <div class="stat-row">
@@ -1094,12 +1006,12 @@ async function initLoad() {
           statsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Detailed stats will update at kickoff.</div>';
         }
 
-        // Lineups: Realistic Grass Pitch + Ratings + 96 Managers
+        // Lineups: Single Full 2-Team Tactical Board + Real Managers
         if (d.rosters && d.rosters.length >= 2) {
-          renderTwoTeamPitch(d.rosters[0], d.rosters[1], homeName, awayName, isFinished, homeScoreNum > awayScoreNum, awayScoreNum > homeScoreNum, allEvents);
+          renderTwoTeamPitch(d.rosters[0], d.rosters[1], homeName, awayName);
         }
 
-        // Last 5 Matches for Both Teams + H2H
+        // Previous 5 Matches for EACH Team (Opponents, Scores & W/D/L) + H2H
         try {
           const [hSchedRes, aSchedRes] = await Promise.allSettled([
             fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${home.id}/schedule`),
@@ -1116,6 +1028,7 @@ async function initLoad() {
               const opp = comp.competitors.find(c => c.id !== teamId) || comp.competitors[1];
               const ourScore = parseInt(us.score?.displayValue ?? us.score ?? 0);
               const oppScore = parseInt(opp.score?.displayValue ?? opp.score ?? 0);
+
               let badge = '<span class="badge-d">🟠 D</span>';
               if (ourScore > oppScore) badge = '<span class="badge-w">🟢 W</span>';
               else if (ourScore < oppScore) badge = '<span class="badge-l">🔴 L</span>';
@@ -1143,10 +1056,14 @@ async function initLoad() {
             </div>
 
             <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin-bottom:6px;">📈 ${homeName} – Previous 5 Games</div>
-            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">${hLast5Html}</div>
+            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">
+              ${hLast5Html}
+            </div>
 
             <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin-bottom:6px;">📈 ${awayName} – Previous 5 Games</div>
-            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">${aLast5Html}</div>
+            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">
+              ${aLast5Html}
+            </div>
           `;
         } catch(e) {
           h2hSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Previous matches data unavailable.</div>';
@@ -1191,15 +1108,15 @@ async function initLoad() {
               newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No club news at this moment.</div>';
             }
           })
-          .catch(() => {
-            newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Club news 
-currently unavailable.</div>';
+   .catch(() => {
+            newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Club news currently unavailable.</div>';
           });
       } catch (err) {
         banner.innerHTML = '<div style="color:#ef4444; font-size:0.8rem;">Could not load match details.</div>';
       }
     }
 
+    // Standings View
     async function loadStandings(code) {
       const box = document.getElementById("standingsWrapper");
       box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading standings...</div>';
@@ -1212,11 +1129,7 @@ currently unavailable.</div>';
           return;
         }
 
-        let html = `
-          <table class="standings-table">
-            <thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th><th>Form</th></tr></thead>
-            <tbody>
-        `;
+        let html = `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>PTS</th><th>Form</th></tr></thead><tbody>`;
         entries.forEach((e, i) => {
           const s = (name) => e.stats?.find(x => x.name === name)?.displayValue ?? "0";
           const gf = s('pointsFor') || s('goalsFor') || "0";
@@ -1227,21 +1140,7 @@ currently unavailable.</div>';
           const rawForm = (e.form || s('form') || "WWDLL").slice(-5).toUpperCase();
           const formHtml = rawForm.split("").map(c => c === "W" ? '<span class="badge-w">🟢</span>' : (c === "D" ? '<span class="badge-d">🟠</span>' : '<span class="badge-l">🔴</span>')).join("");
 
-          html += `
-            <tr>
-              <td>${i + 1}</td>
-              <td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td>
-              <td>${s('gamesPlayed')}</td>
-              <td>${s('wins')}</td>
-              <td>${s('ties')}</td>
-              <td>${s('losses')}</td>
-              <td>${gf}</td>
-              <td>${ga}</td>
-              <td class="${gdClass}">${gdFormatted}</td>
-              <td class="pts">${s('points')}</td>
-              <td><div class="form-badges">${formHtml}</div></td>
-            </tr>
-          `;
+          html += `<tr><td>${i + 1}</td><td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td><td>${s('gamesPlayed')}</td><td>${s('wins')}</td><td>${s('ties')}</td><td>${s('losses')}</td><td>${gf}</td><td>${ga}</td><td class="${gdClass}">${gdFormatted}</td><td class="pts">${s('points')}</td><td><div class="form-badges">${formHtml}</div></td></tr>`;
         });
         html += `</tbody></table>`;
         box.innerHTML = html;
@@ -1250,6 +1149,7 @@ currently unavailable.</div>';
       }
     }
 
+    // Top Goal Scorers & Assists
     async function loadLeaders(code) {
       const box = document.getElementById("leadersWrapper");
       box.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Loading League Leaders...</div>';
@@ -1257,6 +1157,7 @@ currently unavailable.</div>';
         const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard`);
         const data = await res.json();
         const goalsMap = {}, assistsMap = {};
+
         (data.events || []).forEach(ev => {
           (ev.competitions[0]?.details || []).forEach(d => {
             if (d.scoringPlay || (d.type && d.type.text?.toLowerCase().includes("goal"))) {
@@ -1272,22 +1173,17 @@ currently unavailable.</div>';
         const topAssists = Object.entries(assistsMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
         let html = `<h3 style="font-size:0.85rem; color:#38bdf8; margin-bottom:8px;">👟 Top Goal Scorers</h3>`;
-        html += topScorers.length ? topScorers.map(([n, g], i) => `
-          <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;">
-            <span>#${i+1} <strong>${n}</strong></span><span style="color:#38bdf8; font-weight:bold;">${g} Goals</span>
-          </div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
+        html += topScorers.length ? topScorers.map(([n, g], i) => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;"><span>#${i+1} <strong>${n}</strong></span><span style="color:#38bdf8; font-weight:bold;">${g} Goals</span></div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
 
         html += `<h3 style="font-size:0.85rem; color:#38bdf8; margin:16px 0 8px 0;">🎯 Top Playmakers (Assists)</h3>`;
-        html += topAssists.length ? topAssists.map(([n, a], i) => `
-          <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;">
-            <span>#${i+1} <strong>${n}</strong></span><span style="color:#22c55e; font-weight:bold;">${a} Assists</span>
-          </div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
+        html += topAssists.length ? topAssists.map(([n, a], i) => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #334155; font-size:0.75rem;"><span>#${i+1} <strong>${n}</strong></span><span style="color:#22c55e; font-weight:bold;">${a} Assists</span></div>`).join("") : `<div style="font-size:0.72rem; color:#94a3b8; padding:8px 0;">Updating as games conclude.</div>`;
         box.innerHTML = html;
       } catch (e) {
         box.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Leaders data unavailable.</div>';
       }
     }
 
+    // Direct Supabase Reviews
     function openReview() { document.getElementById("reviewModal").classList.add("open"); }
     function closeReview() { document.getElementById("reviewModal").classList.remove("open"); }
 
@@ -1296,11 +1192,13 @@ currently unavailable.</div>';
       const btn = document.getElementById("revBtn");
       btn.innerText = "Saving...";
       btn.disabled = true;
+
       const payload = {
         name: document.getElementById("revName").value || "Fan",
         rating: document.getElementById("revRating").value + " Stars",
         message: document.getElementById("revMsg").value
       };
+
       try {
         const res = await fetch("https://zqfcquyuxmbjehgrktht.supabase.co/rest/v1/reviews", {
           method: "POST",
@@ -1312,8 +1210,9 @@ currently unavailable.</div>';
           },
           body: JSON.stringify(payload)
         });
+
         if (!res.ok) throw new Error("Insert failed");
-        alert("Review saved to Supabase! 🎉");
+        alert("Review saved directly to your Supabase database! 🎉");
         closeReview();
       } catch (err) {
         alert("Review received! Thank you! 🙌");
