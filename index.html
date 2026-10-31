@@ -81,6 +81,7 @@
     .poll-bar-away { background: #f87171; transition: width 0.4s; }
     .poll-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: #cbd5e1; margin-top: 3px; font-weight: 700; }
 
+
 /* Flashscore Match Center Overlay */
     .mc-overlay { display: none; position: fixed; inset: 0; background: #0b1120; z-index: 1000; overflow-y: auto; flex-direction: column; }
     .mc-overlay.open { display: flex; }
@@ -177,10 +178,6 @@
     .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
 </head>
-
-
-
-
 <body>
 
   <!-- Complete 10-Sport Navigation Bar -->
@@ -536,6 +533,7 @@
       localStorage.setItem("etini_favs", JSON.stringify(favTeams));
       renderMatches();
     }
+
 async function voteMatch(e, matchId, choice) {
       e.stopPropagation();
       if (userPollVotes[matchId]) return alert("You already voted on this match! 🗳️");
