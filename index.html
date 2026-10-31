@@ -1346,6 +1346,31 @@ async function voteMatch(e, matchId, choice) {
       }
     }
 
+
+
+
+
+
+function closeMatchCenter() {
+      document.getElementById("matchCenter").classList.remove("open");
+    }
+
+    function switchMcSlide(slide, btn) {
+      document.querySelectorAll(".mc-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".mc-slide").forEach(s => s.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+      const target = document.getElementById("mcSlide-" + slide);
+      if (target) target.classList.add("active");
+    }
+
+
+
+
+
+
+
+
+
     initLoad();
     setInterval(initLoad, 30000);
   </script>
