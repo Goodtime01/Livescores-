@@ -1670,6 +1670,369 @@ function closeMatchCenter() {
 
 
 
+
+
+
+// Ultimate Match Events Parser: Goals, Assists, Penalties, Subs (In/Out), Yellow & Red Cards
+    window.openMatchCenter = async function(id, code) {
+      const mc = document.getElementById("matchCenter");
+      mc.classList.add("open");
+
+      const banner = document.getElementById("mcBanner");
+      const infoSlide = document.getElementById("mcSlide-info");
+      const statsSlide = document.getElementById("mcSlide-stats");
+      const h2hSlide = document.getElementById("mcSlide-h2h");
+      const commSlide = document.getElementById("mcSlide-comm");
+      const newsSlide = document.getElementById("mcSlide-news");
+
+      banner.innerHTML = '<div style="color:#94a3b8; font-size:0.8rem;">Loading match center...</div>';
+      infoSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading events, subs & cards...</div>';
+      statsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading statistics...</div>';
+      h2hSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading Last 5 Matches & H2H...</div>';
+      commSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading live commentary...</div>';
+      newsSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">Loading club headlines...</div>';
+
+      try {
+        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
+        const d = await res.json();
+        const comp = d.header?.competitions?.[0] || {};
+        const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
+        const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
+        const homeName = home.team?.shortDisplayName || home.team?.name || 'Home';
+        const awayName = away.team?.shortDisplayName || away.team?.name || 'Away';
+        const isFinished = comp.status?.type?.state === 'post';
+        const homeScoreNum = parseInt(home.score ?? 0);
+        const awayScoreNum = parseInt(away.score ?? 0);
+
+        const homeGoals = [], awayGoals = [], allEvents = [];
+        const seenEvents = new Set();
+
+        // 1. Parse Scoring Plays from Details
+        (comp.details || []).forEach(ev => {
+          const rawClock = ev.clock?.displayValue || "";
+          const min = rawClock ? `${rawClock}'` : "";
+          const isHome = ev.team?.id === home.id;
+          const textType = (ev.type?.text || "").toLowerCase();
+          const fullText = ev.text || "";
+
+          let player = ev.athletesInvolved?.[0]?.displayName || ev.participants?.[0]?.athlete?.displayName || ev.athlete?.displayName || "";
+          if (!player && fullText) {
+            const clean = fullText.split('(')[0].replace(/Goal!|Goal\s*-\s*[^.]+\./gi, '').trim();
+            if (clean) player = clean;
+          }
+
+          let assist = ev.athletesInvolved?.[1]?.displayName ? ` (Assist: ${ev.athletesInvolved[1].displayName})` : "";
+          if (!assist && fullText.toLowerCase().includes("assisted by")) {
+            const m = fullText.match(/assisted by ([^.]+)\./i);
+            if (m && m[1]) assist = ` (Assist: ${m[1].trim()})`;
+          }
+
+          const isPen = ev.penaltyKick || textType.includes("penalty") || fullText.toLowerCase().includes("penalty");
+          const isOG = ev.ownGoal || textType.includes("own goal") || fullText.toLowerCase().includes("own goal");
+          const tag = isPen ? " (P)" : (isOG ? " (OG)" : "");
+
+          if (ev.scoringPlay || textType.includes("goal")) {
+            const goalBanner = `⚽ ${player || 'Goal'} ${min}${tag}${assist}`;
+            if (isHome) homeGoals.push(goalBanner);
+            else awayGoals.push(goalBanner);
+
+            const key = `goal-${min}-${player}`;
+            if (!seenEvents.has(key)) {
+              seenEvents.add(key);
+              allEvents.push({
+                minInt: parseInt(rawClock) || 0,
+                min,
+                icon: "⚽",
+                text: `<strong>${player || 'Goal'}</strong>${tag} <span style="color:#38bdf8; font-size:0.72rem;">${assist}</span>`,
+                team: isHome ? homeName : awayName
+              });
+            }
+          }
+        });
+
+        // 2. Parse Substitutions, Cards & Missed Penalties from Commentary & Plays
+        const playItems = d.commentary || d.plays || [];
+        playItems.forEach(item => {
+          const rawClock = item.time?.displayValue || item.clock?.displayValue || "";
+          const min = rawClock ? `${rawClock}'` : "";
+          const txt = item.text || item.description || "";
+          const lower = txt.toLowerCase();
+
+          // Team detection
+          const isHome = lower.includes(homeName.toLowerCase());
+          const isAway = lower.includes(awayName.toLowerCase());
+          const teamLabel = isHome ? homeName : (isAway ? awayName : "");
+
+          // Substitutions (In & Out)
+          if (lower.includes("substitution") || lower.includes("replaces")) {
+            let pIn = "", pOut = "";
+            const subMatch = txt.match(/([A-Za-z\s\-\.\']+)\s+replaces\s+([A-Za-z\s\-\.\']+)/i);
+            if (subMatch) {
+              pIn = subMatch[1].replace(/substitution,?\s*[^.]*\.?/gi, '').trim();
+              pOut = subMatch[2].replace(/\.?/g, '').trim();
+            } else if (item.athletesInvolved && item.athletesInvolved.length >= 2) {
+              pIn = item.athletesInvolved[0].displayName;
+              pOut = item.athletesInvolved[1].displayName;
+            }
+
+            if (pIn) {
+              const key = `sub-${min}-${pIn}`;
+              if (!seenEvents.has(key)) {
+                seenEvents.add(key);
+                allEvents.push({
+                  minInt: parseInt(rawClock) || 0,
+                  min,
+                  icon: "🔁",
+                  text: `<span class="sub-in" style="color:#4ade80; font-weight:700;">▲ In: ${pIn}</span> &nbsp; <span class="sub-out" style="color:#f87171; font-size:0.7rem;">▼ Out: ${pOut}</span>`,
+                  team: teamLabel
+                });
+              }
+            }
+          }
+
+          // Red Cards
+          else if (lower.includes("red card") || lower.includes("is sent off")) {
+            const cardMatch = txt.match(/([A-Za-z\s\-\.\']+)\s+\([^)]+\)\s+is shown the red card/i) || txt.match(/([A-Za-z\s\-\.\']+)\s+is sent off/i);
+            const player = cardMatch ? cardMatch[1].trim() : (item.athletesInvolved?.[0]?.displayName || "Player");
+            const key = `red-${min}-${player}`;
+            if (!seenEvents.has(key)) {
+              seenEvents.add(key);
+              allEvents.push({
+                minInt: parseInt(rawClock) || 0,
+                min,
+                icon: "🟥",
+                text: `<strong style="color:#f87171;">${player}</strong> <span style="color:#f87171; font-weight:700; font-size:0.68rem;">(Red Card)</span>`,
+                team: teamLabel
+              });
+            }
+          }
+
+          // Yellow Cards
+          else if (lower.includes("yellow card") || lower.includes("is shown the yellow card")) {
+            const cardMatch = txt.match(/([A-Za-z\s\-\.\']+)\s+\([^)]+\)\s+is shown the yellow card/i) || txt.match(/([A-Za-z\s\-\.\']+)\s+is shown the yellow card/i);
+            const player = cardMatch ? cardMatch[1].trim() : (item.athletesInvolved?.[0]?.displayName || "Player");
+            const key = `yellow-${min}-${player}`;
+            if (!seenEvents.has(key)) {
+              seenEvents.add(key);
+              allEvents.push({
+                minInt: parseInt(rawClock) || 0,
+                min,
+                icon: "🟨",
+                text: `<strong>${player}</strong> <span style="color:#fbbf24; font-size:0.68rem;">(Yellow Card)</span>`,
+                team: teamLabel
+              });
+            }
+          }
+
+          // Missed Penalty
+          else if (lower.includes("penalty missed") || lower.includes("misses the penalty") || (lower.includes("penalty saved") && !lower.includes("goal"))) {
+            const penMatch = txt.match(/([A-Za-z\s\-\.\']+)\s+\([^)]+\)\s+misses/i) || txt.match(/penalty saved by/i);
+            const player = item.athletesInvolved?.[0]?.displayName || (penMatch ? penMatch[1] : "Penalty Taker");
+            const key = `penmiss-${min}-${player}`;
+            if (!seenEvents.has(key)) {
+              seenEvents.add(key);
+              allEvents.push({
+                minInt: parseInt(rawClock) || 0,
+                min,
+                icon: "❌",
+                text: `<strong style="color:#f87171;">Missed Penalty: ${player}</strong>`,
+                team: teamLabel
+              });
+            }
+          }
+        });
+
+        // Chronological Sort
+        allEvents.sort((a, b) => a.minInt - b.minInt);
+
+        // 1. Banner
+        banner.innerHTML = `
+          <div class="mc-league">${d.header?.league?.name || code.toUpperCase()}</div>
+          <div class="mc-teams">
+            <div class="mc-team-block">
+              <img src="${home.team?.logos?.[0]?.href || home.team?.logo || ''}">
+              <div class="mc-team-name">${homeName}</div>
+            </div>
+            <div class="mc-score">${home.score ?? 0} : ${away.score ?? 0}</div>
+            <div class="mc-team-block">
+              <img src="${away.team?.logos?.[0]?.href || away.team?.logo || ''}">
+              <div class="mc-team-name">${awayName}</div>
+            </div>
+          </div>
+          <div class="mc-status">${comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled'}</div>
+          <div class="mc-scorers-banner">
+            <div class="mc-scorers-home">${homeGoals.join("<br>")}</div>
+            <div class="mc-scorers-away">${awayGoals.join("<br>")}</div>
+          </div>
+          ${comp.venue ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:8px;">📍 ${comp.venue.fullName || ''}</div>` : ''}
+        `;
+
+        // 2. Info Slide Timeline (Goals, Assists, Subs In/Out, Yellow & Red Cards, Missed Pens)
+        if (allEvents.length > 0) {
+          infoSlide.innerHTML = allEvents.map(e => `
+            <div class="timeline-item" style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #1e293b;">
+              <span class="timeline-min" style="font-weight:800; color:#38bdf8; min-width:36px;">${e.min}</span>
+              <span style="font-size:1.1rem; line-height:1;">${e.icon}</span>
+              <div style="flex:1; font-size:0.75rem;">
+                ${e.text}
+                ${e.team ? `<span style="color:#94a3b8; font-size:0.68rem; margin-left:4px;">(${e.team})</span>` : ''}
+              </div>
+            </div>
+          `).join("");
+        } else {
+          infoSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No events recorded yet.</div>';
+        }
+
+        // 3. Statistics Slide
+        if (d.boxscore?.teams?.length >= 2) {
+          const h = {}, a = {};
+          d.boxscore.teams[0].statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
+          d.boxscore.teams[1].statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
+          const hPoss = parseInt(h["possessionPct"] || "50"), aPoss = 100 - hPoss;
+          const hShots = parseInt(h["totalShots"] || "0"), aShots = parseInt(a["totalShots"] || "0");
+          const hOnTarget = parseInt(h["shotsOnTarget"] || "0"), aOnTarget = parseInt(a["shotsOnTarget"] || "0");
+
+          statsSlide.innerHTML = `
+            <div class="stat-row">
+              <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
+              <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
+              <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
+              <div class="stat-item"><span>${h["shotsOffTarget"] || Math.max(0, hShots - hOnTarget)}</span><span>Shots Off Target</span><span>${a["shotsOffTarget"] || Math.max(0, aShots - aOnTarget)}</span></div>
+              <div class="stat-item"><span>${h["wonCorners"] || h["corners"] || "0"}</span><span>Corner Kicks</span><span>${a["wonCorners"] || a["corners"] || "0"}</span></div>
+              <div class="stat-item"><span>${h["totalPasses"] || "-"}</span><span>Passes</span><span>${a["totalPasses"] || "-"}</span></div>
+              <div class="stat-item"><span>${h["foulsCommitted"] || "0"}</span><span>Fouls</span><span>${a["foulsCommitted"] || "0"}</span></div>
+              <div class="stat-item"><span>${h["offsides"] || "0"}</span><span>Offsides</span><span>${a["offsides"] || "0"}</span></div>
+              <div class="stat-item"><span>🟨 ${h["yellowCards"] || "0"}</span><span>Yellow Cards</span><span>🟨 ${a["yellowCards"] || "0"}</span></div>
+              <div class="stat-item"><span>🟥 ${h["redCards"] || "0"}</span><span>Red Cards</span><span>${a["redCards"] || "0"} 🟥</span></div>
+            </div>
+          `;
+        } else {
+          statsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Detailed stats will update at kickoff.</div>';
+        }
+
+        // 4. Lineups: Realistic Football Pitch + Real Ratings + Managers
+        if (d.rosters && d.rosters.length >= 2) {
+          renderTwoTeamPitch(d.rosters[0], d.rosters[1], homeName, awayName, isFinished, homeScoreNum > awayScoreNum, awayScoreNum > homeScoreNum, allEvents);
+        }
+
+        // 5. Last 5 Matches for Both Teams + H2H
+        try {
+          const [hSchedRes, aSchedRes] = await Promise.allSettled([
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${home.id}/schedule`),
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${away.id}/schedule`)
+          ]);
+
+          const parseLast5 = (schedData, teamId) => {
+            const completed = (schedData.events || []).filter(e => e.competitions?.[0]?.status?.type?.state === 'post').slice(-5).reverse();
+            if (!completed.length) return '<div style="font-size:0.7rem; color:#94a3b8; padding:4px 0;">No previous matches recorded.</div>';
+
+            return completed.map(ev => {
+              const comp = ev.competitions[0];
+              const us = comp.competitors.find(c => c.id === teamId) || comp.competitors[0];
+              const opp = comp.competitors.find(c => c.id !== teamId) || comp.competitors[1];
+              const ourScore = parseInt(us.score?.displayValue ?? us.score ?? 0);
+              const oppScore = parseInt(opp.score?.displayValue ?? opp.score ?? 0);
+              let badge = '<span class="badge-d">🟠 D</span>';
+              if (ourScore > oppScore) badge = '<span class="badge-w">🟢 W</span>';
+              else if (ourScore < oppScore) badge = '<span class="badge-l">🔴 L</span>';
+
+              return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #334155; font-size:0.72rem;">
+                  <span style="font-weight:600;">vs ${opp.team?.shortDisplayName || opp.team?.name}</span>
+                  <span style="font-weight:800; color:#38bdf8;">${ourScore} : ${oppScore}</span>
+                  <span>${badge}</span>
+                </div>
+              `;
+            }).join("");
+          };
+
+          const hLast5Html = hSchedRes.status === 'fulfilled' && hSchedRes.value.ok ? parseLast5(await hSchedRes.value.json(), home.id) : '';
+          const aLast5Html = aSchedRes.status === 'fulfilled' && aSchedRes.value.ok ? parseLast5(await aSchedRes.value.json(), away.id) : '';
+
+          h2hSlide.innerHTML = `
+            <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin-bottom:8px;">⚔️ Current Head-to-Head</div>
+            <div class="match-card" style="padding:10px; margin-bottom:14px;">
+              <div class="h2h-match">
+                <span class="h2h-teams">${homeName} vs ${awayName}</span>
+                <span class="h2h-score">${home.score ?? 0} : ${away.score ?? 0}</span>
+              </div>
+            </div>
+
+            <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin-bottom:6px;">📈 ${homeName} – Previous 5 Games</div>
+            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">${hLast5Html}</div>
+
+            <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin-bottom:6px;">📈 ${awayName} – Previous 5 Games</div>
+            <div class="match-card" style="padding:8px 12px; margin-bottom:14px;">${aLast5Html}</div>
+          `;
+        } catch(e) {
+          h2hSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Previous matches data unavailable.</div>';
+        }
+
+        // 6. Commentary
+        const commList = d.commentary || d.plays || [];
+        if (commList.length > 0) {
+          commSlide.innerHTML = commList.map(item => `
+            <div class="comm-item">
+              <div class="comm-time">${item.time?.displayValue || item.clock?.displayValue || '•'}</div>
+              <div>${item.text || item.description || ''}</div>
+            </div>
+          `).join("");
+        } else if (allEvents.length > 0) {
+          commSlide.innerHTML = allEvents.map(e => `
+            <div class="comm-item">
+              <div class="comm-time">${e.min}</div>
+              <div>${e.icon} ${e.text} (${e.team})</div>
+            </div>
+          `).join("");
+        } else {
+          commSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Live play-by-play commentary is active during match play.</div>';
+        }
+
+        // 7. News
+        fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/news`)
+          .then(r => r.json())
+          .then(nData => {
+            const articles = (nData.articles || []).slice(0, 6);
+            if (articles.length > 0) {
+              newsSlide.innerHTML = articles.map(a => `
+                <a href="${a.links?.web?.href || '#'}" target="_blank" class="news-card">
+                  ${a.images?.[0]?.url ? `<img src="${a.images[0].url}" alt="">` : ''}
+                  <div>
+                    <div class="news-title">${a.headline}</div>
+                    <div class="news-time">${a.published ? new Date(a.published).toLocaleDateString() : 'Recent'}</div>
+                  </div>
+                </a>
+              `).join("");
+            } else {
+              newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">No club news at this moment.</div>';
+            }
+          })
+          .catch(() => {
+            newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Club news currently unavailable.</div>';
+          });
+
+      } catch (err) {
+        banner.innerHTML = '<div style="color:#ef4444; font-size:0.8rem;">Could not load match details.</div>';
+      }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   </script>
 </body>
 </html>
