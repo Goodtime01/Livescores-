@@ -1671,6 +1671,11 @@ async function openMatchCenter(id, code) {
 
     loadAdvertisements();
 
+
+if (localStorage.getItem("etini_vip_active") === "true") {
+  document.body.classList.add("is-vip");
+}
+
   </script>
 
 
