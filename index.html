@@ -1510,6 +1510,39 @@ async function openMatchCenter(id, code) {
 
     initLoad();
     setInterval(initLoad, 30000);
+
+
+
+// H2H Fully Expanded Override (All 5 Games Displayed in Full Detail by Default)
+    const _baseOpenMatchCenter = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseOpenMatchCenter === "function") {
+        await _baseOpenMatchCenter(id, code);
+      }
+      const h2hBox = document.getElementById("mcSlide-h2h");
+      if (!h2hBox) return;
+
+      const cards = h2hBox.querySelectorAll(".h2h-card");
+      cards.forEach(card => {
+        card.style.background = "#0b1120";
+        card.style.border = "1px solid #334155";
+        card.style.padding = "12px 14px";
+        card.style.marginBottom = "10px";
+        card.style.borderRadius = "10px";
+        card.style.display = "block";
+
+        const row = card.querySelector(".h2h-row");
+        if (row) {
+          row.style.display = "flex";
+          row.style.justifyContent = "space-between";
+          row.style.alignItems = "center";
+          row.style.fontSize = "0.82rem";
+          row.style.fontWeight = "800";
+        }
+        const btn = card.querySelector("span[style*='color:#38bdf8']");
+        if (btn) btn.remove(); // Removes any "View" or collapse button
+      });
+    };
   </script>
 </body>
 </html>
