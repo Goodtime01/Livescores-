@@ -412,6 +412,11 @@
     // Launch Basketball Engine
     initLoad();
     setInterval(initLoad, 30000);
+
+
+if (localStorage.getItem("etini_vip_active") === "true") {
+  document.body.classList.add("is-vip");
+}
   </script>
 </body>
 </html>
