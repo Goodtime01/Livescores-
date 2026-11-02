@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go VIP - Etini LiveScores</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 16px; max-width: 650px; margin: 0 auto; line-height: 1.5; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .back-btn { background: #1e293b; color: #38bdf8; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid #334155; }
+    h1 { font-size: 1.4rem; color: #facc15; display: flex; align-items: center; gap: 8px; }
+    
+    .plan-card { background: #1e293b; border: 1.5px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .plan-card.featured { border-color: #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.15); }
+    .plan-title { font-size: 1.1rem; font-weight: 800; display: flex; justify-content: space-between; }
+    .plan-price { font-size: 1.25rem; color: #38bdf8; font-weight: 900; margin: 6px 0; }
+    .perks { list-style: none; margin: 10px 0; font-size: 0.8rem; color: #cbd5e1; }
+    .perks li { margin-bottom: 6px; }
+
+    .pay-box { background: #0b1120; border: 1px dashed #38bdf8; border-radius: 10px; padding: 14px; margin: 18px 0; font-size: 0.8rem; }
+    .bank-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .wa-btn { display: block; text-align: center; background: #22c55e; color: #0b1120; text-decoration: none; font-weight: 900; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
+
+    .code-box { background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155; margin-top: 20px; text-align: center; }
+    .code-box input { width: 100%; padding: 10px; background: #0b1120; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.9rem; text-align: center; text-transform: uppercase; margin-bottom: 10px; font-weight: 800; }
+    .activate-btn { width: 100%; background: #38bdf8; color: #0b1120; border: none; padding: 10px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; cursor: pointer; }
+    .status-msg { margin-top: 10px; font-size: 0.75rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>👑 Etini VIP Ad-Free</h1>
+    <a href="index.html" class="back-btn">◀ Live Scores</a>
+  </header>
+
+  <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 16px;">
+    Turn off all ads, banners, and popups across all sports pages with an active VIP key.
+  </p>
+
+  <!-- Plans -->
+  <div class="plan-card">
+    <div class="plan-title"><span>Standard VIP</span><span>1 Month</span></div>
+    <div class="plan-price">₦500 <span style="font-size:0.75rem; color:#94a3b8;">/ month</span></div>
+    <ul class="perks">
+      <li>✅ 100% Ad-Free on all 10 Sports</li>
+      <li>✅ Remove All Betting Banners</li>
+      <li>✅ Faster Page Loading</li>
+    </ul>
+  </div>
+
+  <div class="plan-card featured">
+    <div class="plan-title"><span style="color:#facc15;">Pro VIP</span><span>3 Months</span></div>
+    <div class="plan-price">₦1,200 <span style="font-size:0.75rem; color:#94a3b8;">(Save ₦300)</span></div>
+    <ul class="perks">
+      <li>✅ Everything in Standard</li>
+      <li>✅ Priority WhatsApp Match Alerts</li>
+      <li>✅ VIP Match Previews & Picks</li>
+    </ul>
+  </div>
+
+  <!-- Nigerian Payment Box -->
+  <div class="pay-box">
+    <div style="font-weight: 800; color: #38bdf8; margin-bottom: 8px;">💳 Bank Transfer (Instant Verification)</div>
+    <div class="bank-row"><span>Bank:</span><strong>OPay / Moniepoint</strong></div>
+    <div class="bank-row"><span>Account Name:</span><strong>Etini Obop</strong></div>
+    <div class="bank-row"><span>Account Number:</span><strong>8140000000</strong></div>
+    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 6px;">After transfer, tap below to send your receipt on WhatsApp and receive your VIP Code immediately.</p>
+    <a href="https://wa.me/2348140000000?text=Hello%20Etini,%20I%20have%20paid%20for%20VIP%20Ad-Free.%20Here%20is%20my%20receipt:" target="_blank" class="wa-btn">
+      📲 Send Receipt on WhatsApp for VIP Code
+    </a>
+  </div>
+
+  <!-- Code Activation Form -->
+  <div class="code-box">
+    <div style="font-size: 0.85rem; font-weight: 800; margin-bottom: 8px;">Already have your VIP Code?</div>
+    <input type="text" id="vipCodeInput" placeholder="ENTER VIP CODE (e.g. VIP-GOLD)" />
+    <button class="activate-btn" onclick="activateVip()">Activate VIP Ad-Free</button>
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+
+  <script>
+    // List of active valid VIP codes (you can add or generate codes here)
+    const VALID_CODES = ["VIP500", "VIP1000", "ETINI-GOLD", "VIP-NOADS", "PREMIUM2026"];
+
+    function checkCurrentVip() {
+      const isVip = localStorage.getItem("etini_vip_active") === "true";
+      const statusEl = document.getElementById("statusMsg");
+      if (isVip) {
+        statusEl.style.color = "#4ade80";
+        statusEl.innerHTML = "👑 VIP Status: ACTIVE on this device! All ads are disabled.";
+      }
+    }
+
+    function activateVip() {
+      const code = document.getElementById("vipCodeInput").value.trim().toUpperCase();
+      const statusEl = document.getElementById("statusMsg");
+
+      if (VALID_CODES.includes(code)) {
+        localStorage.setItem("etini_vip_active", "true");
+        statusEl.style.color = "#4ade80";
+        statusEl.innerHTML = "🎉 VIP Activated Successfully! Redirecting to ad-free scores...";
+        setTimeout(() => { window.location.href = "index.html"; }, 1500);
+      } else {
+        statusEl.style.color = "#f87171";
+        statusEl.innerHTML = "❌ Invalid VIP Code. Please check your WhatsApp receipt.";
+      }
+    }
+
+    checkCurrentVip();
+  </script>
+</body>
+</html>
