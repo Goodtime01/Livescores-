@@ -1600,6 +1600,65 @@ async function openMatchCenter(id, code) {
         if (btn) btn.remove(); // Removes any "View" or collapse button
       });
     };
+
+
+
+// Ad Management Engine (Direct Ads via ads.json + AdSense Fallback + VIP Removal)
+    async function loadAdvertisements() {
+      const isVip = localStorage.getItem("etini_vip_active") === "true";
+      if (isVip) {
+        document.body.classList.add("is-vip");
+        const vipBtn = document.getElementById("vipHeaderBtn");
+        if (vipBtn) {
+          vipBtn.innerText = "👑 VIP Active";
+          vipBtn.style.background = "#22c55e";
+        }
+        return; // Suppress all ads for VIP users
+      }
+
+      try {
+        const res = await fetch("ads.json");
+        const ads = await res.json();
+        const today = new Date().toISOString().split("T")[0];
+
+        function renderSlot(containerId, adConfig, adSenseSlotId) {
+          const el = document.getElementById(containerId);
+          if (!el) return;
+
+          // If a direct sponsor ad is configured and not expired, display it
+          if (adConfig && adConfig.active && adConfig.expiry >= today && adConfig.image) {
+            el.innerHTML = `
+              <div class="ad-label">Advertisement</div>
+              <a href="${adConfig.link}" target="_blank" style="display:block; text-decoration:none;">
+                <img src="${adConfig.image}" alt="${adConfig.title}" style="width:100%; max-height:90px; object-fit:cover; border-radius:8px; border:1px solid #334155;" />
+              </a>
+              ${adConfig.is_betting ? '<div class="ad-disclaimer">18+ | Gamble Responsibly</div>' : ''}
+            `;
+          } else {
+            // AdSense Fallback
+            el.innerHTML = `
+              <div class="ad-label">Advertisement</div>
+              <ins class="adsbygoogle"
+                   style="display:block"
+                   data-ad-client="ca-pub-3159624027297418"
+                   data-ad-slot="${adSenseSlotId}"
+                   data-ad-format="auto"
+                   data-full-width-responsive="true"></ins>
+            `;
+            try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
+          }
+        }
+
+        renderSlot("ad-top-banner", ads.top_banner, "1234567890");
+        renderSlot("ad-in-feed", ads.in_feed, "2345678901");
+        renderSlot("ad-bottom-banner", ads.bottom_banner, "3456789012");
+      } catch (err) {
+        console.log("Direct ad config not found; AdSense default enabled.");
+      }
+    }
+
+    loadAdvertisements();
+
   </script>
 </body>
 </html>
