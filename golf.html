@@ -227,6 +227,11 @@
 
     initLoad();
     setInterval(initLoad, 60000);
+
+
+if (localStorage.getItem("etini_vip_active") === "true") {
+  document.body.classList.add("is-vip");
+}
   </script>
 </body>
 </html>
