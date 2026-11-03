@@ -232,23 +232,21 @@
 
   
 
+
 <header>
   <h1>⚽ Etini LiveScores</h1>
   <div class="header-btns">
-    <button id="soundBtn">🔔 Alerts</button>
-    <button>⭐ Review</button>
-    <button>↻ Refresh</button>
+    <button class="btn btn-sound active" id="soundBtn" onclick="toggleSound()">🔊 Alerts</button>
+    <button class="btn" onclick="openReview()">⭐ Review</button>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
   </div>
-
   <div class="header-btns">
-    <a href="vip.html">👑 Go VIP</a>
-  </div>
-
-  <div class="header-btns" style="margin-top:8px;">
-    <a href="previews.html">📰 News</a>
+    <a href="vip.html" id="vipHeaderBtn" class="btn" style="background:#facc15; color:#000; font-weight:800; text-decoration:none;">👑 Go VIP</a>
+    <a href="previews.html" class="btn" style="text-decoration:none;">📰 News</a>
+    <button class="btn btn-sound active" id="soundBtn" onclick="toggleSound()">🔊 Alerts</button>
+    <button class="btn btn-primary" onclick="initLoad()">↻ Refresh</button>
   </div>
 </header>
-
 <div id="ad-top-banner" class="ad-slot" style="margin-bottom:12px;"></div>
 
 
@@ -336,9 +334,9 @@
         <option value="uae.1">🇦🇪 UAE – Pro League</option>
       </optgroup>
       <optgroup label="🏆 Europe">
-        <option value="eng.1">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England – Premier League</option>
-        <option value="eng.2">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England – Championship</option>
-        <option value="eng.5">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England – National League</option>
+        <option value="eng.1">🇬🇧 England – Premier League</option>
+        <option value="eng.2">🇬🇧 England – Championship</option>
+        <option value="eng.5">🇬🇧 England – National League</option>
         <option value="esp.1">🇪🇸 Spain – La Liga</option>
         <option value="esp.2">🇪🇸 Spain – Segunda División</option>
         <option value="ita.1">🇮🇹 Italy – Serie A</option>
@@ -350,8 +348,8 @@
         <option value="ned.2">🇳🇱 Netherlands – Eerste Divisie</option>
         <option value="por.1">🇵🇹 Portugal – Liga Portugal</option>
         <option value="tur.1">🇹🇷 Turkey – Süper Lig</option>
-        <option value="sco.1">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland – Premiership</option>
-        <option value="sco.2">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland – Championship</option>
+        <option value="sco.1">🇬🇧 Scotland – Premiership</option>
+        <option value="sco.2">🇬🇧 Scotland – Championship</option>
         <option value="bel.1">🇧🇪 Belgium – Pro League</option>
         <option value="aut.1">🇦🇹 Austria – Bundesliga</option>
         <option value="gre.1">🇬🇷 Greece – Super League</option>
