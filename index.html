@@ -1673,6 +1673,63 @@ if (localStorage.getItem("etini_vip_active") === "true") {
   document.body.classList.add("is-vip");
 }
 
+
+
+
+
+
+
+// Additional Champions League & European Cup Managers
+    const UCL_EXTRA_MANAGERS = {
+      "shakhtar": { name: "Marino Pusic", flag: "🇧🇦" },
+      "atletico": { name: "Diego Simeone", flag: "🇦🇷" },
+      "zagreb": { name: "Nenad Bjelica", flag: "🇭🇷" },
+      "sparta prague": { name: "Lars Friis", flag: "🇩🇰" },
+      "slavia prague": { name: "Jindrich Trpisovsky", flag: "🇨🇿" },
+      "red star": { name: "Vladan Milojevic", flag: "🇷🇸" },
+      "crvena zvezda": { name: "Vladan Milojevic", flag: "🇷🇸" },
+      "young boys": { name: "Giorgio Contini", flag: "🇨🇭" },
+      "stuttgart": { name: "Sebastian Hoeness", flag: "🇩🇪" },
+      "sporting": { name: "Rui Borges", flag: "🇵🇹" },
+      "benfica": { name: "Bruno Lage", flag: "🇵🇹" },
+      "porto": { name: "Francesco Farioli", flag: "🇮🇹" },
+      "monaco": { name: "Adi Hutter", flag: "🇦🇹" },
+      "brest": { name: "Eric Roy", flag: "🇫🇷" },
+      "lille": { name: "Bruno Genesio", flag: "🇫🇷" },
+      "leverkusen": { name: "Xabi Alonso", flag: "🇪🇸" },
+      "bayer": { name: "Xabi Alonso", flag: "🇪🇸" }
+    };
+
+    // Smart Accent-Insensitive Normalizer (e.g. "Atlético" -> "atletico")
+    function cleanStr(s) {
+      return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    }
+
+    // Upgraded Global Matcher (Overrides previous lookup)
+    window.getManagerInfo = function(teamName) {
+      if (!teamName) return { name: "", flag: "" };
+      const raw = cleanStr(teamName);
+
+      // Check UCL / Accent-specific matches first
+      for (const [k, v] of Object.entries(UCL_EXTRA_MANAGERS)) {
+        if (raw.includes(k) || k.includes(raw)) return v;
+      }
+
+      // Check main database
+      for (const [key, val] of Object.entries(MANAGER_DB)) {
+        const kClean = cleanStr(key);
+        if (raw.includes(kClean) || kClean.includes(raw)) {
+          return { name: val.name, flag: val.flag };
+        }
+      }
+
+      return { name: "", flag: "" };
+    };
+
+
+
+
+
   </script>
 
 
