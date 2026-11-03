@@ -1878,6 +1878,55 @@ if (localStorage.getItem("etini_vip_active") === "true") {
 
 
 
+
+
+
+// Fixed Supabase Review Submitter (Compatible with sb_publishable key)
+    window.sendReview = async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById("revBtn");
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const payload = {
+        name: document.getElementById("revName").value || "Anonymous Fan",
+        rating: document.getElementById("revRating").value + " Stars",
+        message: document.getElementById("revMsg").value
+      };
+
+      try {
+        const res = await fetch("https://zqfcquyuxmbjehgrktht.supabase.co/rest/v1/reviews", {
+          method: "POST",
+          headers: {
+            "apikey": "sb_publishable_goSL10-doS57RFYLBXTV5Q_Dr5-cdoD",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error("Supabase Error:", errText);
+          throw new Error("Insert failed");
+        }
+
+        alert("Review saved directly to your Supabase database! 🎉");
+        closeReview();
+      } catch (err) {
+        alert("Failed to submit review. Please try again.");
+      } finally {
+        btn.innerText = "Send";
+        btn.disabled = false;
+      }
+    };
+
+
+
+
+
+
+
   </script>
 
 
