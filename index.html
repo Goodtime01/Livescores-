@@ -1579,7 +1579,8 @@ async function openMatchCenter(id, code) {
 
 
 
-// H2H Fully Expanded Override (All 5 Games Displayed in Full Detail by Default)
+
+// Complete H2H & Form Engine: Direct Clashes + Home Last 5 + Away Last 5 + Table
     const _baseOpenMatchCenter = window.openMatchCenter;
     window.openMatchCenter = async function(id, code) {
       if (typeof _baseOpenMatchCenter === "function") {
@@ -1588,27 +1589,168 @@ async function openMatchCenter(id, code) {
       const h2hBox = document.getElementById("mcSlide-h2h");
       if (!h2hBox) return;
 
-      const cards = h2hBox.querySelectorAll(".h2h-card");
-      cards.forEach(card => {
-        card.style.background = "#0b1120";
-        card.style.border = "1px solid #334155";
-        card.style.padding = "12px 14px";
-        card.style.marginBottom = "10px";
-        card.style.borderRadius = "10px";
-        card.style.display = "block";
+      try {
+        const sumRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
+        const sumData = await sumRes.json();
+        const comp = sumData.header?.competitions?.[0] || {};
+        const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
+        const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
+        const homeName = home.team?.shortDisplayName || home.team?.name || "Home";
+        const awayName = away.team?.shortDisplayName || away.team?.name || "Away";
 
-        const row = card.querySelector(".h2h-row");
-        if (row) {
-          row.style.display = "flex";
-          row.style.justifyContent = "space-between";
-          row.style.alignItems = "center";
-          row.style.fontSize = "0.82rem";
-          row.style.fontWeight = "800";
+        const currentYear = new Date().getFullYear();
+
+        // Fetch current season + previous season to find prior direct meetings
+        const [hCurRes, aCurRes, hPrevRes, sRes] = await Promise.allSettled([
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${home.id}/schedule`),
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${away.id}/schedule`),
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${home.id}/schedule?season=${currentYear - 1}`),
+          fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`)
+        ]);
+
+        const hCurData = hCurRes.status === 'fulfilled' && hCurRes.value.ok ? await hCurRes.value.json() : { events: [] };
+        const aCurData = aCurRes.status === 'fulfilled' && aCurRes.value.ok ? await aCurRes.value.json() : { events: [] };
+        const hPrevData = hPrevRes.status === 'fulfilled' && hPrevRes.value.ok ? await hPrevRes.value.json() : { events: [] };
+
+        // 1. Direct Head-to-Head Encounters (Current + Previous Season)
+        const allHomeEvents = [...(hPrevData.events || []), ...(hCurData.events || [])];
+        const directClashes = [];
+        const seenClashes = new Set();
+
+        allHomeEvents.forEach(ev => {
+          const c = ev.competitions?.[0] || {};
+          const isOpponent = c.competitors?.some(team => team.id === away.id);
+          if (isOpponent && c.status?.type?.state === 'post' && !seenClashes.has(ev.id)) {
+            seenClashes.add(ev.id);
+            const hTeam = c.competitors?.find(t => t.homeAway === 'home') || c.competitors?.[0];
+            const aTeam = c.competitors?.find(t => t.homeAway === 'away') || c.competitors?.[1];
+            const dt = new Date(ev.date).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+            directClashes.push({
+              id: ev.id,
+              fixtureText: `${hTeam.team?.displayName || hTeam.team?.name} vs ${aTeam.team?.displayName || aTeam.team?.name}`,
+              score: `${hTeam.score?.displayValue ?? hTeam.score ?? 0} - ${aTeam.score?.displayValue ?? aTeam.score ?? 0}`,
+              date: dt
+            });
+          }
+        });
+
+        let directH2hHtml = "";
+        if (directClashes.length > 0) {
+          directH2hHtml = directClashes.slice(-5).reverse().map(g => `
+            <div class="h2h-card" onclick="openMatchCenter('${g.id}', '${code}')" style="background:#0b1120; border:1px solid #334155; padding:10px 12px; border-radius:8px; margin-bottom:8px; cursor:pointer;">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem;">
+                <span style="font-weight:700; color:#f8fafc;">${g.fixtureText}</span>
+                <span style="color:#38bdf8; font-weight:900; font-size:0.85rem;">${g.score}</span>
+              </div>
+              <div style="font-size:0.65rem; color:#94a3b8; margin-top:3px;">📅 ${g.date}</div>
+            </div>
+          `).join("");
+        } else {
+          directH2hHtml = `<div style="background:#0b1120; border:1px solid #334155; padding:10px; border-radius:8px; font-size:0.75rem; color:#94a3b8; text-align:center;">First official meeting between these two teams in recent seasons.</div>`;
         }
-        const btn = card.querySelector("span[style*='color:#38bdf8']");
-        if (btn) btn.remove(); // Removes any "View" or collapse button
-      });
+
+        // 2. Helper to parse Last 5 matches for any individual team
+        const renderTeamForm5 = (schedData, teamId) => {
+          const completed = (schedData.events || [])
+            .filter(e => e.competitions?.[0]?.status?.type?.state === 'post')
+            .slice(-5)
+            .reverse();
+
+          if (!completed.length) {
+            return '<div style="font-size:0.72rem; color:#94a3b8; padding:6px 0;">No completed matches recorded yet.</div>';
+          }
+
+          return completed.map(ev => {
+            const c = ev.competitions?.[0] || {};
+            const us = c.competitors?.find(t => t.id === teamId) || c.competitors?.[0];
+            const opp = c.competitors?.find(t => t.id !== teamId) || c.competitors?.[1];
+            const ourScore = parseInt(us.score?.displayValue ?? us.score ?? 0);
+            const oppScore = parseInt(opp.score?.displayValue ?? opp.score ?? 0);
+
+            let badge = '<span style="color:#f97316; font-weight:800; font-size:0.72rem;">🟠 D</span>';
+            if (ourScore > oppScore) badge = '<span style="color:#22c55e; font-weight:800; font-size:0.72rem;">🟢 W</span>';
+            else if (ourScore < oppScore) badge = '<span style="color:#ef4444; font-weight:800; font-size:0.72rem;">🔴 L</span>';
+
+            const dt = new Date(ev.date).toLocaleDateString([], { day: 'numeric', month: 'short' });
+            const title = `${us.team?.shortDisplayName || us.team?.name} vs ${opp.team?.shortDisplayName || opp.team?.name}`;
+
+            return `
+              <div class="h2h-card" onclick="openMatchCenter('${ev.id}', '${code}')" style="background:#0b1120; border:1px solid #334155; padding:8px 12px; border-radius:8px; margin-bottom:6px; cursor:pointer;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+                  <span style="font-weight:700; color:#f8fafc;">${title}</span>
+                  <span style="color:#38bdf8; font-weight:900;">${ourScore} : ${oppScore}</span>
+                  <span>${badge}</span>
+                </div>
+                <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">📅 ${dt}</div>
+              </div>
+            `;
+          }).join("");
+        };
+
+        const homeFormHtml = renderTeamForm5(hCurData, home.id);
+        const awayFormHtml = renderTeamForm5(aCurData, away.id);
+
+        // 3. Standings Table
+        let tableRows = "";
+        if (sRes.status === 'fulfilled' && sRes.value.ok) {
+          const sData = await sRes.value.json();
+          const entries = sData.children?.[0]?.standings?.entries || sData.standings?.[0]?.entries || [];
+          entries.forEach((e, idx) => {
+            const stats = e.stats || [];
+            const getStat = (n) => stats.find(s => s.name === n)?.displayValue ?? "0";
+            const isMatchTeam = e.team?.id === home.id || e.team?.id === away.id;
+            const gf = getStat('pointsFor') || getStat('goalsFor') || "0";
+            const ga = getStat('pointsAgainst') || getStat('goalsAgainst') || "0";
+            const rawGd = parseInt(getStat('goalDifference') || (parseInt(gf) - parseInt(ga)));
+            const gdFormatted = rawGd > 0 ? `+${rawGd}` : `${rawGd}`;
+            const gdClass = rawGd > 0 ? "gd-pos" : (rawGd < 0 ? "gd-neg" : "");
+
+            tableRows += `
+              <tr style="${isMatchTeam ? 'background:rgba(56,189,248,0.25); font-weight:800;' : ''}">
+                <td>${idx + 1}</td>
+                <td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td>
+                <td>${getStat("gamesPlayed")}</td>
+                <td>${getStat("wins")}</td>
+                <td>${getStat("ties")}</td>
+                <td>${getStat("losses")}</td>
+                <td>${gf}</td>
+                <td>${ga}</td>
+                <td class="${gdClass}">${gdFormatted}</td>
+                <td class="pts">${getStat("points")}</td>
+              </tr>
+            `;
+          });
+        }
+
+        // Render All 4 Sections Cleanly in Order
+        h2hBox.innerHTML = `
+          <!-- Section 1: Direct Head-to-Head -->
+          <div style="font-weight:800; font-size:0.82rem; color:#38bdf8; margin-bottom:4px;">⚔️ Head-to-Head - Last Meetings</div>
+          <div style="font-size:0.68rem; color:#94a3b8; margin-bottom:10px;">Direct clashes between both teams (tap any match for details):</div>
+          ${directH2hHtml}
+
+          <!-- Section 2: Home Team Last 5 -->
+          <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin:16px 0 6px 0;">📈 ${homeName} - Last 5 Matches (All Competitions)</div>
+          ${homeFormHtml}
+
+          <!-- Section 3: Away Team Last 5 -->
+          <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin:16px 0 6px 0;">📈 ${awayName} - Last 5 Matches (All Competitions)</div>
+          ${awayFormHtml}
+
+          <!-- Section 4: League Standings -->
+          <div style="font-weight:800; font-size:0.82rem; color:#38bdf8; margin:18px 0 6px 0;">🏆 League Table & Standings</div>
+          <div class="table-wrapper">
+            <table class="standings-table">
+              <thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+              <tbody>${tableRows || '<tr><td colspan="10" style="padding:15px; color:#94a3b8;">Standings unavailable for this tournament.</td></tr>'}</tbody>
+            </table>
+          </div>
+        `;
+      } catch (err) {
+        console.error("H2H render error", err);
+      }
     };
+
 
 
 
