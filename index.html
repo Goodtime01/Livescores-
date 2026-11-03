@@ -1840,7 +1840,7 @@ if (localStorage.getItem("etini_vip_active") === "true") {
   "lille": { name: "Bruno Genesio", flag: "🇫🇷" },
   "chelsea": { name: "Xabi Alonso", flag: "🇪🇸" },
   "bayer leverkusen": { name: "Carles Novell", flag: "🇪🇸" },
-  "manchester united": { name: "Michael Carrick", flag: "🇬🇧" },
+  "man utd": { name: "Michael Carrick", flag: "🇬🇧" },
   "bodo/glimt": { name: "Kjetil Knutsen", flag: "🇳🇴" },
   "lask linz": { name: "Dietmar Kühbauer", flag: "🇦🇹" },
   "slovan bratislava": { name: "Yaya Touré", flag: "🇨🇮" }
@@ -1920,6 +1920,66 @@ if (localStorage.getItem("etini_vip_active") === "true") {
         btn.disabled = false;
       }
     };
+
+
+
+
+
+
+// Fix G+A Math: Converts strings to real numbers (1 + 0 = 1, not 10)
+    const _prevOpenForGA = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _prevOpenForGA === "function") {
+        await _prevOpenForGA(id, code);
+      }
+      
+      const statsSlide = document.getElementById("mcSlide-stats");
+      if (!statsSlide) return;
+
+      // Extract real scores from the banner
+      const bannerScore = document.querySelector(".mc-score");
+      let hGoals = 0, aGoals = 0;
+      if (bannerScore) {
+        const parts = bannerScore.innerText.split(":").map(s => parseInt(s.trim()) || 0);
+        hGoals = parts[0] || 0;
+        aGoals = parts[1] || 0;
+      }
+
+      // Count assists per team separately from the timeline
+      const timelineItems = document.querySelectorAll("#mcSlide-info .timeline-item");
+      let hAssists = 0, aAssists = 0;
+      const homeName = document.querySelectorAll(".mc-team-name")[0]?.innerText || "";
+      const awayName = document.querySelectorAll(".mc-team-name")[1]?.innerText || "";
+
+      timelineItems.forEach(item => {
+        const txt = item.innerText;
+        if (txt.includes("Assist:") && !txt.includes("Assist: -")) {
+          if (txt.includes(`(${homeName})`)) hAssists++;
+          if (txt.includes(`(${awayName})`)) aAssists++;
+        }
+      });
+
+      // Calculate real numerical math
+      const hTotalGA = Number(hGoals) + Number(hAssists);
+      const aTotalGA = Number(aGoals) + Number(aAssists);
+
+      // Replace the stats rows with correct numbers
+      const statItems = statsSlide.querySelectorAll(".stat-item");
+      statItems.forEach(row => {
+        const label = row.querySelector("span:nth-child(2)")?.innerText || "";
+        if (label === "Goals") {
+          row.children[0].innerText = hGoals;
+          row.children[2].innerText = aGoals;
+        } else if (label === "Assists Recorded") {
+          row.children[0].innerText = hAssists;
+          row.children[2].innerText = aAssists;
+        } else if (label.includes("Goals + Assists") || label.includes("G+A")) {
+          row.children[0].innerText = hTotalGA;
+          row.children[2].innerText = aTotalGA;
+        }
+      });
+    };
+
 
 
 
