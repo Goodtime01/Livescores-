@@ -39,9 +39,8 @@
     Turn off all ads, banners, and popups across all sports pages with an active VIP key.
   </p>
 
-  <input id="vipEmail" type="email" placeholder="Enter your email first" class="email-input" />
+  <input id="vipEmail" type="email" placeholder="Enter your email first (required for payment)" class="email-input" />
 
-  <!-- Plans -->
   <div class="plan-card">
     <div class="plan-title"><span>Standard VIP</span><span>1 Month</span></div>
     <div class="plan-price">₦500 <span style="font-size:0.75rem; color:#94a3b8;">/ month</span></div>
@@ -64,7 +63,6 @@
     <button class="pay-btn" style="background:#22c55e; color:#fff;" onclick="payVIP(120000, 90)">Pay ₦1,200 - 3 Months</button>
   </div>
 
-  <!-- Nigerian Payment Box -->
   <div class="pay-box">
     <div style="font-weight: 800; color: #38bdf8; margin-bottom: 8px;">💳 Bank Transfer (Manual)</div>
     <div class="bank-row"><span>Bank:</span><strong>OPay</strong></div>
@@ -76,7 +74,6 @@
     </a>
   </div>
 
-  <!-- Code Activation Form -->
   <div class="code-box">
     <div style="font-size: 0.85rem; font-weight: 800; margin-bottom: 8px;">Already have your VIP Code?</div>
     <input type="text" id="vipCodeInput" placeholder="ENTER VIP CODE (e.g. VIP-GOLD)" />
@@ -98,21 +95,36 @@
     }
 
     function payVIP(amountKobo, days) {
-      var email = document.getElementById('vipEmail').value.trim();
-      if (!email || !email.includes('@')) { alert('Enter your email first'); return; }
+      var emailEl = document.getElementById('vipEmail');
+      var email = emailEl.value.trim();
+      if (!email || !email.includes('@')) { 
+        alert('Please enter your correct email first - Paystack needs it to send receipt'); 
+        emailEl.focus();
+        emailEl.style.borderColor = '#f87171';
+        return; 
+      }
+      
       PaystackPop.setup({
         key: 'pk_live_c70a3f5403ab816952f6bcd3b7243dc3bafb4318',
         email: email,
         amount: amountKobo,
         currency: 'NGN',
+        ref: 'ETINI_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        metadata: {
+          custom_fields: [
+            { display_name: "Plan Duration", variable_name: "duration", value: days + " days" }
+          ]
+        },
         callback: function(r) {
           localStorage.setItem("etini_vip_active", "true");
           localStorage.setItem("etini_vip_expiry", Date.now() + days * 24 * 60 * 60 * 1000);
           localStorage.setItem("etini_vip_ref", r.reference);
-          alert('VIP Activated! Welcome 👑');
+          localStorage.setItem("etini_vip_email", email);
+          localStorage.setItem("etini_vip_key", "VIP-" + r.reference);
+          alert('Payment Successful! 👑 VIP Activated for ' + days + ' days.\nRef: ' + r.reference);
           window.location.href = 'index.html';
         },
-        onClose: function() { alert('Payment cancelled'); }
+        onClose: function() { alert('Payment window closed - you can try again'); }
       }).openIframe();
     }
 
