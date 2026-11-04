@@ -4,30 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Go VIP - Etini LiveScores</title>
-  <script src="https://js.paystack.co/v1/inline.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b1120; color: #f8fafc; padding: 16px; max-width: 650px; margin: 0 auto; line-height: 1.5; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    body { background-color: #0b1120; color: #f8fafc; padding: 16px; max-width: 650px; margin: 0 auto; line-height: 1.5; padding-bottom: 50px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
     .back-btn { background: #1e293b; color: #38bdf8; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid #334155; }
-    h1 { font-size: 1.4rem; color: #facc15; display: flex; align-items: center; gap: 8px; }
-    .plan-card { background: #1e293b; border: 1.5px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 14px; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
-    .plan-card:active { transform: scale(0.98); }
-    .plan-card:hover { border-color: #38bdf8; }
+    h1 { font-size: 1.3rem; color: #facc15; display: flex; align-items: center; gap: 8px; font-weight: 900; }
+    
+    .plan-card { background: #1e293b; border: 1.5px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
     .plan-card.featured { border-color: #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.15); }
-    .plan-card.featured:hover { border-color: #facc15; }
-    .plan-title { font-size: 1.1rem; font-weight: 800; display: flex; justify-content: space-between; }
-    .plan-price { font-size: 1.25rem; color: #38bdf8; font-weight: 900; margin: 6px 0; }
+    .plan-title { font-size: 1.05rem; font-weight: 800; display: flex; justify-content: space-between; }
+    .plan-price { font-size: 1.35rem; color: #38bdf8; font-weight: 900; margin: 6px 0; }
     .perks { list-style: none; margin: 10px 0; font-size: 0.8rem; color: #cbd5e1; }
     .perks li { margin-bottom: 6px; }
-    .pay-btn { width: 100%; border: none; padding: 12px; border-radius: 8px; font-weight: 900; font-size: 0.9rem; cursor: pointer; margin-top: 10px; pointer-events: none; }
+
+    .pay-btn-ps { display: block; text-align: center; background: #38bdf8; color: #0b1120; text-decoration: none; font-weight: 900; font-size: 0.85rem; padding: 10px; border-radius: 8px; margin-top: 10px; }
+    .pay-btn-gold { display: block; text-align: center; background: #facc15; color: #000; text-decoration: none; font-weight: 900; font-size: 0.85rem; padding: 10px; border-radius: 8px; margin-top: 10px; }
+
     .pay-box { background: #0b1120; border: 1px dashed #38bdf8; border-radius: 10px; padding: 14px; margin: 18px 0; font-size: 0.8rem; }
     .bank-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
     .wa-btn { display: block; text-align: center; background: #22c55e; color: #0b1120; text-decoration: none; font-weight: 900; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
+
     .code-box { background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155; margin-top: 20px; text-align: center; }
-    .code-box input, .email-input { width: 100%; padding: 12px; background: #0b1120; border: 1.5px solid #334155; border-radius: 6px; color: #fff; font-size: 0.9rem; text-align: center; margin-bottom: 10px; font-weight: 800; outline: none; }
-    .email-input { text-transform: none; text-align: left; border-color: #facc15; }
-    .email-input:focus { border-color: #38bdf8; }
+    .code-box input { width: 100%; padding: 10px; background: #0b1120; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.9rem; text-align: center; text-transform: uppercase; margin-bottom: 10px; font-weight: 800; outline: none; }
+    .code-box input:focus { border-color: #38bdf8; }
     .activate-btn { width: 100%; background: #38bdf8; color: #0b1120; border: none; padding: 10px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; cursor: pointer; }
     .status-msg { margin-top: 10px; font-size: 0.75rem; font-weight: 700; }
   </style>
@@ -40,100 +40,126 @@
   </header>
 
   <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 16px;">
-    Turn off all ads, banners, and popups across all sports pages with an active VIP key. Click any plan to pay instantly.
+    Enjoy zero ads, instant goal alerts, and an ad-free experience across all 10 sports.
   </p>
 
-  <input id="vipEmail" type="email" placeholder="Enter your email first (required for payment)" class="email-input" />
-
-  <div class="plan-card" onclick="payVIP(50000, 30)">
+  <!-- Plan 1: 500 Naira -->
+  <div class="plan-card">
     <div class="plan-title"><span>Standard VIP</span><span>1 Month</span></div>
     <div class="plan-price">₦500 <span style="font-size:0.75rem; color:#94a3b8;">/ month</span></div>
     <ul class="perks">
       <li>✅ 100% Ad-Free on all 10 Sports</li>
-      <li>✅ Remove All Betting Banners</li>
-      <li>✅ Faster Page Loading</li>
+      <li>✅ Suppress All Banners & Advertisements</li>
+      <li>✅ Faster Mobile Loading</li>
     </ul>
-    <button class="pay-btn" style="background:#facc15; color:#000;">Pay ₦500 - 1 Month</button>
+    <a href="https://paystack.shop/pay/m1t65ts7v-" target="_blank" class="pay-btn-ps">
+      💳 Pay ₦500 with Paystack (Card/Transfer/USSD) ❯
+    </a>
   </div>
 
-  <div class="plan-card featured" onclick="payVIP(120000, 90)">
+  <!-- Plan 2: 1200 Naira -->
+  <div class="plan-card featured">
     <div class="plan-title"><span style="color:#facc15;">Pro VIP</span><span>3 Months</span></div>
     <div class="plan-price">₦1,200 <span style="font-size:0.75rem; color:#94a3b8;">(Save ₦300)</span></div>
     <ul class="perks">
       <li>✅ Everything in Standard</li>
-      <li>✅ Priority WhatsApp Match Alerts</li>
-      <li>✅ VIP Match Previews & Picks</li>
+      <li>✅ 90 Days Complete Ad-Free Access</li>
+      <li>✅ VIP Match Previews & Betting Picks</li>
     </ul>
-    <button class="pay-btn" style="background:#22c55e; color:#fff;">Pay ₦1,200 - 3 Months</button>
-  </div>
-
-  <div class="pay-box">
-    <div style="font-weight: 800; color: #38bdf8; margin-bottom: 8px;">💳 Bank Transfer (Manual)</div>
-    <div class="bank-row"><span>Bank:</span><strong>OPay</strong></div>
-    <div class="bank-row"><span>Account Name:</span><strong>Etini Obop</strong></div>
-    <div class="bank-row"><span>Account Number:</span><strong>9034331842</strong></div>
-    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 6px;">After transfer, tap below to send your receipt on WhatsApp and receive your VIP Code.</p>
-    <a href="https://wa.me/2349034331842?text=Hello%20Etini,%20I%20have%20paid%20for%20VIP%20Ad-Free.%20Here%20is%20my%20receipt:" target="_blank" class="wa-btn">
-      📲 Send Receipt on WhatsApp for VIP Code
+    <a href="https://paystack.shop/pay/0lloli72rv" target="_blank" class="pay-btn-gold">
+      ⚡ Pay ₦1,200 with Paystack (Save ₦300) ❯
     </a>
   </div>
 
+  <!-- Manual Bank Transfer (Fallback) -->
+  <div class="pay-box">
+    <div style="font-weight: 800; color: #38bdf8; margin-bottom: 8px;">🏦 Direct Bank Transfer Alternative</div>
+    <div class="bank-row"><span>Bank:</span><strong>OPay / Moniepoint</strong></div>
+    <div class="bank-row"><span>Account Name:</span><strong>Etini Obop</strong></div>
+    <div class="bank-row"><span>Account Number:</span><strong>8140000000</strong></div>
+    <a href="https://wa.me/2348140000000?text=Hello%20Etini,%20I%20have%20paid%20for%20VIP%20Ad-Free.%20Here%20is%20my%20receipt:" target="_blank" class="wa-btn">
+      📲 Send Transfer Receipt on WhatsApp
+    </a>
+  </div>
+
+  <!-- Secure Cloud Code Activation -->
   <div class="code-box">
-    <div style="font-size: 0.85rem; font-weight: 800; margin-bottom: 8px;">Already have your VIP Code?</div>
-    <input type="text" id="vipCodeInput" placeholder="ENTER VIP CODE (e.g. VIP-GOLD)" />
-    <button class="activate-btn" onclick="activateVip()">Activate VIP Ad-Free</button>
+    <div style="font-size: 0.85rem; font-weight: 800; margin-bottom: 6px;">Activate Your VIP Access</div>
+    <p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 10px;">Enter your unique VIP key below:</p>
+    <input type="text" id="vipCodeInput" placeholder="ENTER VIP CODE (e.g. ETINI-VIP-GOLD)" />
+    <button class="activate-btn" id="actBtn" onclick="activateVip()">Activate Ad-Free Mode</button>
     <div id="statusMsg" class="status-msg"></div>
   </div>
 
   <script>
-    const VALID_CODES = [];
+    const SUPABASE_URL = "https://zqfcquyuxmbjehgrktht.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_goSL10-doS57RFYLBXTV5Q_Dr5-cdoD";
 
     function checkCurrentVip() {
       const isVip = localStorage.getItem("etini_vip_active") === "true";
-      const expiry = Number(localStorage.getItem("etini_vip_expiry") || 0);
+      const exp = localStorage.getItem("etini_vip_expires");
       const statusEl = document.getElementById("statusMsg");
-      const emailEl = document.getElementById("vipEmail");
-      const savedEmail = localStorage.getItem("etini_vip_email");
-      if (savedEmail && emailEl) emailEl.value = savedEmail;
 
-      if (isVip && (!expiry || Date.now() < expiry)) {
-        statusEl.style.color = "#4ade80";
-        statusEl.innerHTML = "👑 VIP Status: ACTIVE on this device! All ads are disabled.";
+      if (isVip) {
+        if (exp && new Date().getTime() > parseInt(exp)) {
+          localStorage.removeItem("etini_vip_active");
+          localStorage.removeItem("etini_vip_expires");
+          statusEl.style.color = "#f87171";
+          statusEl.innerHTML = "⚠️ Your VIP access has expired. Please renew above.";
+        } else {
+          statusEl.style.color = "#4ade80";
+          const dStr = exp ? new Date(parseInt(exp)).toLocaleDateString() : "Active";
+          statusEl.innerHTML = `👑 VIP Status: ACTIVE! All ads disabled until ${dStr}.`;
+        }
       }
     }
 
-    function payVIP(amountKobo, days) {
-      var emailEl = document.getElementById('vipEmail');
-      var email = emailEl.value.trim();
-      if (!email || !email.includes('@')) { 
-        alert('Please enter your correct email first - Paystack needs it to send receipt'); 
-        emailEl.focus();
-        emailEl.style.borderColor = '#f87171';
-        emailEl.scrollIntoView({behavior: 'smooth', block: 'center'});
-        return; 
-      }
-      localStorage.setItem("etini_vip_email", email);
-      // Save the plan so we know how many days to activate after payment
-      localStorage.setItem("etini_vip_pending_days", days);
-      if (amountKobo === 50000) {
-        window.location.href = 'https://paystack.shop/pay/m1t65ts7v-';
-      } else {
-        window.location.href = 'https://paystack.shop/pay/0lloli72rv';
-      }
-    }
-
-    function activateVip() {
+    async function activateVip() {
       const code = document.getElementById("vipCodeInput").value.trim().toUpperCase();
       const statusEl = document.getElementById("statusMsg");
-      if (VALID_CODES.includes(code)) {
-        localStorage.setItem("etini_vip_active", "true");
-        localStorage.setItem("etini_vip_expiry", Date.now() + 30 * 24 * 60 * 60 * 1000);
-        statusEl.style.color = "#4ade80";
-        statusEl.innerHTML = "🎉 VIP Activated! Redirecting...";
-        setTimeout(() => { window.location.href = "index.html"; }, 1500);
-      } else {
+      const btn = document.getElementById("actBtn");
+
+      if (!code) {
         statusEl.style.color = "#f87171";
-        statusEl.innerHTML = "❌ Invalid VIP Code.";
+        statusEl.innerText = "Please enter a VIP code.";
+        return;
+      }
+
+      btn.innerText = "Verifying with Cloud...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_vip_code`, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ p_code: code })
+        });
+
+        const result = await res.json();
+
+        if (result && result.valid) {
+          const days = result.duration_days || 30;
+          const expireTime = new Date().getTime() + (days * 24 * 60 * 60 * 1000);
+
+          localStorage.setItem("etini_vip_active", "true");
+          localStorage.setItem("etini_vip_expires", String(expireTime));
+
+          statusEl.style.color = "#4ade80";
+          statusEl.innerHTML = `🎉 VIP Verified! (${days} Days Ad-Free Access). Redirecting...`;
+          setTimeout(() => { window.location.href = "index.html"; }, 1500);
+        } else {
+          statusEl.style.color = "#f87171";
+          statusEl.innerText = "❌ Invalid or expired VIP code.";
+        }
+      } catch (err) {
+        statusEl.style.color = "#f87171";
+        statusEl.innerText = "Error verifying code. Please check your internet connection.";
+      } finally {
+        btn.innerText = "Activate Ad-Free Mode";
+        btn.disabled = false;
       }
     }
 
