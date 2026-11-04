@@ -7,9 +7,11 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0b1120; color: #f8fafc; padding: 16px; max-width: 650px; margin: 0 auto; line-height: 1.5; padding-bottom: 50px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
     .back-btn { background: #1e293b; color: #38bdf8; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid #334155; }
     h1 { font-size: 1.3rem; color: #facc15; display: flex; align-items: center; gap: 8px; font-weight: 900; }
+
+    .email-alert-box { background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px 14px; font-size: 0.75rem; color: #bae6fd; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     
     .plan-card { background: #1e293b; border: 1.5px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
     .plan-card.featured { border-color: #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.15); }
@@ -25,6 +27,13 @@
     .bank-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
     .wa-btn { display: block; text-align: center; background: #22c55e; color: #0b1120; text-decoration: none; font-weight: 900; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
 
+    .confirm-box { background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155; margin-top: 20px; }
+    .confirm-box h2 { font-size: 1rem; color: #38bdf8; margin-bottom: 6px; }
+    .confirm-box p { font-size: 0.72rem; color: #94a3b8; margin-bottom: 12px; }
+    .confirm-box input, .confirm-box select { width: 100%; padding: 10px; background: #0b1120; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.85rem; margin-bottom: 8px; outline: none; }
+    .confirm-box input:focus { border-color: #38bdf8; }
+    .submit-req-btn { width: 100%; background: #22c55e; color: #0b1120; border: none; padding: 10px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; cursor: pointer; }
+
     .code-box { background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155; margin-top: 20px; text-align: center; }
     .code-box input { width: 100%; padding: 10px; background: #0b1120; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.9rem; text-align: center; text-transform: uppercase; margin-bottom: 10px; font-weight: 800; outline: none; }
     .code-box input:focus { border-color: #38bdf8; }
@@ -39,9 +48,10 @@
     <a href="index.html" class="back-btn">◀ Live Scores</a>
   </header>
 
-  <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 16px;">
-    Enjoy zero ads, instant goal alerts, and an ad-free experience across all 10 sports.
-  </p>
+  <div class="email-alert-box">
+    <span>✉️</span>
+    <span><strong>Automatic Email Confirmation:</strong> All Paystack payments receive an instant official payment confirmation and receipt sent to your email.</span>
+  </div>
 
   <!-- Plan 1: 500 Naira -->
   <div class="plan-card">
@@ -49,11 +59,11 @@
     <div class="plan-price">₦500 <span style="font-size:0.75rem; color:#94a3b8;">/ month</span></div>
     <ul class="perks">
       <li>✅ 100% Ad-Free on all 10 Sports</li>
-      <li>✅ Suppress All Banners & Advertisements</li>
+      <li>✅ Instant Payment Receipt to Your Email</li>
       <li>✅ Faster Mobile Loading</li>
     </ul>
     <a href="https://paystack.shop/pay/m1t65ts7v-" target="_blank" class="pay-btn-ps">
-      💳 Pay ₦500 with Paystack (Card/Transfer/USSD) ❯
+      💳 Pay ₦500 with Paystack (Instant Email Receipt) ❯
     </a>
   </div>
 
@@ -63,15 +73,16 @@
     <div class="plan-price">₦1,200 <span style="font-size:0.75rem; color:#94a3b8;">(Save ₦300)</span></div>
     <ul class="perks">
       <li>✅ Everything in Standard</li>
-      <li>✅ 90 Days Complete Ad-Free Access</li>
+      <li>✅ 90 Days Ad-Free Access</li>
+      <li>✅ Instant Payment Receipt to Your Email</li>
       <li>✅ VIP Match Previews & Betting Picks</li>
     </ul>
     <a href="https://paystack.shop/pay/0lloli72rv" target="_blank" class="pay-btn-gold">
-      ⚡ Pay ₦1,200 with Paystack (Save ₦300) ❯
+      ⚡ Pay ₦1,200 with Paystack (Instant Email Receipt) ❯
     </a>
   </div>
 
-  <!-- Manual Bank Transfer (Fallback) -->
+  <!-- Manual Bank Transfer -->
   <div class="pay-box">
     <div style="font-weight: 800; color: #38bdf8; margin-bottom: 8px;">🏦 Direct Bank Transfer Alternative</div>
     <div class="bank-row"><span>Bank:</span><strong>OPay / Moniepoint</strong></div>
@@ -80,6 +91,23 @@
     <a href="https://wa.me/2348140000000?text=Hello%20Etini,%20I%20have%20paid%20for%20VIP%20Ad-Free.%20Here%20is%20my%20receipt:" target="_blank" class="wa-btn">
       📲 Send Transfer Receipt on WhatsApp
     </a>
+  </div>
+
+  <!-- Confirm Payment & Request Code via Email -->
+  <div class="confirm-box">
+    <h2>📩 Confirm Transfer & Get VIP Key via Email</h2>
+    <p>Paid via direct transfer or need manual email confirmation? Submit your details below to receive your VIP code in your inbox.</p>
+    <form onsubmit="submitEmailConfirmation(event)">
+      <input type="text" id="custName" placeholder="Your Full Name" required />
+      <input type="email" id="custEmail" placeholder="Your Email Address (where confirmation goes)" required />
+      <select id="custPlan">
+        <option value="Standard (₦500)">Standard VIP - ₦500 (1 Month)</option>
+        <option value="Pro (₦1,200)">Pro VIP - ₦1,200 (3 Months)</option>
+      </select>
+      <input type="text" id="custProof" placeholder="Transaction Ref or Sender Bank Name" required />
+      <button type="submit" class="submit-req-btn" id="confBtn">Submit for Email Confirmation</button>
+      <div id="confStatus" class="status-msg"></div>
+    </form>
   </div>
 
   <!-- Secure Cloud Code Activation -->
@@ -111,6 +139,45 @@
           const dStr = exp ? new Date(parseInt(exp)).toLocaleDateString() : "Active";
           statusEl.innerHTML = `👑 VIP Status: ACTIVE! All ads disabled until ${dStr}.`;
         }
+      }
+    }
+
+    async function submitEmailConfirmation(e) {
+      e.preventDefault();
+      const btn = document.getElementById("confBtn");
+      const status = document.getElementById("confStatus");
+      btn.innerText = "Submitting...";
+      btn.disabled = true;
+
+      const payload = {
+        name: document.getElementById("custName").value.trim(),
+        email: document.getElementById("custEmail").value.trim(),
+        plan: document.getElementById("custPlan").value,
+        payment_proof: document.getElementById("custProof").value.trim()
+      };
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/vip_requests`, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error();
+
+        status.style.color = "#4ade80";
+        status.innerHTML = "✅ Confirmation request submitted! We will verify and email your VIP Code to <strong>" + payload.email + "</strong> shortly.";
+        e.target.reset();
+      } catch (err) {
+        status.style.color = "#f87171";
+        status.innerText = "Failed to submit. Please message your receipt on WhatsApp instead.";
+      } finally {
+        btn.innerText = "Submit for Email Confirmation";
+        btn.disabled = false;
       }
     }
 
