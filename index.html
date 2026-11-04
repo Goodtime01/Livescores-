@@ -2035,6 +2035,98 @@ if (localStorage.getItem("etini_vip_active") === "true") {
 
 
 
+// Assistant Managers & Extended Staff Directory
+    const ASST_MANAGER_DB = {
+      "Arsenal": { name: "Albert Stuivenberg", flag: "🇳🇱" },
+      "Aston Villa": { name: "Pako Ayestaran", flag: "🇪🇸" },
+      "Chelsea": { name: "Willy Caballero", flag: "🇦🇷" },
+      "Liverpool": { name: "Sipke Hulshoff", flag: "🇳🇱" },
+      "Man City": { name: "Juanma Lillo", flag: "🇪🇸" },
+      "Manchester City": { name: "Juanma Lillo", flag: "🇪🇸" },
+      "Man United": { name: "Carlos Fernandes", flag: "🇵🇹" },
+      "Manchester United": { name: "Carlos Fernandes", flag: "🇵🇹" },
+      "Newcastle": { name: "Jason Tindall", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      "Tottenham": { name: "Matt Wells", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      "Real Madrid": { name: "Davide Ancelotti", flag: "🇮🇹" },
+      "Barcelona": { name: "Marcus Sorg", flag: "🇩🇪" },
+      "Atletico Madrid": { name: "Nelson Vivas", flag: "🇦🇷" },
+      "Bayern Munich": { name: "Floribert N'Galula", flag: "🇧🇪" },
+      "Leverkusen": { name: "Alberto Encinas", flag: "🇪🇸" },
+      "Bayer Leverkusen": { name: "Alberto Encinas", flag: "🇪🇸" },
+      "Dortmund": { name: "Robert Kovac", flag: "🇭🇷" },
+      "Borussia Dortmund": { name: "Robert Kovac", flag: "🇭🇷" },
+      "PSG": { name: "Rafel Pol", flag: "🇪🇸" },
+      "Paris Saint-Germain": { name: "Rafel Pol", flag: "🇪🇸" },
+      "AC Milan": { name: "Emanuel Ferro", flag: "🇵🇹" },
+      "Milan": { name: "Emanuel Ferro", flag: "🇵🇹" },
+      "Inter": { name: "Massimiliano Farris", flag: "🇮🇹" },
+      "Inter Milan": { name: "Massimiliano Farris", flag: "🇮🇹" },
+      "Juventus": { name: "Alexandre Hugeux", flag: "🇫🇷" },
+      "Napoli": { name: "Marco Landucci", flag: "🇮🇹" },
+      "Benfica": { name: "Luis Nascimento", flag: "🇵🇹" },
+      "Sporting CP": { name: "Tiago Teixeira", flag: "🇵🇹" },
+      "Fenerbahce": { name: "Salvatore Foti", flag: "🇮🇹" },
+      "Galatasaray": { name: "Ismael Garcia", flag: "🇪🇸" },
+      "Al Hilal": { name: "Joao de Deus", flag: "🇵🇹" },
+      "Al Nassr": { name: "Giacomo Murelli", flag: "🇮🇹" },
+      "Enyimba": { name: "Lawrence Ukaegbu", flag: "🇳🇬" },
+      "Rivers United": { name: "Evans Ogenyi", flag: "🇳🇬" },
+      "Remo Stars": { name: "Sulaiman Kamil", flag: "🇳🇬" },
+      "Kano Pillars": { name: "Ahmed Yaro Yaro", flag: "🇳🇬" }
+    };
+
+    // Override Manager Info to include Assistant Manager
+    const _baseGetManagerInfo = window.getManagerInfo;
+    window.getManagerInfo = function(teamName) {
+      const base = _baseGetManagerInfo ? _baseGetManagerInfo(teamName) : { name: "", flag: "" };
+      let asst = null;
+      if (teamName) {
+        for (const [key, val] of Object.entries(ASST_MANAGER_DB)) {
+          if (teamName.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(teamName.toLowerCase())) {
+            asst = val;
+            break;
+          }
+        }
+      }
+      return { ...base, asst };
+    };
+
+    // Enhanced Coach Bar Rendering (Head Coach + Assistant Manager)
+    const _baseRenderTwoTeamPitch = window.renderTwoTeamPitch;
+    window.renderTwoTeamPitch = function(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents) {
+      if (typeof _baseRenderTwoTeamPitch === "function") {
+        _baseRenderTwoTeamPitch(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents);
+      }
+      const coachBox = document.getElementById("coachesContainer");
+      if (!coachBox) return;
+
+      const hCoach = getManagerInfo(hTeamName);
+      const aCoach = getManagerInfo(aTeamName);
+
+      coachBox.innerHTML = `
+        <div class="coaches-wrap" style="display:flex; justify-content:space-between; background:#1e293b; border-radius:8px; padding:10px 14px; margin:12px 0; font-size:0.75rem; border:1px solid #334155;">
+          <div>
+            <div>👔 <strong>${hCoach.name || 'Head Coach'}</strong> ${hCoach.flag}</div>
+            ${hCoach.asst ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:2px;">📋 Asst: ${hCoach.asst.name} ${hCoach.asst.flag}</div>` : ''}
+            <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">(${homeData.formation || '4-3-3'})</div>
+          </div>
+          <div style="text-align:right;">
+            <div>👔 <strong>${aCoach.name || 'Head Coach'}</strong> ${aCoach.flag}</div>
+            ${aCoach.asst ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:2px;">📋 Asst: ${aCoach.asst.name} ${aCoach.asst.flag}</div>` : ''}
+            <div style="font-size:0.68rem; color:#38bdf8; margin-top:2px;">(${awayData.formation || '4-3-3'})</div>
+          </div>
+        </div>
+      `;
+    };
+
+
+
+
+
+
+
+
+
   </script>
 
 
