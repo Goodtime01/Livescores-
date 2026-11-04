@@ -112,29 +112,14 @@
         emailEl.scrollIntoView({behavior: 'smooth', block: 'center'});
         return; 
       }
-      
-      PaystackPop.setup({
-        key: 'pk_live_c70a3f5403ab816952f6bcd3b7243dc3bafb4318',
-        email: email,
-        amount: amountKobo,
-        currency: 'NGN',
-        ref: 'ETINI_' + Date.now() + '_' + Math.floor(Math.random()*1000),
-        metadata: {
-          custom_fields: [
-            { display_name: "Plan Duration", variable_name: "duration", value: days + " days" }
-          ]
-        },
-        callback: function(r) {
-          localStorage.setItem("etini_vip_active", "true");
-          localStorage.setItem("etini_vip_expiry", Date.now() + days * 24 * 60 * 60 * 1000);
-          localStorage.setItem("etini_vip_ref", r.reference);
-          localStorage.setItem("etini_vip_email", email);
-          localStorage.setItem("etini_vip_key", "VIP-" + r.reference);
-          alert('Payment Successful! 👑 VIP Activated for ' + days + ' days.\nRef: ' + r.reference);
-          window.location.href = 'index.html';
-        },
-        onClose: function() { }
-      }).openIframe();
+      localStorage.setItem("etini_vip_email", email);
+      // Save the plan so we know how many days to activate after payment
+      localStorage.setItem("etini_vip_pending_days", days);
+      if (amountKobo === 50000) {
+        window.location.href = 'https://paystack.shop/pay/m1t65ts7v-';
+      } else {
+        window.location.href = 'https://paystack.shop/pay/0lloli72rv';
+      }
     }
 
     function activateVip() {
