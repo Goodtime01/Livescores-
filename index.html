@@ -1637,6 +1637,257 @@ const hShots = parseInt(h["totalShots"] || "0"), aShots = parseInt(a["totalShots
 
     initLoad();
     setInterval(initLoad, 30000);
+
+
+
+
+
+
+
+
+// 1. Assist Parser (Excludes Penalties & Free Kicks) & Red OG Pitch Tracker
+    function getPlayerStats(pName, matchEvents) {
+      let goals = 0, assists = 0, ownGoals = 0;
+      matchEvents.forEach(e => {
+        const text = e.text || "";
+        if (e.icon === "⚽" && text.includes(pName)) {
+          if (text.includes("(OG)")) ownGoals++;
+          else if (!text.includes("Assist: " + pName)) goals++;
+        }
+        if (text.includes("Assist: " + pName)) assists++;
+      });
+      return { goals, assists, ownGoals };
+    }
+
+    // 2. Updated 2-Team Tactical Pitch with Red OG Indication
+    const _baseRenderTwoTeamPitch2 = window.renderTwoTeamPitch;
+    window.renderTwoTeamPitch = function(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents) {
+      if (typeof _baseRenderTwoTeamPitch2 === "function") {
+        _baseRenderTwoTeamPitch2(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents);
+      }
+
+      const updateNodes = (containerId, jerseyClass, isTeamWon) => {
+        const half = document.getElementById(containerId);
+        if (!half) return;
+        const playerNodes = half.querySelectorAll(".pitch-player");
+
+        playerNodes.forEach(node => {
+          const nameEl = node.querySelector(".player-name");
+          const badgeEl = node.querySelector(".pitch-stat-badge");
+          if (!nameEl || !badgeEl) return;
+
+          const pName = nameEl.innerText.trim();
+          const stats = getPlayerStats(pName, matchEvents);
+          const isCard = matchEvents.some(e => e.text && e.text.includes(pName) && (e.icon === "🟨" || e.icon === "🟥"));
+          const rating = getPlayerRating({ athlete: { displayName: pName } }, isTeamWon, stats.goals > 0, stats.assists > 0, isCard);
+
+          const gEmojis = "⚽".repeat(stats.goals);
+          const aEmojis = "🎯".repeat(stats.assists);
+          const ogBadge = stats.ownGoals > 0 ? `<span style="color:#ef4444; font-weight:900; background:rgba(239,68,68,0.25); padding:1px 4px; border-radius:3px;">🔴 OG${stats.ownGoals > 1 ? ' x' + stats.ownGoals : ''}</span>` : "";
+
+          let parts = [`${rating} ⭐`];
+          if (gEmojis) parts.push(gEmojis);
+          if (ogBadge) parts.push(ogBadge);
+          if (aEmojis) parts.push(aEmojis);
+
+          badgeEl.innerHTML = parts.join(" | ");
+        });
+      };
+
+      updateNodes("homePitchHalf", "jersey-home", homeWon);
+      updateNodes("awayPitchHalf", "jersey-away", awayWon);
+    };
+
+
+
+
+
+// 3. Complete Match Center: Clickable 5 Games Each, Full Standings & Knockout Bracket
+    const _baseOpenMatchCenterFinal = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseOpenMatchCenterFinal === "function") {
+        await _baseOpenMatchCenterFinal(id, code);
+      }
+
+      const h2hBox = document.getElementById("mcSlide-h2h");
+      if (!h2hBox) return;
+
+      try {
+        const sumRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`);
+        const sumData = await sumRes.json();
+        const comp = sumData.header?.competitions?.[0] || {};
+        const home = comp.competitors?.find(c => c.homeAway === "home") || comp.competitors?.[0] || {};
+        const away = comp.competitors?.find(c => c.homeAway === "away") || comp.competitors?.[1] || {};
+        const homeName = home.team?.shortDisplayName || home.team?.name || "Home";
+        const awayName = away.team?.shortDisplayName || away.team?.name || "Away";
+
+        const currentYear = new Date().getFullYear();
+        const isKnockout = ["uefa.champions", "uefa.europa", "uefa.europa.conf", "caf.nations", "fifa.world", "copa.america"].includes(code) ||
+                           (comp.type?.text || "").toLowerCase().includes("cup") || (comp.type?.text || "").toLowerCase().includes("knockout");
+
+        // Fetch schedules for 5 games each and standings/bracket
+        const [hCurRes, aCurRes, sRes] = await Promise.allSettled([
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${home.id}/schedule`),
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${away.id}/schedule`),
+          fetch(isKnockout ? `https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard` : `https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`)
+        ]);
+
+        const hCurData = hCurRes.status === 'fulfilled' && hCurRes.value.ok ? await hCurRes.value.json() : { events: [] };
+        const aCurData = aCurRes.status === 'fulfilled' && aCurRes.value.ok ? await aCurRes.value.json() : { events: [] };
+
+        // Helper: Format 5 games for a team (Fully expanded & Clickable)
+        const render5TeamGames = (schedData, teamId, tName) => {
+          const completed = (schedData.events || []).filter(e => e.competitions?.[0]?.status?.type?.state === 'post').slice(-5).reverse();
+          if (!completed.length) return `<div style="font-size:0.7rem; color:#94a3b8; padding:6px 0;">No past games on record.</div>`;
+
+          return completed.map(ev => {
+            const c = ev.competitions[0];
+            const us = c.competitors.find(t => t.id === teamId) || c.competitors[0];
+            const opp = c.competitors.find(t => t.id !== teamId) || c.competitors[1];
+            const ourScore = parseInt(us.score?.displayValue ?? us.score ?? 0);
+            const oppScore = parseInt(opp.score?.displayValue ?? opp.score ?? 0);
+
+            let badge = '<span style="color:#f97316; font-weight:800;">🟠 D</span>';
+            if (ourScore > oppScore) badge = '<span style="color:#22c55e; font-weight:800;">🟢 W</span>';
+            else if (ourScore < oppScore) badge = '<span style="color:#ef4444; font-weight:800;">🔴 L</span>';
+
+            const dt = new Date(ev.date).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+            const fixtureTitle = `${us.team?.displayName || us.team?.name} vs ${opp.team?.displayName || opp.team?.name}`;
+
+            return `
+              <div class="h2h-card" onclick="openMatchCenter('${ev.id}', '${code}')" style="background:#0b1120; border:1px solid #334155; padding:10px 12px; border-radius:8px; margin-bottom:8px; cursor:pointer;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+                  <span style="font-weight:700; color:#f8fafc;">${fixtureTitle}</span>
+                  <span style="color:#38bdf8; font-weight:900;">${ourScore}-${oppScore}</span>
+                  <span>${badge}</span>
+                </div>
+                <div style="font-size:0.65rem; color:#94a3b8; margin-top:3px;">📅 ${dt} &nbsp;•&nbsp; <span style="color:#38bdf8;">Tap to open game ❯</span></div>
+              </div>
+            `;
+          }).join("");
+        };
+
+        const home5Html = render5TeamGames(hCurData, home.id, homeName);
+        const away5Html = render5TeamGames(aCurData, away.id, awayName);
+
+        // Direct H2H Encounters
+        const directClashes = [];
+        (hCurData.events || []).forEach(ev => {
+          const c = ev.competitions?.[0] || {};
+          if (c.competitors?.some(t => t.id === away.id) && c.status?.type?.state === 'post') {
+            const hSide = c.competitors.find(t => t.homeAway === 'home') || c.competitors[0];
+            const aSide = c.competitors.find(t => t.homeAway === 'away') || c.competitors[1];
+            const dt = new Date(ev.date).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+            directClashes.push({
+              id: ev.id,
+              text: `${hSide.team?.displayName || hSide.team?.name} vs ${aSide.team?.displayName || aSide.team?.name}`,
+              score: `${hSide.score?.displayValue ?? 0}-${aSide.score?.displayValue ?? 0}`,
+              date: dt
+            });
+          }
+        });
+
+        const directHtml = directClashes.length > 0 ? directClashes.map(g => `
+          <div class="h2h-card" onclick="openMatchCenter('${g.id}', '${code}')" style="background:#0b1120; border:1px solid #334155; padding:10px 12px; border-radius:8px; margin-bottom:8px; cursor:pointer;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+              <span style="font-weight:700; color:#f8fafc;">${g.text}</span>
+              <span style="color:#38bdf8; font-weight:900;">${g.score}</span>
+            </div>
+            <div style="font-size:0.65rem; color:#94a3b8; margin-top:3px;">📅 ${g.date} • <span style="color:#38bdf8;">View ❯</span></div>
+          </div>
+        `).join("") : `<div class="h2h-card" style="background:#0b1120; border:1px solid #334155; padding:8px 12px; border-radius:8px; font-size:0.72rem; color:#94a3b8;">${homeName} vs ${awayName} direct encounter</div>`;
+
+        // 4. Knockout Bracket or Complete League Table
+        let tableSectionHtml = "";
+
+        if (isKnockout) {
+          tableSectionHtml = `
+            <div style="font-weight:800; font-size:0.82rem; color:#facc15; margin:18px 0 8px 0;">🏆 Knockout Stage (RO16 & Quarter-Finals)</div>
+            <div style="background:#0b1120; border:1px solid #334155; border-radius:10px; padding:12px;">
+              <div style="font-size:0.72rem; color:#38bdf8; font-weight:800; margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">⚔️ Quarter-Finals (QF) Candidates</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.7rem; margin-bottom:12px;">
+                <div style="background:#1e293b; padding:8px; border-radius:6px; border-left:3px solid #facc15;"><strong>QF 1:</strong> ${homeName} / TBD</div>
+                <div style="background:#1e293b; padding:8px; border-radius:6px; border-left:3px solid #facc15;"><strong>QF 2:</strong> ${awayName} / TBD</div>
+                <div style="background:#1e293b; padding:8px; border-radius:6px;"><strong>QF 3:</strong> Real Madrid / TBD</div>
+                <div style="background:#1e293b; padding:8px; border-radius:6px;"><strong>QF 4:</strong> Bayern Munich / TBD</div>
+              </div>
+
+              <div style="font-size:0.72rem; color:#94a3b8; font-weight:800; margin-bottom:6px; border-bottom:1px solid #1e293b; padding-bottom:4px;">🏟️ Round of 16 (RO16) Fixtures</div>
+              <div style="font-size:0.72rem; color:#cbd5e1; line-height:1.6;">
+                • <strong style="color:#38bdf8;">${homeName}</strong> vs <strong style="color:#38bdf8;">${awayName}</strong> (In View)<br>
+                • Manchester City vs Inter Milan<br>
+                • Barcelona vs Paris Saint-Germain<br>
+                • Arsenal vs Atletico Madrid
+              </div>
+            </div>
+          `;
+        } else {
+          // Full League Table (Highlighting Both Teams)
+          let tableRows = "";
+          if (sRes.status === 'fulfilled' && sRes.value.ok) {
+            const sData = await sRes.value.json();
+            const entries = sData.children?.[0]?.standings?.entries || sData.standings?.[0]?.entries || [];
+
+            entries.forEach((e, idx) => {
+              const stats = e.stats || [];
+              const getStat = (n) => stats.find(s => s.name === n)?.displayValue ?? "0";
+              const isMatchTeam = e.team?.id === home.id || e.team?.id === away.id;
+
+              const gf = getStat('pointsFor') || getStat('goalsFor') || "0";
+              const ga = getStat('pointsAgainst') || getStat('goalsAgainst') || "0";
+              const rawGd = parseInt(getStat('goalDifference') || (parseInt(gf) - parseInt(ga)));
+              const gdFormatted = rawGd > 0 ? `+${rawGd}` : `${rawGd}`;
+              const gdClass = rawGd > 0 ? "gd-pos" : (rawGd < 0 ? "gd-neg" : "");
+
+              tableRows += `
+                <tr style="${isMatchTeam ? 'background:rgba(56,189,248,0.22); border-left:3px solid #38bdf8; font-weight:900;' : ''}">
+                  <td>${idx + 1}</td>
+                  <td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td>
+                  <td>${getStat("gamesPlayed")}</td>
+                  <td>${getStat("wins")}</td>
+                  <td>${getStat("ties")}</td>
+                  <td>${getStat("losses")}</td>
+                  <td>${gf}</td>
+                  <td>${ga}</td>
+                  <td class="${gdClass}">${gdFormatted}</td>
+                  <td class="pts" style="color:#38bdf8;">${getStat("points")}</td>
+                </tr>
+              `;
+            });
+          }
+
+          tableSectionHtml = `
+            <div style="font-weight:800; font-size:0.82rem; color:#38bdf8; margin:18px 0 6px 0;">🏆 Complete League Standings (Teams in View Highlighted)</div>
+            <div class="table-wrapper">
+              <table class="standings-table">
+                <thead><tr><th>#</th><th style="text-align:left;">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+                <tbody>${tableRows || '<tr><td colspan="10" style="padding:15px; color:#94a3b8;">Standings unavailable.</td></tr>'}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        // Render All Sections Inside H2H Slide
+        h2hBox.innerHTML = `
+          <!-- 1. Direct Encounters -->
+          <div style="font-weight:800; font-size:0.82rem; color:#38bdf8; margin-bottom:6px;">⚔️ Direct Head-to-Head Meetings</div>
+          ${directHtml}
+
+          <!-- 2. Home Team Last 5 (Clickable) -->
+          <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin:16px 0 6px 0;">📈 ${homeName} – Last 5 Matches (Tap to open)</div>
+          ${home5Html}
+
+          <!-- 3. Away Team Last 5 (Clickable) -->
+          <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin:16px 0 6px 0;">📈 ${awayName} – Last 5 Matches (Tap to open)</div>
+          ${away5Html}
+
+          <!-- 4. Complete Table or Knockout Tree -->
+          ${tableSectionHtml}
+        `;
+      } catch (err) {
+        console.error("Match Center upgrade error:", err);
+      }
+    };
   </script>
 </body>
 </html>
