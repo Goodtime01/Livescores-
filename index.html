@@ -1951,6 +1951,238 @@ const hShots = parseInt(h["totalShots"] || "0"), aShots = parseInt(a["totalShots
       });
     };
 
+
+
+
+
+
+
+
+
+
+
+// 1. Half-Time Badge & Live Match Momentum Bar
+    const _baseHTAndMomentum = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseHTAndMomentum === "function") {
+        await _baseHTAndMomentum(id, code);
+      }
+      const statsSlide = document.getElementById("mcSlide-stats");
+      if (!statsSlide || statsSlide.querySelector("#momentumGauge")) return;
+
+      const banner = document.getElementById("mcBanner");
+      const scoreEl = banner ? banner.querySelector(".mc-score") : null;
+      const hPossEl = statsSlide.querySelector(".stat-labels span:first-child");
+      const hPoss = hPossEl ? parseInt(hPossEl.innerText, 10) || 50 : 50;
+      const aPoss = 100 - hPoss;
+
+      // Add Live Attack Momentum Pressure Gauge at top of Statistics
+      const momentumDiv = document.createElement("div");
+      momentumDiv.id = "momentumGauge";
+      momentumDiv.style.cssText = "background:#0b1120; border:1px solid #334155; border-radius:10px; padding:12px; margin-bottom:14px;";
+      momentumDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:#38bdf8; margin-bottom:6px;">
+          <span>⚡ Match Attack Momentum</span>
+          <span>${hPoss > 50 ? 'Home Pressing' : (aPoss > 50 ? 'Away Pressing' : 'Balanced')}</span>
+        </div>
+        <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden; display:flex;">
+          <div style="width:${hPoss}%; background:linear-gradient(90deg, #0284c7, #38bdf8); transition:width 0.5s;"></div>
+          <div style="width:${aPoss}%; background:linear-gradient(90deg, #f87171, #ef4444); transition:width 0.5s;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#94a3b8; margin-top:4px;">
+          <span>Home Momentum: ${hPoss}%</span>
+          <span>Away Momentum: ${aPoss}%</span>
+        </div>
+      `;
+      statsSlide.prepend(momentumDiv);
+    };
+
+
+
+// 2. Player of the Match (MVP) Crown Award
+    const _baseMvpPitch = window.renderTwoTeamPitch;
+    window.renderTwoTeamPitch = function(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents) {
+      if (typeof _baseMvpPitch === "function") {
+        _baseMvpPitch(homeData, awayData, hTeamName, aTeamName, isFinished, homeWon, awayWon, matchEvents);
+      }
+
+      const pitch = document.getElementById("twoTeamPitch");
+      if (!pitch) return;
+
+      const playerNodes = pitch.querySelectorAll(".pitch-player");
+      let highestRating = -1;
+      let mvpNode = null;
+
+      playerNodes.forEach(node => {
+        const badge = node.querySelector(".pitch-stat-badge");
+        if (badge) {
+          const match = badge.innerText.match(/(\d+\.\d+)\s*⭐/);
+          if (match && match[1]) {
+            const r = parseFloat(match[1]);
+            if (r > highestRating) {
+              highestRating = r;
+              mvpNode = node;
+            }
+          }
+        }
+      });
+
+      if (mvpNode && highestRating >= 7.5) {
+        const pName = mvpNode.querySelector(".player-name")?.innerText || "Player";
+        const badge = mvpNode.querySelector(".pitch-stat-badge");
+        if (badge) {
+          badge.style.border = "1.5px solid #facc15";
+          badge.style.boxShadow = "0 0 10px rgba(250, 204, 21, 0.4)";
+          badge.innerHTML = `<span style="color:#facc15; font-weight:900;">👑 MVP</span> ` + badge.innerHTML;
+        }
+
+        // Spotlight banner on top of the pitch
+        const existingSpotlight = document.getElementById("mvpSpotlight");
+        if (!existingSpotlight) {
+          const spotlight = document.createElement("div");
+          spotlight.id = "mvpSpotlight";
+          spotlight.style.cssText = "background:#0b1120; border:1px solid #facc15; border-radius:8px; padding:8px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:800;";
+          spotlight.innerHTML = `
+            <span style="color:#facc15; display:flex; align-items:center; gap:6px;">👑 Official Player of the Match</span>
+            <span style="color:#fff;">${pName} • <strong style="color:#38bdf8;">${highestRating} ⭐</strong></span>
+          `;
+          pitch.parentElement.insertBefore(spotlight, pitch);
+        }
+      }
+    };
+
+
+
+// 3. Key Player Face-Off (1-on-1 Star Comparison)
+    const _baseFaceOff = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseFaceOff === "function") {
+        await _baseFaceOff(id, code);
+      }
+      const infoSlide = document.getElementById("mcSlide-info");
+      if (!infoSlide || infoSlide.querySelector("#playerFaceOff")) return;
+
+      const pitch = document.getElementById("twoTeamPitch");
+      if (!pitch) return;
+
+      const getTopPlayer = (halfId) => {
+        const half = document.getElementById(halfId);
+        if (!half) return { name: "Star Player", rating: "7.5", stats: "" };
+        let top = { name: "Player", r: 0, badgeText: "" };
+        half.querySelectorAll(".pitch-player").forEach(p => {
+          const n = p.querySelector(".player-name")?.innerText || "";
+          const b = p.querySelector(".pitch-stat-badge")?.innerText || "";
+          const r = parseFloat((b.match(/(\d+\.\d+)/) || [0,0])[1]);
+          if (r > top.r) top = { name: n, r, badgeText: b };
+        });
+        return top;
+      };
+
+      const hStar = getTopPlayer("homePitchHalf");
+      const aStar = getTopPlayer("awayPitchHalf");
+
+      if (hStar.r > 0 && aStar.r > 0) {
+        const faceOffDiv = document.createElement("div");
+        faceOffDiv.id = "playerFaceOff";
+        faceOffDiv.style.cssText = "background:#0b1120; border:1px solid #334155; border-radius:10px; padding:12px; margin-bottom:14px;";
+        faceOffDiv.innerHTML = `
+          <div style="text-align:center; font-size:0.75rem; font-weight:800; color:#38bdf8; margin-bottom:8px; text-transform:uppercase;">
+            ⚔️ Key Player Face-Off
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+            <div style="text-align:left; width:45%;">
+              <div style="font-weight:800; color:#fff;">${hStar.name}</div>
+              <div style="color:#38bdf8; font-size:0.7rem; font-weight:700; margin-top:2px;">${hStar.badgeText}</div>
+            </div>
+            <div style="font-weight:900; color:#facc15; font-size:0.8rem; background:#1e293b; padding:4px 8px; border-radius:6px;">VS</div>
+            <div style="text-align:right; width:45%;">
+              <div style="font-weight:800; color:#fff;">${aStar.name}</div>
+              <div style="color:#38bdf8; font-size:0.7rem; font-weight:700; margin-top:2px;">${aStar.badgeText}</div>
+            </div>
+          </div>
+        `;
+        infoSlide.prepend(faceOffDiv);
+      }
+    };
+
+
+
+
+
+// 4. Live Audio Radio Commentary Engine (Text-to-Speech)
+    let isSpeakingCommentary = false;
+
+    window.toggleAudioCommentary = function() {
+      if (!('speechSynthesis' in window)) {
+        return alert("Text-to-speech audio is not supported in this browser.");
+      }
+
+      const btn = document.getElementById("btnAudioComm");
+      if (isSpeakingCommentary) {
+        window.speechSynthesis.cancel();
+        isSpeakingCommentary = false;
+        if (btn) {
+          btn.innerText = "🎙️ Listen Live (Radio)";
+          btn.style.background = "#1e293b";
+          btn.style.color = "#38bdf8";
+        }
+        return;
+      }
+
+      const commItems = document.querySelectorAll("#mcSlide-comm .comm-item");
+      if (!commItems.length) {
+        return alert("No match commentary available to read aloud.");
+      }
+
+      const lines = Array.from(commItems).slice(0, 8).map(el => {
+        const time = el.querySelector(".comm-time")?.innerText || "";
+        const text = el.querySelector("div:last-child")?.innerText || "";
+        return `Minute ${time}. ${text}`;
+      });
+
+      const fullScript = lines.join(". ");
+      const utterance = new SpeechSynthesisUtterance(fullScript);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      utterance.onend = () => {
+        isSpeakingCommentary = false;
+        if (btn) {
+          btn.innerText = "🎙️ Listen Live (Radio)";
+          btn.style.background = "#1e293b";
+          btn.style.color = "#38bdf8";
+        }
+      };
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+      isSpeakingCommentary = true;
+
+      if (btn) {
+        btn.innerText = "⏹️ Stop Audio Stream";
+        btn.style.background = "#ef4444";
+        btn.style.color = "#fff";
+      }
+    };
+
+    // Inject the Audio Radio button into Commentary tab
+    const _baseAudioCommTab = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseAudioCommTab === "function") {
+        await _baseAudioCommTab(id, code);
+      }
+      const commSlide = document.getElementById("mcSlide-comm");
+      if (!commSlide || commSlide.querySelector("#btnAudioComm")) return;
+
+      const audioBtn = document.createElement("button");
+      audioBtn.id = "btnAudioComm";
+      audioBtn.onclick = window.toggleAudioCommentary;
+      audioBtn.style.cssText = "width:100%; background:#1e293b; color:#38bdf8; border:1px solid #38bdf8; padding:10px; border-radius:8px; font-weight:800; font-size:0.75rem; margin-bottom:12px; cursor:pointer;";
+      audioBtn.innerText = "🎙️ Listen Live (Radio Broadcast)";
+      commSlide.prepend(audioBtn);
+    };
+
+
   </script>
 </body>
 </html>
