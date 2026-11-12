@@ -1888,6 +1888,69 @@ const hShots = parseInt(h["totalShots"] || "0"), aShots = parseInt(a["totalShots
         console.error("Match Center upgrade error:", err);
       }
     };
+
+
+
+
+
+
+
+
+
+
+// Fix: Proper Integer Math for Goal + Assist (1 + 0 = 1)
+    const _baseFixGAStats = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseFixGAStats === "function") {
+        await _baseFixGAStats(id, code);
+      }
+      const statsSlide = document.getElementById("mcSlide-stats");
+      if (!statsSlide) return;
+
+      const gaRow = Array.from(statsSlide.querySelectorAll(".stat-item")).find(el => el.innerText.includes("Goals + Assists"));
+      if (gaRow) {
+        const spans = gaRow.querySelectorAll("span");
+        if (spans.length >= 3) {
+          const banner = document.getElementById("mcBanner");
+          const scoreText = banner ? banner.querySelector(".mc-score")?.innerText || "0 : 0" : "0 : 0";
+          const [hGoals, aGoals] = scoreText.split(":").map(s => parseInt(s.trim(), 10) || 0);
+
+          const totalAssistsEl = Array.from(statsSlide.querySelectorAll(".stat-item")).find(el => el.innerText.includes("Assists Recorded"));
+          const totalAssists = totalAssistsEl ? parseInt(totalAssistsEl.querySelector("span")?.innerText, 10) || 0 : 0;
+
+          spans[0].innerText = hGoals + totalAssists;
+          spans[2].innerText = aGoals + totalAssists;
+        }
+      }
+    };
+
+
+// Fix: Real Goal Difference Calculation (GF - GA) in Standings Table
+    const _baseFixGDTable = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseFixGDTable === "function") {
+        await _baseFixGDTable(id, code);
+      }
+      const h2hBox = document.getElementById("mcSlide-h2h");
+      if (!h2hBox) return;
+
+      const table = h2hBox.querySelector(".standings-table");
+      if (!table) return;
+
+      const rows = table.querySelectorAll("tbody tr");
+      rows.forEach(tr => {
+        const cells = tr.querySelectorAll("td");
+        if (cells.length >= 10) {
+          const gf = parseInt(cells[6].innerText.trim(), 10) || 0;
+          const ga = parseInt(cells[7].innerText.trim(), 10) || 0;
+          const gd = gf - ga;
+
+          cells[8].innerText = gd > 0 ? `+${gd}` : `${gd}`;
+          cells[8].className = gd > 0 ? "gd-pos" : (gd < 0 ? "gd-neg" : "");
+        }
+      });
+    };
+
   </script>
 </body>
 </html>
