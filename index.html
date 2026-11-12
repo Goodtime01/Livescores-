@@ -2183,6 +2183,73 @@ const hShots = parseInt(h["totalShots"] || "0"), aShots = parseInt(a["totalShots
     };
 
 
+
+
+
+
+
+
+
+
+
+// Dynamic Player of the Match: Real MVP from the 2 Teams Playing
+    const _baseFixRealMOTM = window.openMatchCenter;
+    window.openMatchCenter = async function(id, code) {
+      if (typeof _baseFixRealMOTM === "function") {
+        await _baseFixRealMOTM(id, code);
+      }
+
+      const lineupsSlide = document.getElementById("mcSlide-lineups");
+      if (!lineupsSlide) return;
+
+      // Find the Player of the Match banner
+      const allDivs = Array.from(lineupsSlide.querySelectorAll("div"));
+      const motmEl = allDivs.find(d => d.innerText && d.innerText.includes("Player of the Match"));
+      if (!motmEl) return;
+
+      // Only show on completed matches (FT)
+      const banner = document.getElementById("mcBanner");
+      const statusText = banner ? banner.querySelector(".mc-status")?.innerText || "" : "";
+      const isFinished = statusText.includes("FT") || statusText.includes("Full Time") || statusText.includes("FINAL");
+
+      if (!isFinished) {
+        motmEl.style.display = "none";
+        return;
+      }
+
+      // Scan all players on the field to find the real MVP
+      const pitchPlayers = Array.from(lineupsSlide.querySelectorAll(".pitch-player"));
+      let bestPlayer = null;
+      let maxRating = -1;
+
+      pitchPlayers.forEach(pNode => {
+        const nameEl = pNode.querySelector(".player-name");
+        const badgeEl = pNode.querySelector(".pitch-stat-badge");
+        if (nameEl && badgeEl) {
+          const match = badgeEl.innerText.match(/([0-9]+\.?[0-9]*)\s*⭐/);
+          if (match) {
+            const r = parseFloat(match[1]);
+            if (r > maxRating) {
+              maxRating = r;
+              bestPlayer = nameEl.innerText.trim();
+            }
+          }
+        }
+      });
+
+      if (bestPlayer && maxRating > 0) {
+        motmEl.style.display = "flex";
+        motmEl.style.justifyContent = "space-between";
+        motmEl.style.alignItems = "center";
+        motmEl.innerHTML = `
+          <span style="font-weight:800; color:#facc15;">👑 Official Player of the Match</span>
+          <span style="font-weight:900; color:#fff;">${bestPlayer} • <span style="color:#facc15;">${maxRating} ⭐</span></span>
+        `;
+      } else {
+        motmEl.style.display = "none";
+      }
+    };
+
   </script>
 </body>
 </html>
