@@ -2155,6 +2155,191 @@ window.openMatchCenter = async function(id, code) {
 
 
 
+// Fix: Render Logos, Big Score, Managers & Scorers at the Top of Match Center
+function renderMatchBanner(comp, local, hTeam, aTeam, details, code) {
+  const banner = document.getElementById("mcBanner");
+  if (!banner) return;
+
+  const hName = hTeam?.team?.shortDisplayName || hTeam?.shortDisplayName || hTeam?.name || local?.home || "Home";
+  const aName = aTeam?.team?.shortDisplayName || aTeam?.shortDisplayName || aTeam?.name || local?.away || "Away";
+  const hLogo = hTeam?.team?.logo || hTeam?.logo || local?.homeLogo || "";
+  const aLogo = aTeam?.team?.logo || aTeam?.logo || local?.awayLogo || "";
+  const hScore = hTeam?.score ?? local?.homeScore ?? "0";
+  const aScore = aTeam?.score ?? local?.awayScore ?? "0";
+  const status = comp?.status?.type?.shortDetail || comp?.status?.type?.description || local?.statusText || "FT";
+  const league = comp?.league?.name || local?.leagueName || (code || "").toUpperCase();
+  const venue = comp?.venue?.fullName || local?.venue || "";
+
+  const hMgr = getManagerInfo(hName);
+  const aMgr = getManagerInfo(aName);
+
+  const hGoals = [], aGoals = [];
+  (details || []).forEach(ev => {
+    const isGoal = ev.scoringPlay || (ev.type?.text || "").toLowerCase().includes("goal");
+    const isOG = ev.ownGoal || (ev.type?.text || "").toLowerCase().includes("own goal") || (ev.text || "").toLowerCase().includes("own goal");
+    const isPen = ev.penaltyKick || (ev.type?.text || "").toLowerCase().includes("penalty");
+    const isFK = (ev.type?.text || "").toLowerCase().includes("free kick");
+    const rawMin = ev.clock?.displayValue || "";
+    const min = rawMin ? `${rawMin}'` : "";
+    const isHome = ev.team?.id === (hTeam?.team?.id || hTeam?.id);
+
+    let player = ev.athletesInvolved?.[0]?.displayName || ev.athlete?.displayName || "";
+    if (!player && ev.text) {
+      player = ev.text.split('(')[0].replace(/Goal!|Goal\s*-\s*[^.]+\./gi, '').trim();
+    }
+    if (!player) player = isOG ? "Own Goal" : "Goal";
+
+    const tag = isOG ? " (OG)" : (isPen ? " (P)" : (isFK ? " (FK)" : ""));
+    let assist = "";
+    if (!isOG && !isPen && !isFK) {
+      const aName = ev.athletesInvolved?.[1]?.displayName;
+      if (aName) assist = ` (Assist: ${aName})`;
+      else if (ev.text && ev.text.toLowerCase().includes("assisted by")) {
+        const m = ev.text.match(/assisted by ([^.]+)\./i);
+        if (m && m[1]) assist = ` (Assist: ${m[1].trim()})`;
+      } else {
+        assist = ` (Assist: -)`;
+      }
+    }
+
+    const line = `${isOG ? '<span style="color:#ef4444;">⚽</span>' : '⚽'} ${player} ${min}${tag} ${assist}`.trim();
+    if (isHome) hGoals.push(line);
+    else aGoals.push(line);
+  });
+
+  banner.innerHTML = `
+    <div class="mc-league" style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase; margin-bottom:8px; font-weight:700;">${league}</div>
+    <div class="mc-teams" style="display:flex; justify-content:space-around; align-items:center; gap:8px;">
+      <div class="mc-team-block" style="width:38%; text-align:center;">
+        ${hLogo ? `<img src="${hLogo}" style="width:44px; height:44px; object-fit:contain; margin-bottom:4px;">` : ''}
+        <div class="mc-team-name" style="font-size:0.95rem; font-weight:800;">${hName}</div>
+        ${hMgr.name ? `<div class="mc-team-mgr" style="font-size:0.68rem; color:#38bdf8; font-weight:700; margin-top:2px;">${hMgr.name} ${hMgr.flag}</div>` : ''}
+      </div>
+      <div class="mc-score" style="font-size:2rem; font-weight:900; color:#38bdf8; min-width:80px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+        ${hScore} : ${aScore}
+      </div>
+      <div class="mc-team-block" style="width:38%; text-align:center;">
+        ${aLogo ? `<img src="${aLogo}" style="width:44px; height:44px; object-fit:contain; margin-bottom:4px;">` : ''}
+        <div class="mc-team-name" style="font-size:0.95rem; font-weight:800;">${aName}</div>
+        ${aMgr.name ? `<div class="mc-team-mgr" style="font-size:0.68rem; color:#38bdf8; font-weight:700; margin-top:2px;">${aMgr.name} ${aMgr.flag}</div>` : ''}
+      </div>
+    </div>
+    <div class="mc-status" style="font-size:0.75rem; color:#fbbf24; font-weight:800; margin-top:6px;">${status}</div>
+    <div class="mc-scorers-banner" style="display:flex; justify-content:space-between; font-size:0.7rem; color:#cbd5e1; margin-top:10px; padding-top:8px; border-top:1px dashed #334155;">
+      <div class="mc-scorers-home" style="width:48%; text-align:left;">${hGoals.join("<br>")}</div>
+      <div class="mc-scorers-away" style="width:48%; text-align:right;">${aGoals.join("<br>")}</div>
+    </div>
+    ${venue ? `<div style="font-size:0.65rem; color:#94a3b8; margin-top:6px;">📍 ${venue}</div>` : ''}
+  `;
+}
+
+
+
+
+// Helper: Normalize names by stripping accents and spaces (e.g. "Maurício" -> "mauricio")
+function cleanStr(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+// Fix: 2-Team Pitch with 100% Guaranteed Goal & Assist Matching next to Ratings
+const _basePitchWithIndicator = window.renderTwoTeamPitch;
+window.renderTwoTeamPitch = function(homeRoster, awayRoster, homeTeam, awayTeam, isFinished, homeWon, awayWon, details) {
+  const pStats = {};
+
+  (details || []).forEach(ev => {
+    const isGoal = ev.scoringPlay || (ev.type?.text || "").toLowerCase().includes("goal");
+    const isOG = ev.ownGoal || (ev.type?.text || "").toLowerCase().includes("own goal") || (ev.text || "").toLowerCase().includes("own goal");
+    const pName = ev.athletesInvolved?.[0]?.displayName || ev.athlete?.displayName || "";
+    const aName = ev.athletesInvolved?.[1]?.displayName || "";
+    const pId = ev.athletesInvolved?.[0]?.id || ev.athlete?.id;
+    const aId = ev.athletesInvolved?.[1]?.id;
+
+    if (pName || pId) {
+      const k1 = pId ? "id_" + pId : cleanStr(pName);
+      if (!pStats[k1]) pStats[k1] = { g: 0, a: 0, og: 0 };
+      if (isOG) pStats[k1].og++;
+      else if (isGoal) pStats[k1].g++;
+      if (pName) pStats[cleanStr(pName)] = pStats[k1];
+    }
+    if ((aName || aId) && isGoal && !isOG) {
+      const k2 = aId ? "id_" + aId : cleanStr(aName);
+      if (!pStats[k2]) pStats[k2] = { g: 0, a: 0, og: 0 };
+      pStats[k2].a++;
+      if (aName) pStats[cleanStr(aName)] = pStats[k2];
+    }
+  });
+
+  const getStatsForPlayer = (p) => {
+    const idKey = p.athlete?.id ? "id_" + p.athlete.id : null;
+    if (idKey && pStats[idKey]) return pStats[idKey];
+    const n1 = cleanStr(p.athlete?.displayName);
+    if (pStats[n1]) return pStats[n1];
+    const n2 = cleanStr(p.athlete?.fullName);
+    if (pStats[n2]) return pStats[n2];
+    const n3 = cleanStr(p.athlete?.shortName);
+    if (pStats[n3]) return pStats[n3];
+    return { g: 0, a: 0, og: 0 };
+  };
+
+  const updateNodeBadges = (halfId, isWinner) => {
+    const half = document.getElementById(halfId);
+    if (!half) return;
+    const playerNodes = half.querySelectorAll(".pitch-player");
+
+    playerNodes.forEach((node, idx) => {
+      const nameEl = node.querySelector(".player-name");
+      const badgeEl = node.querySelector(".pitch-stat-badge");
+      if (!nameEl || !badgeEl) return;
+
+      const pShortName = nameEl.innerText.trim();
+      const rosterList = halfId === "homePitchHalf" ? (homeRoster?.roster || []).filter(x => x.starter) : (awayRoster?.roster || []).filter(x => x.starter);
+      const playerObj = rosterList.find(x => cleanStr(x.athlete?.shortName || x.athlete?.displayName).includes(cleanStr(pShortName))) || rosterList[idx] || {};
+
+      const st = getStatsForPlayer(playerObj);
+      const rating = getPlayerRating(playerObj, isWinner, st.g > 0, st.a > 0, false);
+
+      let statDisplay = `${rating} ⭐`;
+      if (st.g > 0) statDisplay += " " + "⚽".repeat(st.g);
+      if (st.og > 0) statDisplay += " " + `<span style="color:#ef4444; font-weight:900;">${"⚽".repeat(st.og)}</span>`;
+      if (st.a > 0) statDisplay += " " + "🎯".repeat(st.a);
+
+      badgeEl.innerHTML = statDisplay;
+    });
+  };
+
+  if (typeof _basePitchWithIndicator === "function") {
+    _basePitchWithIndicator(homeRoster, awayRoster, homeTeam, awayTeam, isFinished, homeWon, awayWon, details);
+  }
+
+  updateNodeBadges("homePitchHalf", homeWon);
+  updateNodeBadges("awayPitchHalf", awayWon);
+};
+
+// Connect Match Banner into openMatchCenter so Logos & Scores Always Show at Top
+const _baseOpenWithBanner = window.openMatchCenter;
+window.openMatchCenter = async function(id, code) {
+  if (typeof _baseOpenWithBanner === "function") {
+    await _baseOpenWithBanner(id, code);
+  }
+
+  const local = matchesData.find(m => m.id === id);
+  const home = { id: local?.homeId, name: local?.home, shortDisplayName: local?.home, logo: local?.homeLogo };
+  const away = { id: local?.awayId, name: local?.away, shortDisplayName: local?.away, logo: local?.awayLogo };
+
+  const d = await fetchFast(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`, 4000) ||
+            await fetchFast(`https://site.api.espn.com/apis/site/v2/sports/soccer/summary?event=${id}`, 4000);
+
+  const comp = d?.header?.competitions?.[0];
+  const hTeam = comp?.competitors?.find(c => c.homeAway === 'home') || home;
+  const aTeam = comp?.competitors?.find(c => c.homeAway === 'away') || away;
+  const details = comp?.details || [];
+
+  renderMatchBanner(comp, local, hTeam, aTeam, details, code);
+
+  if (d?.rosters?.length >= 2) {
+    renderTwoTeamPitch(d.rosters[0], d.rosters[1], hTeam.team || hTeam, aTeam.team || aTeam, comp?.status?.type?.state === 'post', hTeam.winner, aTeam.winner, details);
+  }
+};
 
 
 
