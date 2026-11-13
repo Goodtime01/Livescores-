@@ -1439,6 +1439,727 @@ async function openMatchCenter(id, code) {
 
     initLoad();
     setInterval(initLoad, 30000);
+
+
+
+
+
+
+
+
+
+
+
+// PART 1: Info & Timeline Event Parser and Renderer
+function renderMatchInfo(details, commentary, homeTeam, awayTeam) {
+  const infoSlide = document.getElementById("mcSlide-info");
+  if (!infoSlide) return;
+
+  const events = [];
+  const seen = new Set();
+  const homeName = homeTeam?.shortDisplayName || homeTeam?.name || "Home";
+  const awayName = awayTeam?.shortDisplayName || awayTeam?.name || "Away";
+
+  // 1. Goals & Own Goals
+  (details || []).forEach(ev => {
+    const rawMin = ev.clock?.displayValue || "";
+    const min = rawMin ? `${rawMin}'` : "";
+    const isHome = ev.team?.id === homeTeam?.id;
+    const team = isHome ? homeName : awayName;
+    const textType = (ev.type?.text || "").toLowerCase();
+    const fullText = ev.text || "";
+
+    const isGoal = ev.scoringPlay || textType.includes("goal");
+    const isOG = ev.ownGoal || textType.includes("own goal") || fullText.toLowerCase().includes("own goal");
+    const isPen = ev.penaltyKick || textType.includes("penalty") || fullText.toLowerCase().includes("penalty");
+
+    if (isGoal || isOG) {
+      let scorer = ev.athletesInvolved?.[0]?.displayName || ev.participants?.[0]?.athlete?.displayName || ev.athlete?.displayName || "";
+      if (!scorer && fullText) {
+        const clean = fullText.split('(')[0].replace(/Goal!|Goal\s*-\s*[^.]+\./gi, '').trim();
+        if (clean) scorer = clean;
+      }
+      if (!scorer) scorer = "No data";
+
+      let assist = "-";
+      if (!isOG && !isPen && !textType.includes("free kick")) {
+        const aName = ev.athletesInvolved?.[1]?.displayName;
+        if (aName) {
+          assist = aName;
+        } else if (fullText.toLowerCase().includes("assisted by")) {
+          const m = fullText.match(/assisted by ([^.]+)\./i);
+          if (m && m[1]) assist = m[1].trim();
+        }
+      }
+
+      const key = `goal-${min}-${scorer}-${isOG}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        events.push({
+          minInt: parseInt(rawMin, 10) || 0,
+          min: min || "•",
+          html: isOG
+            ? `<span style="color:#ef4444; font-weight:700;">Own Goal - ${scorer}</span>`
+            : `<span><strong>${scorer}</strong>${isPen ? " (P)" : ""}<br><small style="color:#94a3b8;">Assist: ${assist}</small></span>`,
+          icon: isOG ? `<span style="color:#ef4444;">⚽</span>` : `⚽`,
+          team
+        });
+      }
+    }
+  });
+
+  // 2. Substitutes & Cards from Commentary / Plays
+  (commentary || []).forEach(item => {
+    const rawMin = item.time?.displayValue || item.clock?.displayValue || "";
+    const min = rawMin ? `${rawMin}'` : "";
+    const txt = item.text || item.description || "";
+    const lower = txt.toLowerCase();
+
+    const isHome = lower.includes(homeName.toLowerCase());
+    const isAway = lower.includes(awayName.toLowerCase());
+    const team = isHome ? homeName : (isAway ? awayName : "");
+
+    // Substitutes: Minute - In: [Full player name] - Out: [Full player name]
+    if (lower.includes("substitution") || lower.includes("replaces")) {
+      let pIn = "", pOut = "";
+      const subMatch = txt.match(/([A-Z][A-Za-z\s\-\.\']+)\s+replaces\s+([A-Z][A-Za-z\s\-\.\']+)/i);
+      if (subMatch) {
+        pIn = subMatch[1].replace(/substitution,?\s*[^.]*\.?/gi, '').trim();
+        pOut = subMatch[2].replace(/\.?/g, '').trim();
+      } else if (item.athletesInvolved && item.athletesInvolved.length >= 2) {
+        pIn = item.athletesInvolved[0]?.displayName || "";
+        pOut = item.athletesInvolved[1]?.displayName || "";
+      }
+
+      if (pIn && pOut) {
+        const key = `sub-${min}-${pIn}-${pOut}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          events.push({
+            minInt: parseInt(rawMin, 10) || 0,
+            min: min || "•",
+            html: `${min ? min + " - " : ""}In: ${pIn} - Out: ${pOut}`,
+            icon: `🔁`,
+            team: team || "No data"
+          });
+        }
+      }
+    }
+
+    // Yellow Cards: Minute - [Full player name] - Team
+    else if (lower.includes("yellow card") && !lower.includes("red card")) {
+      const cardMatch = txt.match(/([A-Z][A-Za-z\s\-\.\']+)\s+\([^)]+\)\s+is shown the yellow card/i) || txt.match(/([A-Z][A-Za-z\s\-\.\']+)\s+is shown the yellow card/i);
+      const player = cardMatch ? cardMatch[1].trim() : (item.athletesInvolved?.[0]?.displayName || "");
+      if (player) {
+        const key = `yc-${min}-${player}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          events.push({
+            minInt: parseInt(rawMin, 10) || 0,
+            min: min || "•",
+            html: `${min ? min + " - " : ""}${player} - ${team || "No data"}`,
+            icon: `🟨`,
+            team
+          });
+        }
+      }
+    }
+
+    // Red Cards: Minute - [Full player name] - Team
+    else if (lower.includes("red card") || lower.includes("is sent off")) {
+      const cardMatch = txt.match(/([A-Z][A-Za-z\s\-\.\']+)\s+\([^)]+\)\s+is shown the red card/i) || txt.match(/([A-Z][A-Za-z\s\-\.\']+)\s+is sent off/i);
+      const player = cardMatch ? cardMatch[1].trim() : (item.athletesInvolved?.[0]?.displayName || "");
+      if (player) {
+        const key = `rc-${min}-${player}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          events.push({
+            minInt: parseInt(rawMin, 10) || 0,
+            min: min || "•",
+            html: `${min ? min + " - " : ""}${player} - ${team || "No data"}`,
+            icon: `🟥`,
+            team
+          });
+        }
+      }
+    }
+  });
+
+  if (!events.length) {
+    infoSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">No data</div>';
+    return;
+  }
+
+  events.sort((a, b) => a.minInt - b.minInt);
+
+  infoSlide.innerHTML = events.map(e => `
+    <div class="timeline-item" style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #1e293b;">
+      <span class="timeline-min" style="font-weight:800; color:#38bdf8; min-width:36px;">${e.min}</span>
+      <span style="font-size:1.1rem; line-height:1;">${e.icon}</span>
+      <div style="flex:1; font-size:0.75rem;">
+        ${e.html}
+        ${e.team ? `<span style="color:#94a3b8; font-size:0.68rem; margin-left:6px;">(${e.team})</span>` : ''}
+      </div>
+    </div>
+  `).join("");
+}
+
+
+// PART 2: Match Statistics with Home & Away Assists Bar
+function renderMatchStats(boxscore, homeTeam, awayTeam, details) {
+  const statsSlide = document.getElementById("mcSlide-stats");
+  if (!statsSlide) return;
+
+  const hName = homeTeam?.shortDisplayName || homeTeam?.name || "Home";
+  const aName = awayTeam?.shortDisplayName || awayTeam?.name || "Away";
+
+  // Calculate official match assists from event details
+  let hAssists = 0, aAssists = 0;
+  (details || []).forEach(ev => {
+    const isGoal = ev.scoringPlay || (ev.type?.text || "").toLowerCase().includes("goal");
+    const isPen = ev.penaltyKick || (ev.type?.text || "").toLowerCase().includes("penalty");
+    const isOG = ev.ownGoal || (ev.type?.text || "").toLowerCase().includes("own goal");
+
+    if (isGoal && !isPen && !isOG) {
+      const isHome = ev.team?.id === homeTeam?.id;
+      const hasAssist = ev.athletesInvolved?.[1]?.displayName || (ev.text && ev.text.toLowerCase().includes("assisted by"));
+      if (hasAssist) {
+        if (isHome) hAssists++;
+        else aAssists++;
+      }
+    }
+  });
+
+  if (!boxscore?.teams?.length) {
+    statsSlide.innerHTML = `
+      <div style="text-align:center; padding:25px; color:#94a3b8; font-size:0.75rem;">
+        Detailed statistics will be recorded once the match kicks off.
+      </div>`;
+    return;
+  }
+
+  const h = {}, a = {};
+  boxscore.teams[0]?.statistics?.forEach(s => h[s.name] = s.displayValue ?? s.value);
+  boxscore.teams[1]?.statistics?.forEach(s => a[s.name] = s.displayValue ?? s.value);
+
+  const hPoss = parseInt(h["possessionPct"] || "50", 10);
+  const aPoss = 100 - hPoss;
+  const hShots = h["totalShots"] || "0";
+  const aShots = a["totalShots"] || "0";
+  const hOnTarget = h["shotsOnTarget"] || "0";
+  const aOnTarget = a["shotsOnTarget"] || "0";
+  const hOffTarget = h["shotsOffTarget"] || Math.max(0, parseInt(hShots,10) - parseInt(hOnTarget,10));
+  const aOffTarget = a["shotsOffTarget"] || Math.max(0, parseInt(aShots,10) - parseInt(aOnTarget,10));
+  const hCorners = h["wonCorners"] || h["corners"] || "0";
+  const aCorners = a["wonCorners"] || a["corners"] || "0";
+  const hPasses = h["totalPasses"] || "-";
+  const aPasses = a["totalPasses"] || "-";
+  const hFouls = h["foulsCommitted"] || "0";
+  const aFouls = a["foulsCommitted"] || "0";
+  const hOffsides = h["offsides"] || "0";
+  const aOffsides = a["offsides"] || "0";
+  const hYellow = h["yellowCards"] || "0";
+  const aYellow = a["yellowCards"] || "0";
+  const hRed = h["redCards"] || "0";
+  const aRed = a["redCards"] || "0";
+
+  const totalAssists = hAssists + aAssists;
+  const hAssistPct = totalAssists > 0 ? Math.round((hAssists / totalAssists) * 100) : 50;
+
+  statsSlide.innerHTML = `
+    <!-- Possession Bar -->
+    <div class="stat-row" style="margin-bottom:12px;">
+      <div class="stat-labels"><span>${hPoss}%</span><span>Possession</span><span>${aPoss}%</span></div>
+      <div class="stat-bar"><div class="stat-fill" style="width:${hPoss}%;"></div></div>
+    </div>
+
+    <!-- Assists Bar -->
+    <div class="stat-row" style="margin-bottom:12px;">
+      <div class="stat-labels"><span>${hAssists}</span><span>Assists</span><span>${aAssists}</span></div>
+      <div class="stat-bar"><div class="stat-fill" style="width:${hAssistPct}%; background:#38bdf8;"></div></div>
+    </div>
+
+    <!-- General Stats Grid -->
+    <div class="stat-grid">
+      <div class="stat-item"><span>${hShots}</span><span>Total Shots</span><span>${aShots}</span></div>
+      <div class="stat-item"><span>${hOnTarget}</span><span>Shots On Target</span><span>${aOnTarget}</span></div>
+      <div class="stat-item"><span>${hOffTarget}</span><span>Shots Off Target</span><span>${aOffTarget}</span></div>
+      <div class="stat-item"><span>${hCorners}</span><span>Corner Kicks</span><span>${aCorners}</span></div>
+      <div class="stat-item"><span>${hPasses}</span><span>Total Passes</span><span>${aPasses}</span></div>
+      <div class="stat-item"><span>${hFouls}</span><span>Fouls</span><span>${aFouls}</span></div>
+      <div class="stat-item"><span>${hOffsides}</span><span>Offsides</span><span>${aOffsides}</span></div>
+      <div class="stat-item"><span>🟨 ${hYellow}</span><span>Yellow Cards</span><span>🟨 ${aYellow}</span></div>
+      <div class="stat-item"><span>🟥 ${hRed}</span><span>Red Cards</span><span>${aRed} 🟥</span></div>
+    </div>
+  `;
+}
+
+
+// PART 3: 2-Team Pitch with Ratings, Repeated Emojis & Red Own Goals
+function renderTwoTeamPitch(homeRoster, awayRoster, homeTeam, awayTeam, isFinished, homeWon, awayWon, details) {
+  const pitch = document.getElementById("twoTeamPitch");
+  if (!pitch) return;
+
+  const hStarters = (homeRoster?.roster || []).filter(p => p.starter);
+  const aStarters = (awayRoster?.roster || []).filter(p => p.starter);
+
+  if (hStarters.length < 11 || aStarters.length < 11) {
+    pitch.innerHTML = '<div style="text-align:center; color:#fff; padding:180px 0; font-weight:700;">Tactical pitch diagram will appear once official Starting XIs are announced 1 hour before kickoff.</div>';
+    return;
+  }
+
+  // Count player goals, assists & own goals
+  const pStats = {};
+  (details || []).forEach(ev => {
+    const isGoal = ev.scoringPlay || (ev.type?.text || "").toLowerCase().includes("goal");
+    const isOG = ev.ownGoal || (ev.type?.text || "").toLowerCase().includes("own goal") || (ev.text || "").toLowerCase().includes("own goal");
+    const pName = ev.athletesInvolved?.[0]?.displayName || ev.athlete?.displayName || "";
+    const aName = ev.athletesInvolved?.[1]?.displayName || "";
+
+    if (pName) {
+      if (!pStats[pName]) pStats[pName] = { g: 0, a: 0, og: 0 };
+      if (isOG) pStats[pName].og++;
+      else if (isGoal) pStats[pName].g++;
+    }
+    if (aName && isGoal && !isOG) {
+      if (!pStats[aName]) pStats[aName] = { g: 0, a: 0, og: 0 };
+      pStats[aName].a++;
+    }
+  });
+
+  // Pitch Field Markings
+  pitch.style.background = "repeating-linear-gradient(180deg, #15803d 0px, #15803d 40px, #166534 40px, #166534 80px)";
+  pitch.style.position = "relative";
+  pitch.style.border = "2.5px solid rgba(255,255,255,0.9)";
+  pitch.style.minHeight = "600px";
+  pitch.innerHTML = `
+    <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:180px; height:70px; border:2px solid rgba(255,255,255,0.8); border-top:none; pointer-events:none; z-index:1;"></div>
+    <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:80px; height:28px; border:2px solid rgba(255,255,255,0.8); border-top:none; pointer-events:none; z-index:1;"></div>
+    <div style="position:absolute; top:50%; left:0; right:0; border-top:2px solid rgba(255,255,255,0.85); pointer-events:none; z-index:1;"></div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:80px; height:80px; border:2px solid rgba(255,255,255,0.85); border-radius:50%; pointer-events:none; z-index:1;"></div>
+    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:180px; height:70px; border:2px solid rgba(255,255,255,0.8); border-bottom:none; pointer-events:none; z-index:1;"></div>
+    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80px; height:28px; border:2px solid rgba(255,255,255,0.8); border-bottom:none; pointer-events:none; z-index:1;"></div>
+    <div id="awayPitchHalf"></div>
+    <div id="homePitchHalf"></div>
+  `;
+
+  const awayHalf = document.getElementById("awayPitchHalf");
+  const homeHalf = document.getElementById("homePitchHalf");
+
+  const renderNode = (p, jerseyClass, isWinner) => {
+    const fullName = p.athlete?.displayName || p.athlete?.fullName || "Player";
+    const shortName = p.athlete?.shortName || fullName.split(" ").pop();
+    const st = pStats[fullName] || { g: 0, a: 0, og: 0 };
+    const rating = getPlayerRating(p, isWinner, st.g > 0, st.a > 0, false);
+
+    let badges = `${rating} ⭐`;
+    if (st.g > 0) badges += " " + "⚽".repeat(st.g);
+    if (st.og > 0) badges += " " + `<span style="color:#ef4444; font-weight:bold;">${"⚽".repeat(st.og)}</span>`;
+    if (st.a > 0) badges += " " + "🎯".repeat(st.a);
+
+    return `
+      <div class="pitch-player">
+        <div class="jersey-circle ${jerseyClass}">${p.jersey || '•'}</div>
+        <div class="player-name">${shortName}</div>
+        <div class="pitch-stat-badge">${badges}</div>
+      </div>
+    `;
+  };
+
+  // Render Away Team (Top)
+  const aGk = aStarters[0];
+  const aOutfield = aStarters.slice(1);
+  const aForm = (awayRoster?.formation || "4-3-3").split("-").map(Number);
+  let aSlices = [], aIdx = 0;
+  aForm.forEach(n => { aSlices.push(aOutfield.slice(aIdx, aIdx + n)); aIdx += n; });
+
+  const renderRow = (target, players, cls, won) => {
+    const row = document.createElement("div");
+    row.className = "pitch-row";
+    row.innerHTML = players.map(p => renderNode(p, cls, won)).join("");
+    target.appendChild(row);
+  };
+
+  renderRow(awayHalf, [aGk], "jersey-away", awayWon);
+  aSlices.forEach(group => renderRow(awayHalf, group, "jersey-away", awayWon));
+
+  // Render Home Team (Bottom)
+  const hGk = hStarters[0];
+  const hOutfield = hStarters.slice(1);
+  const hForm = (homeRoster?.formation || "4-3-3").split("-").map(Number);
+  let hSlices = [], hIdx = 0;
+  hForm.forEach(n => { hSlices.push(hOutfield.slice(hIdx, hIdx + n)); hIdx += n; });
+
+  for (let i = hSlices.length - 1; i >= 0; i--) {
+    renderRow(homeHalf, hSlices[i], "jersey-home", homeWon);
+  }
+  renderRow(homeHalf, [hGk], "jersey-home", homeWon);
+
+  // Bench Substitutes with Ratings & Indicators
+  const renderSubItem = (p, isWinner) => {
+    const fullName = p.athlete?.displayName || p.athlete?.fullName || "Player";
+    const st = pStats[fullName] || { g: 0, a: 0, og: 0 };
+    const rating = getPlayerRating(p, isWinner, st.g > 0, st.a > 0, false);
+
+    let badges = `${rating} ⭐`;
+    if (st.g > 0) badges += " " + "⚽".repeat(st.g);
+    if (st.og > 0) badges += " " + `<span style="color:#ef4444; font-weight:bold;">${"⚽".repeat(st.og)}</span>`;
+    if (st.a > 0) badges += " " + "🎯".repeat(st.a);
+
+    return `
+      <div class="bench-player">
+        <div style="display:flex; justify-content:space-between;">
+          <span><strong class="bench-num">#${p.jersey || '-'}</strong> ${fullName}</span>
+        </div>
+        <div style="font-size:0.62rem; color:#38bdf8; font-weight:700;">${badges}</div>
+      </div>
+    `;
+  };
+
+  const hSubs = (homeRoster?.roster || []).filter(p => !p.starter).map(p => renderSubItem(p, homeWon)).join("");
+  const aSubs = (awayRoster?.roster || []).filter(p => !p.starter).map(p => renderSubItem(p, awayWon)).join("");
+
+  const benchContainer = document.getElementById("benchGridContainer");
+  if (benchContainer) {
+    benchContainer.innerHTML = `
+      <div class="bench-grid">
+        <div class="bench-col">
+          <div class="bench-title">${homeTeam?.shortDisplayName || 'Home'} Bench</div>
+          ${hSubs || '<div style="font-size:0.68rem; color:#94a3b8;">N/A</div>'}
+        </div>
+        <div class="bench-col">
+          <div class="bench-title">${awayTeam?.shortDisplayName || 'Away'} Bench</div>
+          ${aSubs || '<div style="font-size:0.68rem; color:#94a3b8;">N/A</div>'}
+        </div>
+      </div>
+    `;
+  }
+}
+
+
+// PART 4: H2H (Last 3 Direct, Last 5 Each) and Full Standings Table
+async function renderH2HAndTable(homeTeam, awayTeam, code, matchId) {
+  const h2hBox = document.getElementById("mcSlide-h2h");
+  if (!h2hBox) return;
+
+  const hName = homeTeam?.shortDisplayName || homeTeam?.name || "Home";
+  const aName = awayTeam?.shortDisplayName || awayTeam?.name || "Away";
+
+  try {
+    const [hSched, aSched, standingsData] = await Promise.all([
+      fetchFast(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${homeTeam.id}/schedule`),
+      fetchFast(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/teams/${awayTeam.id}/schedule`),
+      fetchFast(`https://site.api.espn.com/apis/v2/sports/soccer/${code}/standings`)
+    ]);
+
+    // 1. Last 3 Direct Head-to-Head Encounters
+    const directClashes = [];
+    (hSched?.events || []).forEach(ev => {
+      const c = ev.competitions?.[0] || {};
+      const isOpp = c.competitors?.some(t => t.id === awayTeam.id);
+      if (isOpp && c.status?.type?.state === "post") {
+        const hSide = c.competitors.find(t => t.homeAway === "home") || c.competitors[0];
+        const aSide = c.competitors.find(t => t.homeAway === "away") || c.competitors[1];
+        const dt = new Date(ev.date).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+        directClashes.push({
+          id: ev.id,
+          fixture: `${hSide.team?.displayName || hSide.team?.name} vs ${aSide.team?.displayName || aSide.team?.name}`,
+          score: `${hSide.score?.displayValue ?? 0}-${aSide.score?.displayValue ?? 0}`,
+          date: dt
+        });
+      }
+    });
+
+    const directH2hHtml = directClashes.length > 0
+      ? directClashes.slice(-3).reverse().map(g => `
+          <div class="h2h-card" onclick="openMatchCenter('${g.id}', '${code}')">
+            <div class="h2h-row">
+              <span class="h2h-title">${g.fixture}</span>
+              <span class="h2h-score">${g.score}</span>
+            </div>
+            <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">${g.date} • Tap to view match ❯</div>
+          </div>`).join("")
+      : `<div class="h2h-card" style="font-size:0.7rem; color:#94a3b8;">${hName} vs ${aName} - First recorded meeting this season</div>`;
+
+    // 2. Last 5 Games for Both Teams
+    const renderTeam5 = (schedData, teamId) => {
+      const list = (schedData?.events || []).filter(e => e.competitions?.[0]?.status?.type?.state === "post").slice(-5).reverse();
+      if (!list.length) return `<div style="font-size:0.7rem; color:#94a3b8; padding:4px 0;">No games recorded.</div>`;
+
+      return list.map(ev => {
+        const c = ev.competitions[0];
+        const us = c.competitors.find(t => t.id === teamId) || c.competitors[0];
+        const opp = c.competitors.find(t => t.id !== teamId) || c.competitors[1];
+        const ourScore = parseInt(us.score?.displayValue ?? us.score ?? 0, 10);
+        const oppScore = parseInt(opp.score?.displayValue ?? opp.score ?? 0, 10);
+
+        let badge = '<span style="color:#f97316; font-weight:800;">🟠 D</span>';
+        if (ourScore > oppScore) badge = '<span style="color:#22c55e; font-weight:800;">🟢 W</span>';
+        else if (ourScore < oppScore) badge = '<span style="color:#ef4444; font-weight:800;">🔴 L</span>';
+
+        const dt = new Date(ev.date).toLocaleDateString([], { day: "numeric", month: "short" });
+        return `
+          <div class="h2h-card" onclick="openMatchCenter('${ev.id}', '${code}')">
+            <div class="h2h-row">
+              <span class="h2h-title">${us.team?.shortDisplayName || us.team?.name} vs ${opp.team?.shortDisplayName || opp.team?.name}</span>
+              <span><strong style="color:#38bdf8;">${ourScore}:${oppScore}</strong> &nbsp;${badge}</span>
+            </div>
+            <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">${dt} • Tap to view ❯</div>
+          </div>`;
+      }).join("");
+    };
+
+    // 3. Full Scrollable League Table (GD = GF - GA)
+    let tableRows = "";
+    const entries = standingsData?.children?.[0]?.standings?.entries || standingsData?.standings?.[0]?.entries || [];
+    entries.forEach((e, idx) => {
+      const stats = e.stats || [];
+      const getStat = (n) => stats.find(s => s.name === n)?.displayValue ?? "0";
+      const isMatchTeam = e.team?.id === homeTeam.id || e.team?.id === awayTeam.id;
+
+      const gf = parseInt(getStat("pointsFor") || getStat("goalsFor") || "0", 10);
+      const ga = parseInt(getStat("pointsAgainst") || getStat("goalsAgainst") || "0", 10);
+      const gd = gf - ga;
+      const gdDisplay = gd > 0 ? `+${gd}` : `${gd}`;
+      const gdClass = gd > 0 ? "gd-pos" : (gd < 0 ? "gd-neg" : "");
+
+      tableRows += `
+        <tr style="${isMatchTeam ? 'background:rgba(56,189,248,0.25); border-left:3px solid #38bdf8; font-weight:900;' : ''}">
+          <td>${idx + 1}</td>
+          <td class="team-cell"><img src="${e.team?.logos?.[0]?.href || ''}"><span>${e.team?.shortDisplayName || e.team?.name}</span></td>
+          <td>${getStat("gamesPlayed")}</td>
+          <td>${getStat("wins")}</td>
+          <td>${getStat("ties")}</td>
+          <td>${getStat("losses")}</td>
+          <td>${gf}</td>
+          <td>${ga}</td>
+          <td class="${gdClass}">${gdDisplay}</td>
+          <td class="pts">${getStat("points")}</td>
+        </tr>`;
+    });
+
+    h2hBox.innerHTML = `
+      <!-- Head-to-Head Section -->
+      <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin-bottom:6px;">⚔️ Last 3 Head-to-Head Matches</div>
+      ${directH2hHtml}
+
+      <!-- Home Team Last 5 -->
+      <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin:14px 0 6px 0;">📈 ${hName} - Last 5 Matches</div>
+      ${renderTeam5(hSched, homeTeam.id)}
+
+      <!-- Away Team Last 5 -->
+      <div style="font-weight:800; font-size:0.78rem; color:#38bdf8; margin:14px 0 6px 0;">📈 ${aName} - Last 5 Matches</div>
+      ${renderTeam5(aSched, awayTeam.id)}
+
+      <!-- Complete League Table -->
+      <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; margin:16px 0 6px 0;">🏆 Full League Table</div>
+      <div class="table-wrapper">
+        <table class="standings-table">
+          <thead><tr><th>Pos</th><th style="text-align:left;">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+          <tbody>${tableRows || '<tr><td colspan="10" style="padding:15px; color:#94a3b8;">Standings unavailable.</td></tr>'}</tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    h2hBox.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">H2H and Standings data unavailable.</div>';
+  }
+}
+
+
+
+
+
+// PART 5: Real Knockout Bracket Generator (Only For Knockout Stages)
+function renderKnockoutBracket(knockoutData, homeTeam, awayTeam, currentMatchId, container) {
+  if (!knockoutData || !container) return;
+
+  const rounds = [
+    { title: "Round of 16", matches: knockoutData.ro16 || [] },
+    { title: "Quarter-Finals", matches: knockoutData.qf || [] },
+    { title: "Semi-Finals", matches: knockoutData.sf || [] },
+    { title: "Final", matches: knockoutData.final || [] }
+  ];
+
+  let bracketHtml = `<div style="font-weight:800; font-size:0.82rem; color:#facc15; margin:14px 0 8px 0;">🏆 Knockout Stage Tournament Tree</div>`;
+
+  rounds.forEach(r => {
+    if (!r.matches.length) return;
+    bracketHtml += `
+      <div style="font-size:0.72rem; color:#38bdf8; font-weight:800; margin:10px 0 4px 0; border-bottom:1px solid #1e293b; padding-bottom:3px;">
+        ${r.title}
+      </div>
+      <div style="display:grid; grid-template-columns:1fr; gap:6px;">
+    `;
+
+    r.matches.forEach(m => {
+      const isCurrentMatch = m.id === currentMatchId || 
+        (m.team1?.id === homeTeam?.id && m.team2?.id === awayTeam?.id) || 
+        (m.team1?.id === awayTeam?.id && m.team2?.id === homeTeam?.id);
+
+      const t1Won = m.winnerId === m.team1?.id;
+      const t2Won = m.winnerId === m.team2?.id;
+
+      bracketHtml += `
+        <div style="background:#0b1120; border:1px solid ${isCurrentMatch ? '#38bdf8' : '#334155'}; border-radius:6px; padding:6px 10px; font-size:0.72rem;">
+          <div style="display:flex; justify-content:space-between; ${t1Won ? 'font-weight:bold; color:#4ade80;' : ''}">
+            <span>${m.team1?.name || 'TBD'}</span>
+            <span>${m.team1?.score ?? '-'}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:3px; ${t2Won ? 'font-weight:bold; color:#4ade80;' : ''}">
+            <span>${m.team2?.name || 'TBD'}</span>
+            <span>${m.team2?.score ?? '-'}</span>
+          </div>
+          ${m.aggregate ? `<div style="font-size:0.62rem; color:#94a3b8; margin-top:2px; text-align:right;">Agg: ${m.aggregate}</div>` : ''}
+        </div>
+      `;
+    });
+
+    bracketHtml += `</div>`;
+  });
+
+  container.innerHTML = bracketHtml;
+}
+
+
+
+// PART 6: Real Match Commentary Feed (Newest First)
+function renderMatchCommentary(commentaryData) {
+  const commSlide = document.getElementById("mcSlide-comm");
+  if (!commSlide) return;
+
+  const rawPlays = commentaryData || [];
+  if (!rawPlays.length) {
+    commSlide.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:0.75rem;">No commentary available for this match yet.</div>';
+    return;
+  }
+
+  // Ensure newest events appear first
+  const sortedPlays = [...rawPlays].reverse();
+
+  commSlide.innerHTML = sortedPlays.map(item => {
+    const rawTime = item.time?.displayValue || item.clock?.displayValue || "";
+    const min = rawTime ? `${rawTime}'` : "•";
+    const text = item.text || item.description || "";
+    const lower = text.toLowerCase();
+
+    let icon = "⚡";
+    if (lower.includes("goal") || lower.includes("scores")) icon = "⚽";
+    else if (lower.includes("yellow card")) icon = "🟨";
+    else if (lower.includes("red card")) icon = "🟥";
+    else if (lower.includes("substitution") || lower.includes("replaces")) icon = "🔁";
+    else if (lower.includes("corner")) icon = "🚩";
+    else if (lower.includes("foul")) icon = "⚠️";
+    else if (lower.includes("half")) icon = "⏱️";
+
+    return `
+      <div class="comm-item">
+        <div class="comm-time">${min}</div>
+        <div style="flex:1;">
+          <span style="margin-right:4px;">${icon}</span>
+          <span>${text}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+
+
+// PART 7: Dedicated Club News (Home vs Away) & Complete Match Center Connector
+async function renderClubNews(code, homeTeam, awayTeam) {
+  const newsSlide = document.getElementById("mcSlide-news");
+  if (!newsSlide) return;
+
+  newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Loading official club news...</div>';
+
+  try {
+    const data = await fetchFast(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/news`);
+    const articles = data?.articles || [];
+
+    const hName = (homeTeam?.shortDisplayName || homeTeam?.name || "").toLowerCase();
+    const aName = (awayTeam?.shortDisplayName || awayTeam?.name || "").toLowerCase();
+
+    const homeNews = articles.filter(a => (a.headline + a.description).toLowerCase().includes(hName)).slice(0, 3);
+    const awayNews = articles.filter(a => (a.headline + a.description).toLowerCase().includes(aName)).slice(0, 3);
+
+    const formatCard = (a, team) => `
+      <a href="${a.links?.web?.href || '#'}" target="_blank" class="news-card">
+        ${a.images?.[0]?.url ? `<img src="${a.images[0].url}" alt="" />` : ''}
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px;">
+            ${team?.logo ? `<img src="${team.logo}" style="width:14px; height:14px; object-fit:contain;">` : ''}
+            <span style="font-size:0.65rem; color:#38bdf8; font-weight:700;">${team?.name}</span>
+          </div>
+          <div class="news-title">${a.headline}</div>
+          <div style="font-size:0.68rem; color:#cbd5e1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${a.description || ''}</div>
+          <div class="news-time" style="margin-top:4px;">${a.published ? new Date(a.published).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Recent'}</div>
+        </div>
+      </a>
+    `;
+
+    let html = "";
+    if (homeNews.length) {
+      html += `<div style="font-weight:800; font-size:0.75rem; color:#38bdf8; margin-bottom:6px;">📰 ${homeTeam?.name} News</div>`;
+      html += homeNews.map(a => formatCard(a, homeTeam)).join("");
+    }
+
+    if (awayNews.length) {
+      html += `<div style="font-weight:800; font-size:0.75rem; color:#38bdf8; margin:12px 0 6px 0;">📰 ${awayTeam?.name} News</div>`;
+      html += awayNews.map(a => formatCard(a, awayTeam)).join("");
+    }
+
+    newsSlide.innerHTML = html || '<div style="text-align:center; padding:25px; color:#94a3b8;">No recent news for these clubs.</div>';
+  } catch (e) {
+    newsSlide.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">Club news currently unavailable.</div>';
+  }
+}
+
+// Master Connector: Opens the Match Center and Runs Parts 1 Through 7
+window.openMatchCenter = async function(id, code) {
+  const mc = document.getElementById("matchCenter");
+  if (!mc) return;
+  mc.classList.add("open");
+
+  // Fallback match info from list
+  const local = matchesData.find(m => m.id === id);
+  const home = { id: local?.homeId, name: local?.home, shortDisplayName: local?.home, logo: local?.homeLogo };
+  const away = { id: local?.awayId, name: local?.away, shortDisplayName: local?.away, logo: local?.awayLogo };
+
+  // Fetch match details
+  const d = await fetchFast(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/summary?event=${id}`, 5000);
+  const comp = d?.header?.competitions?.[0];
+  const hTeam = comp?.competitors?.find(c => c.homeAway === 'home') || home;
+  const aTeam = comp?.competitors?.find(c => c.homeAway === 'away') || away;
+  const details = comp?.details || [];
+  const commData = d?.commentary || d?.plays || [];
+
+  // Execute all 7 parts
+  renderMatchInfo(details, commData, hTeam.team || hTeam, aTeam.team || aTeam);
+  renderMatchStats(d?.boxscore, hTeam.team || hTeam, aTeam.team || aTeam, details);
+
+  const isKnockout = ["uefa.champions", "uefa.europa", "uefa.europa.conf", "caf.nations"].includes(code);
+  if (isKnockout && d?.bracket) {
+    renderKnockoutBracket(d.bracket, hTeam.team || hTeam, aTeam.team || aTeam, id, document.getElementById("mcSlide-h2h"));
+  } else {
+    renderH2HAndTable(hTeam.team || hTeam, aTeam.team || aTeam, code, id);
+  }
+
+  if (d?.rosters?.length >= 2) {
+    renderTwoTeamPitch(d.rosters[0], d.rosters[1], hTeam.team || hTeam, aTeam.team || aTeam, comp?.status?.type?.state === 'post', hTeam.winner, aTeam.winner, details);
+  }
+
+  renderMatchCommentary(commData);
+  renderClubNews(code, hTeam.team || hTeam, aTeam.team || aTeam);
+};
+
+
+
+
+
+
+
+
+
   </script>
 </body>
 </html>
