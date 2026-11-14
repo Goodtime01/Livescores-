@@ -2358,6 +2358,126 @@ window.openMatchCenter = async function(id, code) {
 
 
 
+// 1. Fix Mobile Touch Scrolling (Removes Flexbox Scroll Trap)
+    const scrollStyle = document.createElement("style");
+    scrollStyle.innerHTML = `
+      .mc-overlay.open {
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        overflow-y: scroll !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        z-index: 99999 !important;
+      }
+      .mc-body {
+        padding-bottom: 90px !important;
+        overflow-y: visible !important;
+        min-height: auto !important;
+      }
+    `;
+    document.head.appendChild(scrollStyle);
+
+    // 2. Fix Goal Scorer Names in Banner (Restores Player Names for International & Club Matches)
+    window.renderMatchBanner = function(comp, local, hTeam, aTeam, details, code) {
+      const banner = document.getElementById("mcBanner");
+      if (!banner) return;
+
+      const hName = hTeam?.team?.shortDisplayName || hTeam?.shortDisplayName || hTeam?.name || local?.home || "Home";
+      const aName = aTeam?.team?.shortDisplayName || aTeam?.shortDisplayName || aTeam?.name || local?.away || "Away";
+      const hLogo = hTeam?.team?.logo || hTeam?.logo || local?.homeLogo || "";
+      const aLogo = aTeam?.team?.logo || aTeam?.logo || local?.awayLogo || "";
+      const hScore = hTeam?.score ?? local?.homeScore ?? "0";
+      const aScore = aTeam?.score ?? local?.awayScore ?? "0";
+      const status = comp?.status?.type?.shortDetail || comp?.status?.type?.description || local?.statusText || "FT";
+      const league = comp?.league?.name || local?.leagueName || (code || "").toUpperCase();
+      const venue = comp?.venue?.fullName || local?.venue || "";
+
+      const hMgr = getManagerInfo(hName);
+      const aMgr = getManagerInfo(aName);
+
+      const hGoals = [], aGoals = [];
+      (details || []).forEach(ev => {
+        const isGoal = ev.scoringPlay || (ev.type?.text || "").toLowerCase().includes("goal");
+        const isOG = ev.ownGoal || (ev.type?.text || "").toLowerCase().includes("own goal") || (ev.text || "").toLowerCase().includes("own goal");
+        const isPen = ev.penaltyKick || (ev.type?.text || "").toLowerCase().includes("penalty");
+        const isFK = (ev.type?.text || "").toLowerCase().includes("free kick");
+        const rawMin = ev.clock?.displayValue || "";
+        const min = rawMin ? `${rawMin}'` : "";
+        const isHome = ev.team?.id === (hTeam?.team?.id || hTeam?.id);
+
+        // 5-layer player name resolution (finds Gustavo Caballero, Song Ui-young, Maurício, etc.)
+        let player = ev.athletesInvolved?.[0]?.displayName 
+                  || ev.participants?.[0]?.athlete?.displayName 
+                  || ev.athlete?.displayName 
+                  || ev.player?.displayName 
+                  || "";
+
+        if (!player && ev.text) {
+          const matchName = ev.text.match(/(?:Goal!|Goal)\s*[^.]*?([A-Z][a-zA-Z\s\-\.\'\u00C0-\u017F]+?)(?:\s*\([^)]+\)|\s+scores|\s+header|\s+right|\s+left)/i);
+          if (matchName && matchName[1]) {
+            player = matchName[1].trim();
+          } else {
+            const clean = ev.text.split('(')[0].replace(/Goal!|Goal\s*-\s*[^.]+\./gi, '').trim();
+            if (clean && clean.toLowerCase() !== "goal") player = clean;
+          }
+        }
+        if (!player) player = isOG ? "Own Goal" : "Goal";
+
+        const tag = isOG ? " (OG)" : (isPen ? " (P)" : (isFK ? " (FK)" : ""));
+        let assist = "";
+        if (!isOG && !isPen && !isFK) {
+          const aName = ev.athletesInvolved?.[1]?.displayName;
+          if (aName) assist = ` (Assist: ${aName})`;
+          else if (ev.text && ev.text.toLowerCase().includes("assisted by")) {
+            const m = ev.text.match(/assisted by ([^.]+)\./i);
+            if (m && m[1]) assist = ` (Assist: ${m[1].trim()})`;
+          } else {
+            assist = ` (Assist: -)`;
+          }
+        }
+
+        const line = `${isOG ? '<span style="color:#ef4444;">⚽</span>' : '⚽'} ${player} ${min}${tag} ${assist}`.trim();
+        if (isHome) hGoals.push(line);
+        else aGoals.push(line);
+      });
+
+      banner.innerHTML = `
+        <div class="mc-league" style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase; margin-bottom:8px; font-weight:700;">${league}</div>
+        <div class="mc-teams" style="display:flex; justify-content:space-around; align-items:center; gap:8px;">
+          <div class="mc-team-block" style="width:38%; text-align:center;">
+            ${hLogo ? `<img src="${hLogo}" style="width:44px; height:44px; object-fit:contain; margin-bottom:4px;">` : ''}
+            <div class="mc-team-name" style="font-size:0.95rem; font-weight:800;">${hName}</div>
+            ${hMgr.name ? `<div class="mc-team-mgr" style="font-size:0.68rem; color:#38bdf8; font-weight:700; margin-top:2px;">${hMgr.name} ${hMgr.flag}</div>` : ''}
+          </div>
+          <div class="mc-score" style="font-size:2rem; font-weight:900; color:#38bdf8; min-width:80px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+            ${hScore} : ${aScore}
+          </div>
+          <div class="mc-team-block" style="width:38%; text-align:center;">
+            ${aLogo ? `<img src="${aLogo}" style="width:44px; height:44px; object-fit:contain; margin-bottom:4px;">` : ''}
+            <div class="mc-team-name" style="font-size:0.95rem; font-weight:800;">${aName}</div>
+            ${aMgr.name ? `<div class="mc-team-mgr" style="font-size:0.68rem; color:#38bdf8; font-weight:700; margin-top:2px;">${aMgr.name} ${aMgr.flag}</div>` : ''}
+          </div>
+        </div>
+        <div class="mc-status" style="font-size:0.75rem; color:#fbbf24; font-weight:800; margin-top:6px;">${status}</div>
+        <div class="mc-scorers-banner" style="display:flex; justify-content:space-between; font-size:0.7rem; color:#cbd5e1; margin-top:10px; padding-top:8px; border-top:1px dashed #334155;">
+          <div class="mc-scorers-home" style="width:48%; text-align:left;">${hGoals.join("<br>")}</div>
+          <div class="mc-scorers-away" style="width:48%; text-align:right;">${aGoals.join("<br>")}</div>
+        </div>
+        ${venue ? `<div style="font-size:0.65rem; color:#94a3b8; margin-top:6px;">📍 ${venue}</div>` : ''}
+      `;
+    };
+
+
+
+
+
+
 
 
 
