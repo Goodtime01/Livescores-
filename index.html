@@ -3017,6 +3017,169 @@ window.renderTwoTeamPitch = function(homeRoster, awayRoster, homeTeam, awayTeam,
 
 
 
+
+
+
+
+
+
+
+// Separation: Real Goals vs. Red Cards in Match Banner & Pitch
+    window.renderMatchBanner = function(comp, local, hTeam, aTeam, details, code) {
+      const banner = document.getElementById("mcBanner");
+      if (!banner) return;
+
+      const hName = hTeam?.team?.shortDisplayName || hTeam?.shortDisplayName || hTeam?.name || local?.home || "Home";
+      const aName = aTeam?.team?.shortDisplayName || aTeam?.shortDisplayName || aTeam?.name || local?.away || "Away";
+      const hLogo = hTeam?.team?.logo || hTeam?.logo || local?.homeLogo || "";
+      const aLogo = aTeam?.team?.logo || aTeam?.logo || local?.awayLogo || "";
+      const hScore = hTeam?.score ?? local?.homeScore ?? "0";
+      const aScore = aTeam?.score ?? local?.awayScore ?? "0";
+      const status = comp?.status?.type?.shortDetail || comp?.status?.type?.description || local?.statusText || "FT";
+      const league = comp?.league?.name || local?.leagueName || (code || "").toUpperCase();
+      const venue = comp?.venue?.fullName || local?.venue || "";
+
+      const hMgr = getManagerInfo(hName);
+      const aMgr = getManagerInfo(aName);
+
+      const hEvents = [], aEvents = [];
+
+      (details || []).forEach(ev => {
+        const rawMin = ev.clock?.displayValue || "";
+        const min = rawMin ? `${rawMin}'` : "";
+        const isHome = ev.team?.id === (hTeam?.team?.id || hTeam?.id);
+        const textType = (ev.type?.text || "").toLowerCase();
+        const fullText = (ev.text || "").toLowerCase();
+
+        // 1. Identify RED CARDS
+        const isRed = ev.redCard || textType.includes("red") || fullText.includes("red card") || fullText.includes("is sent off");
+
+        // 2. Identify GOALS
+        const isOG = ev.ownGoal || textType.includes("own goal") || fullText.includes("own goal");
+        const isPen = ev.penaltyKick || textType.includes("penalty") || fullText.includes("penalty");
+        const isFK = textType.includes("free kick") || fullText.includes("free kick");
+        const isGoal = !isRed && (ev.scoringPlay || textType.includes("goal") || isOG);
+
+        // Extract Player Name
+        let player = ev.participants?.[0]?.athlete?.displayName || ev.athletesInvolved?.[0]?.displayName || ev.athlete?.displayName || "";
+        if (!player && ev.text) {
+          player = ev.text.split('(')[0].replace(/Goal!|Goal\s*-\s*[^.]+\./gi, '').trim();
+        }
+        if (!player) player = isRed ? "Player" : (isOG ? "Own Goal" : "Goal");
+
+        // RED CARD in Banner
+        if (isRed) {
+          const redLine = `<span style="color:#f87171; font-weight:800;">🟥 ${player} ${min}</span>`;
+          if (isHome) hEvents.push(redLine);
+          else aEvents.push(redLine);
+          return;
+        }
+
+        // GOAL in Banner
+        if (isGoal) {
+          const tag = isOG ? ` <span style="background:#ef4444; color:#fff; font-size:0.58rem; font-weight:900; padding:1px 3px; border-radius:3px;">OG</span>` : (isPen ? " (P)" : (isFK ? " (FK)" : ""));
+
+          let assist = "";
+          if (!isOG && !isPen && !isFK) {
+            const aName = ev.athletesInvolved?.[1]?.displayName;
+            if (aName) assist = ` (Assist: ${aName})`;
+            else if (ev.text && ev.text.toLowerCase().includes("assisted by")) {
+              const m = ev.text.match(/assisted by\s+([A-ZÀ-ÿ][A-Za-zÀ-ÿ\s\-\.\']+?)(?:\s+(?:with|following|after|through|from|to)|\.|$)/i);
+              if (m && m[1]) assist = ` (Assist: ${m[1].trim()})`;
+            } else {
+              assist = ` (Assist: -)`;
+            }
+          }
+
+          const icon = isOG ? '<span style="color:#ef4444;">⚽</span>' : '⚽';
+          const goalLine = `${icon} ${player} ${min}${tag} ${assist}`.trim();
+
+          if (isHome) hEvents.push(goalLine);
+          else aEvents.push(goalLine);
+        }
+      });
+
+      banner.innerHTML = `
+        <div class="mc-league" style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase; margin-bottom:8px; font-weight:700;">${league}</div>
+        <div class="mc-teams" style="display:flex; justify-content:space-around; align-items:center; gap:8px;">
+          <div class="mc-team-block" style="width:38%; text-align:center;">
+            ${hLogo ? `<img src="${hLogo}" style="width:44px; height:44px; object-fit:contain; margin-bottom:4px;">` : ''}
+            <div class="mc-team-name" style="font-size:0.95rem; font-weight:800;">${hName}</div>
+            ${hMgr.name ? `<div class="mc-team-mgr" style="font-size:0.68rem; color:#38bdf8; font-weight:700; margin-top:2px;">${hMgr.name} ${hMgr.flag}</div>` : ''}
+          </div>
+          <div class="mc-score" style="font-size:2rem; font-weight:900; color:#38bdf8; min-width:80px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+            ${hScore} : ${aScore}
+          </div>
+          <div class="mc-team-block" style="width:38%; text-align:center;">
+            ${aLogo ? `<img src="${aLogo}" style="width:44px; height:44px; object-fit:contain; margin-bottom:4px;">` : ''}
+            <div class="mc-team-name" style="font-size:0.95rem; font-weight:800;">${aName}</div>
+            ${aMgr.name ? `<div class="mc-team-mgr" style="font-size:0.68rem; color:#38bdf8; font-weight:700; margin-top:2px;">${aMgr.name} ${aMgr.flag}</div>` : ''}
+          </div>
+        </div>
+        <div class="mc-status" style="font-size:0.75rem; color:#fbbf24; font-weight:800; margin-top:6px;">${status}</div>
+        <div class="mc-scorers-banner" style="display:flex; justify-content:space-between; font-size:0.7rem; color:#cbd5e1; margin-top:10px; padding-top:8px; border-top:1px dashed #334155;">
+          <div class="mc-scorers-home" style="width:48%; text-align:left;">${hEvents.join("<br>")}</div>
+          <div class="mc-scorers-away" style="width:48%; text-align:right;">${aEvents.join("<br>")}</div>
+        </div>
+        ${venue ? `<div style="font-size:0.65rem; color:#94a3b8; margin-top:6px;">📍 ${venue}</div>` : ''}
+      `;
+    };
+
+    // Fix: Red Cards on Pitch Show as 🟥, Not ⚽
+    const _basePitchRedCardFix = window.renderTwoTeamPitch;
+    window.renderTwoTeamPitch = function(homeRoster, awayRoster, homeTeam, awayTeam, isFinished, homeWon, awayWon, details) {
+      if (typeof _basePitchRedCardFix === "function") {
+        _basePitchRedCardFix(homeRoster, awayRoster, homeTeam, awayTeam, isFinished, homeWon, awayWon, details);
+      }
+
+      const redCardPlayers = new Set();
+      (details || []).forEach(ev => {
+        const textType = (ev.type?.text || "").toLowerCase();
+        const fullText = (ev.text || "").toLowerCase();
+        if (ev.redCard || textType.includes("red") || fullText.includes("red card")) {
+          const p = ev.athletesInvolved?.[0]?.displayName || ev.athlete?.displayName || "";
+          if (p) redCardPlayers.add(p.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+        }
+      });
+
+      // Update badge if player received a red card
+      document.querySelectorAll(".pitch-player").forEach(node => {
+        const nameEl = node.querySelector(".player-name");
+        const badgeEl = node.querySelector(".pitch-stat-badge");
+        if (!nameEl || !badgeEl) return;
+        const norm = nameEl.innerText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+        for (const redName of redCardPlayers) {
+          if (redName.includes(norm) || norm.includes(redName)) {
+            // Replace any accidental ⚽ with 🟥
+            badgeEl.innerHTML = badgeEl.innerHTML.replace(/⚽+/g, "") + ` <span style="color:#f87171; font-weight:bold;">🟥</span>`;
+            break;
+          }
+        }
+      });
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   </script>
 </body>
 </html>
